@@ -1,0 +1,12 @@
+[gd_scene format=3 uid="uid://nm8i5u2bqdiv"]
+
+[ext_resource type="PackedScene" uid="uid://6l6j14vr886s" path="res://luciddebug.glb" id="1_05qip"]
+[ext_resource type="PhysicsMaterial" uid="uid://deg4jk60bn6hb" path="res://pm_concrete.tres" id="2_eg1a4"]
+
+[node name="luciddebug" unique_id=1643952968 instance=ExtResource("1_05qip")]
+
+[node name="StaticBody3D" parent="level " parent_id_path=PackedInt32Array(690986705) index="0" unique_id=1271885763]
+physics_material_override = ExtResource("2_eg1a4")
+
+[node name="StaticBody3D" parent="climbable " parent_id_path=PackedInt32Array(1049054876) index="0" unique_id=826523225]
+physics_material_override = ExtResource("2_eg1a4")

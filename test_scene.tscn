@@ -1,0 +1,77 @@
+[gd_scene format=3 uid="uid://ifogxg85vdcp"]
+
+[ext_resource type="Script" uid="uid://d1j4l28b3mks7" path="res://ld_body.gd" id="1_ia1lp"]
+[ext_resource type="PackedScene" uid="uid://6l6j14vr886s" path="res://luciddebug.glb" id="1_uhqqe"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_ia1lp"]
+radius = 0.3
+height = 1.0
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_wb0og"]
+radius = 0.25
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_sb6tq"]
+radius = 0.3
+height = 1.0
+
+[sub_resource type="BoxMesh" id="BoxMesh_wb0og"]
+size = Vector3(0.1, 1, 0.1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_sb6tq"]
+size = Vector3(5, 20, 5)
+
+[node name="Test Scene" type="Node3D" unique_id=667831700]
+
+[node name="PhysicsPlayerController" type="RigidBody3D" parent="." unique_id=290065418 node_paths=PackedStringArray("camera", "shapecast")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.8937, 3.3830867, 4.137167)
+mass = 69.0
+script = ExtResource("1_ia1lp")
+camera = NodePath("Camera3D")
+shapecast = NodePath("ShapeCast3D")
+friction_coefficient = 2.0
+ride_height = 0.9
+spring_strength = 5000.0
+metadata/_custom_type_script = "uid://d1j4l28b3mks7"
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="PhysicsPlayerController" unique_id=257326396]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.25, 0)
+shape = SubResource("CapsuleShape3D_ia1lp")
+
+[node name="ShapeCast3D" type="ShapeCast3D" parent="PhysicsPlayerController" unique_id=1229155897]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.06878233, 0)
+shape = SubResource("SphereShape3D_wb0og")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="PhysicsPlayerController" unique_id=1791145501]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.25, 0)
+mesh = SubResource("CapsuleMesh_sb6tq")
+
+[node name="Camera3D" type="Camera3D" parent="PhysicsPlayerController" unique_id=1300883146]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+
+[node name="MeshInstance3D2" type="MeshInstance3D" parent="PhysicsPlayerController" unique_id=1333691727]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.0564885, -0.7233331)
+mesh = SubResource("BoxMesh_wb0og")
+
+[node name="luciddebug" parent="." unique_id=1643952968 instance=ExtResource("1_uhqqe")]
+
+[node name="OmniLight3D" type="OmniLight3D" parent="." unique_id=1154806392]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.1654396, 17.174236, -8.437365)
+omni_range = 147.727
+
+[node name="OmniLight3D2" type="OmniLight3D" parent="." unique_id=106794305]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -28.987911, 17.174236, 19.289642)
+omni_range = 147.727
+
+[node name="OmniLight3D3" type="OmniLight3D" parent="." unique_id=676386583]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.83637714, 10.703478, -0.43880844)
+shadow_enabled = true
+omni_range = 147.727
+
+[node name="Area3D" type="Area3D" parent="." unique_id=2044167564]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11.324425, 5.4804626, -11.960465)
+gravity_space_override = 3
+gravity_point_center = Vector3(0, 1, 0)
+gravity_direction = Vector3(0, 1, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Area3D" unique_id=1461777872]
+shape = SubResource("BoxShape3D_sb6tq")
