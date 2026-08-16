@@ -17,16 +17,31 @@ height = 1.0
 [sub_resource type="BoxMesh" id="BoxMesh_wb0og"]
 size = Vector3(0.1, 1, 0.1)
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_sb6tq"]
-size = Vector3(5, 20, 5)
+[sub_resource type="SphereShape3D" id="SphereShape3D_ia1lp"]
+radius = 0.25
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_sb6tq"]
+radius = 25.0
+
+[sub_resource type="SphereMesh" id="SphereMesh_sb6tq"]
+radius = 25.0
+height = 50.0
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_ie5li"]
+radius = 40.0
+
+[sub_resource type="Environment" id="Environment_ia1lp"]
+background_mode = 1
+background_color = Color(0.00041321453, 0.04256989, 0.28678074, 1)
 
 [node name="Test Scene" type="Node3D" unique_id=667831700]
 
-[node name="PhysicsPlayerController" type="RigidBody3D" parent="." unique_id=290065418 node_paths=PackedStringArray("camera", "shapecast")]
+[node name="PhysicsPlayerController" type="RigidBody3D" parent="." unique_id=290065418 node_paths=PackedStringArray("camera", "cam_spring", "shapecast")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.8937, 3.3830867, 4.137167)
 mass = 69.0
 script = ExtResource("1_ia1lp")
-camera = NodePath("Camera3D")
+camera = NodePath("cam_spring/Camera3D")
+cam_spring = NodePath("cam_spring")
 shapecast = NodePath("ShapeCast3D")
 friction_coefficient = 2.0
 ride_height = 0.9
@@ -45,12 +60,16 @@ shape = SubResource("SphereShape3D_wb0og")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.25, 0)
 mesh = SubResource("CapsuleMesh_sb6tq")
 
-[node name="Camera3D" type="Camera3D" parent="PhysicsPlayerController" unique_id=1300883146]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
-
 [node name="MeshInstance3D2" type="MeshInstance3D" parent="PhysicsPlayerController" unique_id=1333691727]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.0564885, -0.7233331)
 mesh = SubResource("BoxMesh_wb0og")
+
+[node name="cam_spring" type="SpringArm3D" parent="PhysicsPlayerController" unique_id=674244444]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+shape = SubResource("SphereShape3D_ia1lp")
+spring_length = 0.0
+
+[node name="Camera3D" type="Camera3D" parent="PhysicsPlayerController/cam_spring" unique_id=1300883146]
 
 [node name="luciddebug" parent="." unique_id=1643952968 instance=ExtResource("1_uhqqe")]
 
@@ -67,11 +86,26 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.83637714, 10.703478, -0.43
 shadow_enabled = true
 omni_range = 147.727
 
-[node name="Area3D" type="Area3D" parent="." unique_id=2044167564]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11.324425, 5.4804626, -11.960465)
-gravity_space_override = 3
-gravity_point_center = Vector3(0, 1, 0)
-gravity_direction = Vector3(0, 1, 0)
+[node name="Planet" type="StaticBody3D" parent="." unique_id=174918285]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 39.650673, 35.74402, -46.614098)
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Area3D" unique_id=1461777872]
-shape = SubResource("BoxShape3D_sb6tq")
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Planet" unique_id=186478656]
+shape = SubResource("SphereShape3D_sb6tq")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Planet" unique_id=628406651]
+mesh = SubResource("SphereMesh_sb6tq")
+
+[node name="Area3D" type="Area3D" parent="Planet" unique_id=1795958293]
+gravity_space_override = 3
+gravity_point = true
+gravity_point_unit_distance = 50.0
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Planet/Area3D" unique_id=945935443]
+shape = SubResource("SphereShape3D_ie5li")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=1350055376]
+transform = Transform3D(0.98691314, 0.11073745, 0.117216185, -0.07887937, -0.3024746, 0.9498881, 0.14064309, -0.946703, -0.28978118, 0, 0, 0)
+shadow_enabled = true
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=190216174]
+environment = SubResource("Environment_ia1lp")
