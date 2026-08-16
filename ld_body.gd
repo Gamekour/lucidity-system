@@ -17,7 +17,7 @@ class_name PhysicsPlayerController
 @export var upright_strength : float = 1000.0
 @export var upright_damping : float = 100.0
 @export var cam_distance_max : float = 4.0
-@export var top_speed_by_stance_height : float = 1
+@export var crouch_speed : float = 0.5
 @export var crouch_height : float = 0.5
 @export var crawl_height : float = 0.25
 @export var lean_strength : float = 1.0
@@ -26,6 +26,8 @@ class_name PhysicsPlayerController
 @export var air_upright_assist_strength : float = 400.0
 @export var air_upright_assist_damping : float = 40.0
 @export var jump_height : float = 2.0
+@export_range(0.0, PI, 0.01, "radians_as_degrees") var body_turn_max_angle : float = deg_to_rad(70.0)
+@export var body_turn_input_deadzone : float = 0.15
 
 var stance_height : float = 0
 var target_angle_horizontal : float = 0
@@ -55,7 +57,8 @@ func _physics_process(_delta: float) -> void:
 
 	var input_vector := Input.get_vector("move_left", "move_right", "move_back", "move_forward")
 	var input_3d := _get_camera_relative_input(up_dir, input_vector)
-	var speed = min(roll_force * roll_force_scale * (sprint_multiplier * sprint_multiplier_scale if sprinting and shapecast.is_colliding() else 1.0), stance_height * top_speed_by_stance_height * roll_force * sprint_multiplier)
+	var max_speed = max(lerpf(crouch_speed * roll_force, roll_force * sprint_multiplier * sprint_multiplier_scale, stance_height), 0)
+	var speed = min(roll_force * roll_force_scale * (sprint_multiplier * sprint_multiplier_scale if sprinting and shapecast.is_colliding() else 1.0), max_speed)
 	var virtual_torque = input_3d * speed
 	var target_force = up_dir.cross(virtual_torque) / (shapecast.shape as SphereShape3D).radius
 
@@ -74,7 +77,8 @@ func _physics_process(_delta: float) -> void:
 	apply_force(force)
 
 	var current_yaw := _get_current_yaw(up_dir)
-	var look_angle_horizontal : float = wrapf(target_angle_horizontal - current_yaw, -PI, PI)
+	var body_target_angle := _get_body_target_angle(input_vector)
+	var look_angle_horizontal : float = wrapf(body_target_angle - current_yaw, -PI, PI)
 	var yaw_damping_torque : float = -angular_velocity.dot(up_dir) * turn_damping
 	var yaw_torque := up_dir * (look_angle_horizontal * turn_strength + yaw_damping_torque)
 	var lean_input : Vector3 = force / maxf(friction_budget, 0.0001)
@@ -122,11 +126,9 @@ func _get_up_direction(gravity_vec: Vector3) -> Vector3:
 	return -gravity_vec.normalized()
 
 func _get_horizontal_basis(up_dir: Vector3) -> Array:
-	var reference := Vector3(0, 0, 1)
-	if abs(reference.dot(up_dir)) > 0.98:
-		reference = Vector3(1, 0, 0)
-	var forward_ref := (reference - up_dir * reference.dot(up_dir)).normalized()
-	var right_ref := up_dir.cross(forward_ref).normalized()
+	var tilt_basis := _get_tilt_basis(up_dir)
+	var forward_ref := tilt_basis.z
+	var right_ref := tilt_basis.x
 	return [forward_ref, right_ref]
 
 func _get_camera_relative_axes(up_dir: Vector3) -> Array:
@@ -157,6 +159,20 @@ func _get_current_yaw(up_dir: Vector3) -> float:
 	var projected_right := (right - up_dir * right.dot(up_dir)).normalized()
 	return atan2(projected_right.dot(right_ref), projected_right.dot(forward_ref)) - PI / 2.0
 
+func _get_body_target_angle(input_vector: Vector2) -> float:
+	if input_vector.length() < body_turn_input_deadzone:
+		return target_angle_horizontal
+	var move_yaw_offset := atan2(input_vector.x, input_vector.y)
+	if input_vector.y < 0.0:
+		move_yaw_offset = -move_yaw_offset
+	if (abs(move_yaw_offset) > 3.1):
+		move_yaw_offset = 0
+	else:
+		print(move_yaw_offset)
+		move_yaw_offset = clampf(move_yaw_offset, -body_turn_max_angle, body_turn_max_angle)
+	
+	return wrapf(target_angle_horizontal - move_yaw_offset, -PI, PI)
+
 func _get_lean_target_up(up_dir: Vector3, lean_input: Vector3) -> Vector3:
 	var flat_lean := lean_input - lean_input.project(up_dir)
 	var lean_magnitude := clampf(flat_lean.length() * lean_strength, 0.0, 1.0)
@@ -168,7 +184,6 @@ func _get_lean_target_up(up_dir: Vector3, lean_input: Vector3) -> Vector3:
 	return up_dir.rotated(lean_axis, lean_angle)
 
 func _get_crouch_lean_factor() -> float:
-	# 0 at stance_height == ride_height, 1 at stance_height == 0.1 * ride_height
 	return clampf(inverse_lerp(1, crawl_height, stance_height), 0.0, 1.0)
 
 func _get_upright_torque(up_dir: Vector3, lean_input: Vector3, strength: float, damping: float) -> Vector3:
@@ -178,7 +193,6 @@ func _get_upright_torque(up_dir: Vector3, lean_input: Vector3, strength: float, 
 	if crouch_factor > 0.0001:
 		var axes := _get_camera_relative_axes(up_dir)
 		var flat_forward : Vector3 = axes[0]
-		# axis chosen so a positive angle tilts up_dir toward flat_forward
 		var lean_axis := flat_forward.cross(up_dir)
 		var lean_axis_length := lean_axis.length()
 		if lean_axis_length > 0.0001:
@@ -188,9 +202,6 @@ func _get_upright_torque(up_dir: Vector3, lean_input: Vector3, strength: float, 
 	return _upright_torque_towards(up_dir, target_up, strength, damping)
 
 func _get_air_upright_torque(up_dir: Vector3) -> Vector3:
-	# Legless "assist" torque: no ground contact, no lean/crouch shaping, just a
-	# gentle (or strong, depending on the exported values) pull of the body's up
-	# axis back towards the world up direction while airborne.
 	if air_upright_assist_strength <= 0.0:
 		return Vector3.ZERO
 	return _upright_torque_towards(up_dir, up_dir, air_upright_assist_strength, air_upright_assist_damping)
