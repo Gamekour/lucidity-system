@@ -3,13 +3,13 @@
 importer="scene"
 importer_version=1
 type="PackedScene"
-uid="uid://6l6j14vr886s"
-path="res://.godot/imported/luciddebug.glb-4a0d539ae6f33bb410480d5bb8d8e11a.scn"
+uid="uid://kg8tko51k72u"
+path="res://.godot/imported/base06.glb-075b82fee0fcf83ecd59fb50c70dc3c4.scn"
 
 [deps]
 
-source_file="res://luciddebug.glb"
-dest_files=["res://.godot/imported/luciddebug.glb-4a0d539ae6f33bb410480d5bb8d8e11a.scn"]
+source_file="res://base06.glb"
+dest_files=["res://.godot/imported/base06.glb-075b82fee0fcf83ecd59fb50c70dc3c4.scn"]
 
 [params]
 
@@ -39,20 +39,7 @@ import_script/path=""
 materials/extract=0
 materials/extract_format=0
 materials/extract_path=""
-_subresources={
-"materials": {
-"gray_concrete": {
-"use_external/enabled": true,
-"use_external/fallback_path": "res://debug_mat.tres",
-"use_external/path": "uid://dnm5ak0rw2pxe"
-},
-"polished_andesite": {
-"use_external/enabled": true,
-"use_external/fallback_path": "res://debug_mat.tres",
-"use_external/path": "uid://dnm5ak0rw2pxe"
-}
-}
-}
+_subresources={}
 gltf/naming_version=2
 gltf/embedded_image_handling=1
 gltf/texture_map_mode=1

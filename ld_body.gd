@@ -17,6 +17,7 @@ class_name PhysicsPlayerController
 @export var upright_strength : float = 1000.0
 @export var upright_damping : float = 100.0
 @export var cam_distance_max : float = 4.0
+@export var cam_distance_min : float = -0.06
 @export var crouch_speed : float = 0.5
 @export var crouch_height : float = 0.5
 @export var crawl_height : float = 0.25
@@ -28,6 +29,7 @@ class_name PhysicsPlayerController
 @export var jump_height : float = 2.0
 @export_range(0.0, PI, 0.01, "radians_as_degrees") var body_turn_max_angle : float = deg_to_rad(70.0)
 @export var body_turn_input_deadzone : float = 0.15
+@export var camera_tilt_smoothing : float = 10.0
 
 var stance_height : float = 0
 var target_angle_horizontal : float = 0
@@ -43,6 +45,7 @@ var spring_strength_scale : float = 1.0
 var spring_damping_scale : float = 1.0
 var top_speed_stance_height_scale : float = 1.0
 var jump_height_scale : float = 1.0
+var stance_height_scale : float = 1.0
 
 var current_up_dir : Vector3 = Vector3.UP
 var camera_up_dir : Vector3 = Vector3.UP
@@ -51,6 +54,7 @@ func _ready() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
 func _physics_process(_delta: float) -> void:
+	
 	var gravity_vec : Vector3 = get_gravity()
 	var up_dir : Vector3 = _get_up_direction(gravity_vec).normalized()
 	current_up_dir = up_dir
@@ -81,7 +85,7 @@ func _physics_process(_delta: float) -> void:
 	var look_angle_horizontal : float = wrapf(body_target_angle - current_yaw, -PI, PI)
 	var yaw_damping_torque : float = -angular_velocity.dot(up_dir) * turn_damping
 	var yaw_torque := up_dir * (look_angle_horizontal * turn_strength + yaw_damping_torque)
-	var lean_input : Vector3 = force / maxf(friction_budget, 0.0001)
+	var lean_input : Vector3 = flat_velocity / maxf(friction_budget, 0.0001)
 
 	var upright_torque : Vector3
 	if grounded:
@@ -93,6 +97,7 @@ func _physics_process(_delta: float) -> void:
 
 	if grounded:
 		stance_height = crawl_height if Input.is_action_pressed("crawl") else crouch_height if Input.is_action_pressed("crouch") else jump_height * jump_height_scale if Input.is_action_pressed("jump") else 1.0
+		stance_height *= stance_height_scale
 		var current_distance : float = shapecast.get_closest_collision_safe_fraction() * abs(shapecast.target_position.y)
 		var ride_height = abs(shapecast.target_position.y) + ride_height_offset
 		var displacement : float = (stance_height * ride_height) - current_distance
@@ -101,9 +106,12 @@ func _physics_process(_delta: float) -> void:
 		var spring_force : Vector3 = slope_normal * spring_magnitude
 		apply_force(spring_force, shapecast.position)
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	sprinting = Input.is_action_pressed("sprint")
-	camera_up_dir = current_up_dir
+	var tilt_t : float = 1.0 - exp(-camera_tilt_smoothing * delta)
+	camera_up_dir = camera_up_dir.normalized()
+	current_up_dir = current_up_dir.normalized()
+	camera_up_dir = _safe_slerp_up(camera_up_dir, current_up_dir, tilt_t)
 	var tilt_basis := _get_tilt_basis(camera_up_dir)
 	var yaw_basis := Basis(Vector3.UP, target_angle_horizontal)
 	var pitch_basis := Basis(Vector3.RIGHT, camera_pitch)
@@ -116,9 +124,25 @@ func _input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
 		if (event.is_pressed()):
 			if (event.button_index == MOUSE_BUTTON_WHEEL_UP):
-				cam_spring.spring_length = clampf(cam_spring.spring_length - cam_distance_max / 10, 0, cam_distance_max)
+				cam_spring.spring_length = clampf(cam_spring.spring_length - cam_distance_max / 10, cam_distance_min, cam_distance_max)
 			if (event.button_index == MOUSE_BUTTON_WHEEL_DOWN):
-				cam_spring.spring_length = clampf(cam_spring.spring_length + cam_distance_max / 10, 0, cam_distance_max)
+				cam_spring.spring_length = clampf(cam_spring.spring_length + cam_distance_max / 10, cam_distance_min, cam_distance_max)
+
+func _safe_slerp_up(from: Vector3, to: Vector3, weight: float) -> Vector3:
+	from = from.normalized()
+	to = to.normalized()
+	var dot := clampf(from.dot(to), -1.0, 1.0)
+	# Near-parallel: cross product is too small to give a reliable axis, so lerp instead.
+	if dot > 0.9995:
+		return from.lerp(to, weight).normalized()
+	# Near-opposite: pick any axis perpendicular to `from` to rotate around.
+	if dot < -0.9995:
+		var arbitrary := Vector3.RIGHT if abs(from.x) < 0.9 else Vector3.UP
+		var axis := from.cross(arbitrary).normalized()
+		return from.rotated(axis, PI * weight).normalized()
+	var theta := acos(dot) * weight
+	var relative := (to - from * dot).normalized()
+	return (from * cos(theta) + relative * sin(theta)).normalized()
 
 func _get_up_direction(gravity_vec: Vector3) -> Vector3:
 	if gravity_vec.length_squared() < 0.0001:
@@ -168,7 +192,6 @@ func _get_body_target_angle(input_vector: Vector2) -> float:
 	if (abs(move_yaw_offset) > 3.1):
 		move_yaw_offset = 0
 	else:
-		print(move_yaw_offset)
 		move_yaw_offset = clampf(move_yaw_offset, -body_turn_max_angle, body_turn_max_angle)
 	
 	return wrapf(target_angle_horizontal - move_yaw_offset, -PI, PI)
