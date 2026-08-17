@@ -30,6 +30,7 @@ class_name PhysicsPlayerController
 @export_range(0.0, PI, 0.01, "radians_as_degrees") var body_turn_max_angle : float = deg_to_rad(70.0)
 @export var body_turn_input_deadzone : float = 0.15
 @export var camera_tilt_smoothing : float = 10.0
+@export var body_turn_sideways_deadzone: float = deg_to_rad(15.0)
 
 var stance_height : float = 0
 var target_angle_horizontal : float = 0
@@ -186,13 +187,19 @@ func _get_current_yaw(up_dir: Vector3) -> float:
 func _get_body_target_angle(input_vector: Vector2) -> float:
 	if input_vector.length() < body_turn_input_deadzone:
 		return target_angle_horizontal
+	
 	var move_yaw_offset := atan2(input_vector.x, input_vector.y)
+	
+	# Check "how sideways" using the raw angle, before the backward-fold below.
+	# Raw angle is symmetric: PI/2 = right, -PI/2 = left, 0 = forward, ±PI = backward.
+	if absf(absf(move_yaw_offset) - (PI / 2.0)) < body_turn_sideways_deadzone:
+		return target_angle_horizontal
+	
 	if input_vector.y < 0.0:
-		move_yaw_offset = -move_yaw_offset
-	if (abs(move_yaw_offset) > 3.1):
-		move_yaw_offset = 0
-	else:
-		move_yaw_offset = clampf(move_yaw_offset, -body_turn_max_angle, body_turn_max_angle)
+		if (move_yaw_offset < 0.0):
+			move_yaw_offset += PI
+		else:
+			move_yaw_offset -= PI
 	
 	return wrapf(target_angle_horizontal - move_yaw_offset, -PI, PI)
 

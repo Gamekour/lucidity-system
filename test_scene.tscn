@@ -5,6 +5,7 @@
 [ext_resource type="Script" uid="uid://drcmxxe77jx4w" path="res://IKController.gd" id="2_sasra"]
 [ext_resource type="Script" uid="uid://kpuqgbh8b1s0" path="res://playermodel.gd" id="3_2nij2"]
 [ext_resource type="Texture2D" uid="uid://bkwvcrqmwfopw" path="res://base06_BASE06.png" id="3_coq8p"]
+[ext_resource type="Script" uid="uid://uwl2prsk3to" path="res://bone_root.gd" id="5_7cbxl"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_ia1lp"]
 radius = 0.1
@@ -28,7 +29,7 @@ point_count = 4
 
 [sub_resource type="Curve" id="Curve_2nij2"]
 _limits = [0.0, 0.5, 0.0, 1.0]
-_data = [Vector2(0, 0), 0.0, -0.15853035, 0, 0, Vector2(0.50377834, 0.5), 0.0, 0.0, 0, 0, Vector2(1, 0), -3.2853358, 0.0, 0, 0]
+_data = [Vector2(0, 0), 0.0, 3.150794, 0, 0, Vector2(0.50377834, 0.5), 0.0, 0.0, 0, 0, Vector2(1, 0), -0.033741597, 0.0, 0, 0]
 point_count = 3
 
 [sub_resource type="Curve" id="Curve_7cbxl"]
@@ -336,6 +337,7 @@ spring_strength = 5000.0
 turn_strength = 100.0
 turn_damping = 10.0
 upright_strength = 2000.0
+cam_distance_min = 0.0
 crouch_speed = -0.5
 crawl_height = 0.3
 lean_strength = 500.0
@@ -353,7 +355,7 @@ shape = SubResource("SphereShape3D_wb0og")
 target_position = Vector3(0, -1.05, 0)
 
 [node name="cam_spring" type="SpringArm3D" parent="PhysicsPlayerController" unique_id=674244444]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.407, 0)
+transform = Transform3D(-0.9999993, 0.0011594346, 8.293265e-05, 0.0011594346, 0.99999934, -9.625626e-08, -8.29327e-05, -1.0149302e-10, -1, -8.4877014e-05, 0.40759754, 6.532669e-05)
 shape = SubResource("SphereShape3D_ia1lp")
 spring_length = 0.0
 
@@ -918,11 +920,23 @@ settings/3/root_bone_name = "Arm.L"
 settings/3/root_bone = 4
 settings/3/middle_bone_name = "Forearm.L"
 settings/3/middle_bone = 5
-settings/3/pole_direction = 1
+settings/3/pole_direction = 7
+settings/3/pole_direction_vector = Vector3(1, 0, 0.545)
 settings/3/end_bone_name = "Hand.L"
 settings/3/end_bone = 6
 settings/3/use_virtual_end = false
 settings/3/extend_end_bone = false
+
+[node name="Headroot" type="Node3D" parent="PhysicsPlayerController" unique_id=2070561820 node_paths=PackedStringArray("skeleton")]
+transform = Transform3D(-0.9999993, 0.0011594346, 8.293265e-05, 0.0011594346, 0.99999934, -9.625626e-08, -8.29327e-05, -1.01474676e-10, -1, -8.4877014e-05, 0.3287406, 6.532669e-05)
+script = ExtResource("5_7cbxl")
+skeleton = NodePath("../playermodel/Armature/Skeleton3D")
+
+[node name="cam_pos" type="RemoteTransform3D" parent="PhysicsPlayerController/Headroot" unique_id=772255754]
+transform = Transform3D(1, 8.420134e-15, 0, 8.393005e-15, 1, 0, 0, 6.4212524e-14, 1, 9.1552734e-05, 0.078856945, 0)
+remote_path = NodePath("../../cam_spring")
+update_rotation = false
+update_scale = false
 
 [node name="luciddebug" parent="." unique_id=1643952968 instance=ExtResource("1_uhqqe")]
 
