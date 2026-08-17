@@ -63,6 +63,11 @@ crawl={
 ]
 }
 
+[layer_names]
+
+3d_physics/layer_1="Default"
+3d_physics/layer_2="Player"
+
 [physics]
 
 3d/physics_engine="Jolt Physics"

@@ -1,4 +1,5 @@
 extends Node3D
+class_name BoneRoot
 # Put this on your camera (or a rig node above it)
 
 @export var skeleton: Skeleton3D

@@ -47,6 +47,9 @@ _limits = [0.5, 1.5, 0.0, 1.0]
 _data = [Vector2(0, 0.88993716), 0.0, 0.0, 0, 0, Vector2(0.24937029, 1.0974844), 0.0, 0.0, 0, 0, Vector2(0.49874055, 0.87735856), 0.0, 0.0, 0, 0, Vector2(0.7506297, 1.0974844), 0.0, 0.0, 0, 0, Vector2(1, 0.88364786), 0.0, 0.0, 0, 0]
 point_count = 5
 
+[sub_resource type="SphereShape3D" id="SphereShape3D_buypi"]
+radius = 0.02
+
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_3vi0m"]
 resource_name = "atlas"
 cull_mode = 2
@@ -325,6 +328,7 @@ size = Vector3(17.455933, 30.521484, 9.686157)
 
 [node name="PhysicsPlayerController" type="RigidBody3D" parent="." unique_id=290065418 node_paths=PackedStringArray("camera", "cam_spring", "shapecast")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.8937, 3.3830867, 4.137167)
+collision_layer = 2
 mass = 69.0
 script = ExtResource("1_ia1lp")
 camera = NodePath("cam_spring/Camera3D")
@@ -352,7 +356,7 @@ shape = SubResource("CapsuleShape3D_ia1lp")
 [node name="ShapeCast3D" type="ShapeCast3D" parent="PhysicsPlayerController" unique_id=1229155897]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.06878233, 0)
 shape = SubResource("SphereShape3D_wb0og")
-target_position = Vector3(0, -1.05, 0)
+target_position = Vector3(0, -1.1, 0)
 
 [node name="cam_spring" type="SpringArm3D" parent="PhysicsPlayerController" unique_id=674244444]
 transform = Transform3D(-0.9999993, 0.0011594346, 8.293265e-05, 0.0011594346, 0.99999934, -9.625626e-08, -8.29327e-05, -1.0149302e-10, -1, -8.4877014e-05, 0.40759754, 6.532669e-05)
@@ -366,7 +370,7 @@ near = 0.01
 script = ExtResource("2_sasra")
 body = NodePath("..")
 legs = NodePath("../ShapeCast3D")
-ik_targets = [NodePath("IK_RF"), NodePath("IK_LF"), NodePath("IK_RH"), NodePath("IK_LH")]
+ik_targets = [NodePath("spring_RF"), NodePath("spring_LF"), NodePath("spring_RH"), NodePath("spring_LH")]
 start_positions = Array[Vector3]([Vector3(0.07, -0.852, 0), Vector3(-0.07, -0.852, 0), Vector3(0.15, -0.172, 0), Vector3(-0.15, -0.172, 0)])
 speed_min = 0.75
 speed_max = 0.4
@@ -380,17 +384,29 @@ stance_height_bob_min = SubResource("Curve_8pr8v")
 stance_height_bob_max = SubResource("Curve_buypi")
 metadata/_custom_type_script = "uid://drcmxxe77jx4w"
 
-[node name="IK_RF" type="Node3D" parent="PhysicsPlayerController/rig_root" unique_id=545870435]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.069999695, -0.8521688, 0)
+[node name="spring_RF" type="SpringArm3D" parent="PhysicsPlayerController/rig_root" unique_id=1507942179]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.069000244, -0.072874546, 0)
+shape = SubResource("SphereShape3D_buypi")
 
-[node name="IK_LF" type="Node3D" parent="PhysicsPlayerController/rig_root" unique_id=100158376]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.07, -0.852, 0)
+[node name="IK_RF" type="Node3D" parent="PhysicsPlayerController/rig_root/spring_RF" unique_id=545870435]
 
-[node name="IK_RH" type="Node3D" parent="PhysicsPlayerController/rig_root" unique_id=1744420917]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.14999962, -0.17192984, 0)
+[node name="spring_LF" type="SpringArm3D" parent="PhysicsPlayerController/rig_root" unique_id=2050882400]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.069000244, -0.072874546, 0)
+shape = SubResource("SphereShape3D_buypi")
 
-[node name="IK_LH" type="Node3D" parent="PhysicsPlayerController/rig_root" unique_id=1198920607]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.14999962, -0.17192984, 0)
+[node name="IK_LF" type="Node3D" parent="PhysicsPlayerController/rig_root/spring_LF" unique_id=100158376]
+
+[node name="spring_RH" type="SpringArm3D" parent="PhysicsPlayerController/rig_root" unique_id=27467257]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.072, 0.288, 0.037)
+shape = SubResource("SphereShape3D_buypi")
+
+[node name="IK_RH" type="Node3D" parent="PhysicsPlayerController/rig_root/spring_RH" unique_id=1744420917]
+
+[node name="spring_LH" type="SpringArm3D" parent="PhysicsPlayerController/rig_root" unique_id=1341861996]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.072052956, 0.2880001, 0.0373559)
+shape = SubResource("SphereShape3D_buypi")
+
+[node name="IK_LH" type="Node3D" parent="PhysicsPlayerController/rig_root/spring_LH" unique_id=1198920607]
 
 [node name="pole_RF" type="Node3D" parent="PhysicsPlayerController/rig_root" unique_id=1083500836]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.069999695, 0, -0.67377615)
@@ -399,10 +415,10 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.069999695, 0, -0.67377615)
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.069999695, 0, -0.67377615)
 
 [node name="pole_RH" type="Node3D" parent="PhysicsPlayerController/rig_root" unique_id=296298748]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.069999695, -0.2023611, 0.60000753)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.069999695, 0.22103882, 0.38152122)
 
 [node name="pole_LH" type="Node3D" parent="PhysicsPlayerController/rig_root" unique_id=11763739]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.069999695, -0.2023611, 0.60000753)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.069999695, 0.220546, 0.3812933)
 
 [node name="playermodel" type="Node3D" parent="PhysicsPlayerController" unique_id=2011867218]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 0, -0.89670515, 0)
@@ -881,7 +897,7 @@ skeleton = NodePath("..")
 
 [node name="IK" type="TwoBoneIK3D" parent="PhysicsPlayerController/playermodel/Armature/Skeleton3D" unique_id=1206094189]
 setting_count = 4
-settings/0/target_node = NodePath("../../../../rig_root/IK_RF")
+settings/0/target_node = NodePath("../../../../rig_root/spring_RF/IK_RF")
 settings/0/pole_node = NodePath("../../../../rig_root/pole_RF")
 settings/0/root_bone_name = "Thigh.R"
 settings/0/root_bone = 61
@@ -892,7 +908,7 @@ settings/0/end_bone_name = "Foot.R"
 settings/0/end_bone = 63
 settings/0/use_virtual_end = false
 settings/0/extend_end_bone = false
-settings/1/target_node = NodePath("../../../../rig_root/IK_LF")
+settings/1/target_node = NodePath("../../../../rig_root/spring_LF/IK_LF")
 settings/1/pole_node = NodePath("../../../../rig_root/pole_LF")
 settings/1/root_bone_name = "Thigh.L"
 settings/1/root_bone = 57
@@ -903,7 +919,7 @@ settings/1/end_bone_name = "Foot.L"
 settings/1/end_bone = 59
 settings/1/use_virtual_end = false
 settings/1/extend_end_bone = false
-settings/2/target_node = NodePath("../../../../rig_root/IK_RH")
+settings/2/target_node = NodePath("../../../../rig_root/spring_RH/IK_RH")
 settings/2/pole_node = NodePath("../../../../rig_root/pole_RH")
 settings/2/root_bone_name = "Arm.R"
 settings/2/root_bone = 34
@@ -914,7 +930,7 @@ settings/2/end_bone_name = "Hand.R"
 settings/2/end_bone = 36
 settings/2/use_virtual_end = false
 settings/2/extend_end_bone = false
-settings/3/target_node = NodePath("../../../../rig_root/IK_LH")
+settings/3/target_node = NodePath("../../../../rig_root/spring_LH/IK_LH")
 settings/3/pole_node = NodePath("../../../../rig_root/pole_LH")
 settings/3/root_bone_name = "Arm.L"
 settings/3/root_bone = 4
@@ -927,10 +943,11 @@ settings/3/end_bone = 6
 settings/3/use_virtual_end = false
 settings/3/extend_end_bone = false
 
-[node name="Headroot" type="Node3D" parent="PhysicsPlayerController" unique_id=2070561820 node_paths=PackedStringArray("skeleton")]
+[node name="Headroot" type="Node3D" parent="PhysicsPlayerController" unique_id=645627365 node_paths=PackedStringArray("skeleton")]
 transform = Transform3D(-0.9999993, 0.0011594346, 8.293265e-05, 0.0011594346, 0.99999934, -9.625626e-08, -8.29327e-05, -1.01474676e-10, -1, -8.4877014e-05, 0.3287406, 6.532669e-05)
 script = ExtResource("5_7cbxl")
 skeleton = NodePath("../playermodel/Armature/Skeleton3D")
+metadata/_custom_type_script = "uid://uwl2prsk3to"
 
 [node name="cam_pos" type="RemoteTransform3D" parent="PhysicsPlayerController/Headroot" unique_id=772255754]
 transform = Transform3D(1, 8.420134e-15, 0, 8.393005e-15, 1, 0, 0, 6.4212524e-14, 1, 9.1552734e-05, 0.078856945, 0)

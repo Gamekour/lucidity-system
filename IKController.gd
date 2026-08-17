@@ -2,7 +2,7 @@ extends Node3D
 class_name WalkIKController
 @export var body : PhysicsPlayerController
 @export var legs : ShapeCast3D
-@export var ik_targets : Array[Node3D] = []
+@export var ik_targets : Array[SpringArm3D] = []
 @export var start_positions : Array[Vector3] = []
 @export var phase_offsets : Array[float] = [0.0, 0.5, 0.5, 0.0]
 @export var speed_min : float = 0.25
@@ -54,9 +54,11 @@ func _process(delta: float) -> void:
 		var s := wrapf(sample + phase_offsets[i], 0, 1)
 		var lift = lerpf(lift_min.sample(s), lift_max.sample(s), weight) * (arm_lift_scale if i >= 2 else 1)
 		var stretch = lerpf(stretch_min.sample(s), stretch_max.sample(s), weight) * (arm_stretch_scale if i >= 2 else 1)
-		var aniso = Vector3.FORWARD.dot(local_vel.normalized())
+		var aniso = abs(Vector3.FORWARD.dot(local_vel.normalized()))
 		var animated_offset := Vector3(stretch * time_scale * (1 - aniso) * horizontal_scale, lift * time_scale, stretch * time_scale * aniso)
-		ik_targets[i].position = start_positions[i] + animated_offset * pose_blend
+		var target_pos := (start_positions[i] + animated_offset * pose_blend)
+		ik_targets[i].look_at(to_global(target_pos), to_global(Vector3.UP), true)
+		ik_targets[i].spring_length = ik_targets[i].global_position.distance_to(to_global(target_pos))
 
 func _apply_gravity_counter_rotation(delta: float) -> void:
 	var parent_node := get_parent()
