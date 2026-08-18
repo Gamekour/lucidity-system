@@ -64,6 +64,11 @@ func _physics_process(_delta: float) -> void:
 	var gravity_vec : Vector3 = get_gravity()
 	var up_dir : Vector3 = _get_up_direction(gravity_vec).normalized()
 	current_up_dir = up_dir
+	
+	var base_right := up_dir.cross(global_basis.z).normalized()
+	print(up_dir)
+	var shapecast_basis := Basis(base_right, up_dir, global_basis.z.normalized())
+	shapecast.global_basis = shapecast_basis.orthonormalized()
 
 	var input_vector := Input.get_vector("move_left", "move_right", "move_back", "move_forward")
 	var input_3d := _get_camera_relative_input(up_dir, input_vector)
