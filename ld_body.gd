@@ -31,6 +31,8 @@ class_name PhysicsPlayerController
 @export var body_turn_input_deadzone : float = 0.15
 @export var camera_tilt_smoothing : float = 10.0
 @export var body_turn_sideways_deadzone: float = deg_to_rad(15.0)
+@export_range(-90.0, 90.0, 0.5, "radians_as_degrees") var min_camera_pitch : float = deg_to_rad(-85.0)
+@export_range(-90.0, 90.0, 0.5, "radians_as_degrees") var max_camera_pitch : float = deg_to_rad(85.0)
 
 var stance_height : float = 0
 var target_angle_horizontal : float = 0
@@ -121,7 +123,7 @@ func _process(delta: float) -> void:
 func _input(event: InputEvent) -> void:
 	if event is InputEventMouseMotion:
 		target_angle_horizontal = wrapf(target_angle_horizontal - event.relative.x * get_process_delta_time() * sens.x, -PI, PI)
-		camera_pitch = wrapf(camera_pitch - event.relative.y * get_process_delta_time() * sens.y, -PI, PI)
+		camera_pitch = clampf(camera_pitch - event.relative.y * get_process_delta_time() * sens.y, min_camera_pitch, max_camera_pitch)
 	if event is InputEventMouseButton:
 		if (event.is_pressed()):
 			if (event.button_index == MOUSE_BUTTON_WHEEL_UP):

@@ -4,6 +4,7 @@ class_name SkeletonOverlay
 @export var playermodel : PlayerModel
 @export var source_skeleton: Skeleton3D
 @export var target_skeleton: Skeleton3D
+@export var cam_ref : Node3D
 @export var IK_mods_disable : Array[IKModifier3D]
 @export var IK_mods_disable_LH : Array[IKModifier3D]
 @export var bone_mask: PackedStringArray
@@ -15,7 +16,37 @@ class_name SkeletonOverlay
 		mirror_axis = value
 		_mask_dirty = true
 
+@export_group("Camera Aim")
+## Bone the camera-driven aim rotation is applied to (typically the chest/upper-spine bone).
+@export var chest_bone_name: String = "Chest"
+@export var camera_aim_active: bool = true
+@export_range(0.0, 1.0, 0.01) var camera_aim_weight: float = 1.0
+
+@export_subgroup("Pitch (look up / down)")
+@export var camera_aim_pitch_enabled: bool = true
+@export var camera_aim_pitch_axis: Vector3 = Vector3.RIGHT
+@export_range(-180.0, 180.0, 0.1) var camera_aim_pitch_offset: float = 0.0
+@export_range(-180.0, 180.0, 0.1) var camera_aim_pitch_clamp_min: float = -80.0
+@export_range(-180.0, 180.0, 0.1) var camera_aim_pitch_clamp_max: float = 80.0
+
+@export_subgroup("Yaw (turn left / right)")
+@export var camera_aim_yaw_enabled: bool = false
+@export var camera_aim_yaw_axis: Vector3 = Vector3.UP
+@export_range(-180.0, 180.0, 0.1) var camera_aim_yaw_offset: float = 0.0
+@export_range(-180.0, 180.0, 0.1) var camera_aim_yaw_clamp_min: float = -80.0
+@export_range(-180.0, 180.0, 0.1) var camera_aim_yaw_clamp_max: float = 80.0
+
+@export_subgroup("Roll (lean / tilt)")
+@export var camera_aim_roll_enabled: bool = false
+@export var camera_aim_roll_axis: Vector3 = Vector3.FORWARD
+@export_range(-180.0, 180.0, 0.1) var camera_aim_roll_offset: float = 0.0
+@export_range(-180.0, 180.0, 0.1) var camera_aim_roll_clamp_min: float = -80.0
+@export_range(-180.0, 180.0, 0.1) var camera_aim_roll_clamp_max: float = 80.0
+
 var _pairs: Array[Vector2i] = []
+var _chest_bone_idx: int = -1
+var _chest_in_overlay: bool = false
+var _chest_rest_rotation: Quaternion = Quaternion.IDENTITY
 var _mask_dirty: bool = true
 
 func _ready() -> void:
@@ -30,6 +61,7 @@ func _process(_delta: float) -> void:
 	if _mask_dirty:
 		_rebuild_pairs()
 	_apply_overlay()
+	_apply_camera_aim()
 
 func _apply_overlay() -> void:
 	var active_disable_list = IK_mods_disable_LH if playermodel.left_handed else IK_mods_disable
@@ -47,10 +79,57 @@ func _apply_overlay() -> void:
 			var current_rot := target_skeleton.get_bone_pose_rotation(target_idx)
 			target_skeleton.set_bone_pose_rotation(target_idx, current_rot.slerp(source_rot, weight))
 
-## Mirrors a rotation quaternion across the plane perpendicular to mirror_axis.
-## For each axis, the component along that axis and w are kept; the other
-## two imaginary components are negated. This is the standard trick for
-## turning a "copy" of a pose into a true left/right mirror of it.
+func _apply_camera_aim() -> void:
+	if not camera_aim_active or camera_aim_weight <= 0.0:
+		return
+	if _chest_bone_idx == -1 or not is_instance_valid(cam_ref):
+		return
+	if not camera_aim_pitch_enabled and not camera_aim_yaw_enabled and not camera_aim_roll_enabled:
+		return
+
+	var base_rot: Quaternion
+	if _chest_in_overlay:
+		base_rot = target_skeleton.get_bone_pose_rotation(_chest_bone_idx)
+	else:
+		base_rot = _chest_rest_rotation
+
+	var skeleton_basis := target_skeleton.global_transform.basis.orthonormalized()
+	var cam_basis := cam_ref.global_transform.basis.orthonormalized()
+
+	var local_forward := skeleton_basis.inverse() * (-cam_basis.z)
+	var horizontal_len := Vector2(local_forward.x, local_forward.z).length()
+
+	var aim_rot := Quaternion.IDENTITY
+
+	if camera_aim_yaw_enabled:
+		var yaw_axis := camera_aim_yaw_axis.normalized()
+		if yaw_axis.length_squared() > 0.0:
+			var yaw_deg := rad_to_deg(atan2(local_forward.x, local_forward.z))
+			yaw_deg = clamp(yaw_deg + camera_aim_yaw_offset, camera_aim_yaw_clamp_min, camera_aim_yaw_clamp_max)
+			aim_rot = aim_rot * Quaternion(yaw_axis, deg_to_rad(yaw_deg))
+
+	if camera_aim_pitch_enabled:
+		var pitch_axis := camera_aim_pitch_axis.normalized()
+		if pitch_axis.length_squared() > 0.0:
+			var pitch_deg := -rad_to_deg(atan2(local_forward.y, horizontal_len))
+			pitch_deg = clamp(pitch_deg + camera_aim_pitch_offset, camera_aim_pitch_clamp_min, camera_aim_pitch_clamp_max)
+			aim_rot = aim_rot * Quaternion(pitch_axis, deg_to_rad(pitch_deg))
+
+	if camera_aim_roll_enabled:
+		var roll_axis := camera_aim_roll_axis.normalized()
+		if roll_axis.length_squared() > 0.0:
+			var local_up := skeleton_basis.inverse() * cam_basis.y
+			var roll_deg := rad_to_deg(atan2(local_up.x, local_up.y))
+			roll_deg = clamp(roll_deg + camera_aim_roll_offset, camera_aim_roll_clamp_min, camera_aim_roll_clamp_max)
+			aim_rot = aim_rot * Quaternion(roll_axis, deg_to_rad(roll_deg))
+
+	var new_rot := base_rot * aim_rot
+
+	if camera_aim_weight >= 1.0:
+		target_skeleton.set_bone_pose_rotation(_chest_bone_idx, new_rot)
+	else:
+		target_skeleton.set_bone_pose_rotation(_chest_bone_idx, base_rot.slerp(new_rot, camera_aim_weight))
+
 func _mirror_rotation(q: Quaternion) -> Quaternion:
 	match mirror_axis:
 		0: # X
@@ -61,9 +140,6 @@ func _mirror_rotation(q: Quaternion) -> Quaternion:
 			return Quaternion(-q.x, -q.y, q.z, q.w)
 	return q
 
-## Swaps "Left"/"Right" in a bone name for left_handed_mode source lookups.
-## Bones without a Left/Right prefix (e.g. spine, head) are returned unchanged
-## and still get their rotation mirrored (useful for e.g. mirrored lean/twist).
 func _mirror_bone_name(bone_name: String) -> String:
 	if bone_name.find("Left") != -1:
 		return bone_name.replace("Left", "Right")
@@ -76,6 +152,14 @@ func _rebuild_pairs() -> void:
 	_mask_dirty = false
 	if not is_instance_valid(source_skeleton) or not is_instance_valid(target_skeleton):
 		return
+
+	_chest_bone_idx = target_skeleton.find_bone(chest_bone_name)
+	_chest_in_overlay = false
+	if _chest_bone_idx == -1 and not chest_bone_name.is_empty():
+		push_warning("SkeletonOverlay: chest bone '%s' not found in target_skeleton" % chest_bone_name)
+	else:
+		_chest_rest_rotation = target_skeleton.get_bone_rest(_chest_bone_idx).basis.get_rotation_quaternion()
+
 	for bone_name in bone_mask:
 		var target_idx := target_skeleton.find_bone(_mirror_bone_name(bone_name) if playermodel.left_handed else bone_name)
 		if target_idx == -1:
@@ -88,6 +172,9 @@ func _rebuild_pairs() -> void:
 		if source_idx == -1:
 			push_warning("SkeletonOverlay: bone '%s' not found in source_skeleton" % source_bone_name)
 			continue
+
+		if target_idx == _chest_bone_idx:
+			_chest_in_overlay = true
 
 		_pairs.append(Vector2i(target_idx, source_idx))
 
@@ -124,6 +211,5 @@ func clear_mask() -> void:
 	bone_mask.clear()
 	_mask_dirty = true
 
-## Force a rebuild, e.g. after swapping source_skeleton/target_skeleton at runtime.
 func refresh() -> void:
 	_mask_dirty = true

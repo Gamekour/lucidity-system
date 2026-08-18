@@ -869,15 +869,16 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.48827994, 0.00030586164, -
 [node name="AnimationPlayer" parent="Body Block" index="1" unique_id=643565872]
 autoplay = &"mixamo_com"
 
-[node name="SkeletonOverlay" type="Node" parent="." unique_id=513702763 node_paths=PackedStringArray("playermodel", "source_skeleton", "target_skeleton", "IK_mods_disable", "IK_mods_disable_LH")]
+[node name="SkeletonOverlay" type="Node" parent="." unique_id=513702763 node_paths=PackedStringArray("playermodel", "source_skeleton", "target_skeleton", "cam_ref", "IK_mods_disable", "IK_mods_disable_LH")]
 script = ExtResource("7_8pr8v")
 playermodel = NodePath("../PhysicsPlayerController/playermodel/Armature/GeneralSkeleton")
 source_skeleton = NodePath("../Body Block/GeneralSkeleton")
 target_skeleton = NodePath("../PhysicsPlayerController/playermodel/Armature/GeneralSkeleton")
+cam_ref = NodePath("../PhysicsPlayerController/cam_spring")
 IK_mods_disable = [NodePath("../PhysicsPlayerController/playermodel/Armature/GeneralSkeleton/IK_RH")]
 IK_mods_disable_LH = [NodePath("../PhysicsPlayerController/playermodel/Armature/GeneralSkeleton/IK_LH")]
 bone_mask = PackedStringArray("RightUpperArm", "RightLowerArm", "RightHand")
-active = false
+camera_aim_yaw_enabled = true
 metadata/_custom_type_script = "uid://c8qyp1ubjxh1u"
 
 [editable path="Body Block"]
