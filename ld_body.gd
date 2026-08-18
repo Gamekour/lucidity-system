@@ -33,6 +33,9 @@ class_name PhysicsPlayerController
 @export var body_turn_sideways_deadzone: float = deg_to_rad(15.0)
 @export_range(-90.0, 90.0, 0.5, "radians_as_degrees") var min_camera_pitch : float = deg_to_rad(-85.0)
 @export_range(-90.0, 90.0, 0.5, "radians_as_degrees") var max_camera_pitch : float = deg_to_rad(85.0)
+@export var slope_correction : float = 1.0
+@export var slope_correction_damping : float = 0.0
+@export var slope_stance_height_scale : float = 0.5
 
 var stance_height : float = 0
 var target_angle_horizontal : float = 0
@@ -52,12 +55,12 @@ var stance_height_scale : float = 1.0
 
 var current_up_dir : Vector3 = Vector3.UP
 var camera_up_dir : Vector3 = Vector3.UP
+var current_dot : float = 0.0
 
 func _ready() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
 func _physics_process(_delta: float) -> void:
-	
 	var gravity_vec : Vector3 = get_gravity()
 	var up_dir : Vector3 = _get_up_direction(gravity_vec).normalized()
 	current_up_dir = up_dir
@@ -73,13 +76,23 @@ func _physics_process(_delta: float) -> void:
 	var grounded := shapecast.is_colliding()
 	if grounded:
 		slope_normal = shapecast.get_collision_normal(0)
+		current_dot = up_dir.dot(slope_normal)
 
 	var gravity_magnitude : float = gravity_vec.length()
 	var normal_force := mass * gravity_magnitude * slope_normal.dot(up_dir)
 	var friction_budget := maxf(normal_force, 0.0) * friction_coefficient * friction_coefficient_scale
 
 	var flat_velocity := linear_velocity - linear_velocity.project(up_dir)
-	var accel = (target_force - (flat_velocity * mass)) * (acceleration * acceleration_scale if grounded else air_acceleration * air_acceleration_scale)
+	var gravity_tangent := gravity_vec - slope_normal * gravity_vec.dot(slope_normal)
+
+	var slope_correction_force := gravity_tangent * mass * slope_correction
+	var gravity_tangent_length := gravity_tangent.length()
+	if gravity_tangent_length > 0.0001:
+		var gravity_tangent_dir := gravity_tangent / gravity_tangent_length
+		var velocity_along_slope := flat_velocity.dot(gravity_tangent_dir)
+		slope_correction_force += gravity_tangent_dir * velocity_along_slope * mass * slope_correction_damping * (1 - current_dot)
+
+	var accel = (target_force - (flat_velocity * mass) - slope_correction_force) * (acceleration * acceleration_scale if grounded else air_acceleration * air_acceleration_scale)
 	var force = accel.limit_length(friction_budget)
 	apply_force(force)
 
@@ -101,6 +114,7 @@ func _physics_process(_delta: float) -> void:
 	if grounded:
 		stance_height = crawl_height if Input.is_action_pressed("crawl") else crouch_height if Input.is_action_pressed("crouch") else jump_height * jump_height_scale if Input.is_action_pressed("jump") else 1.0
 		stance_height *= stance_height_scale
+		stance_height -= (1 - current_dot) * slope_stance_height_scale
 		var current_distance : float = shapecast.get_closest_collision_safe_fraction() * abs(shapecast.target_position.y)
 		var ride_height = abs(shapecast.target_position.y) + ride_height_offset
 		var displacement : float = (stance_height * ride_height) - current_distance

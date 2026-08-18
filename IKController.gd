@@ -19,7 +19,7 @@ class_name WalkIKController
 @export var stance_height_bob_max : Curve
 @export var level_speed : float = 10.0
 @export var horizontal_scale : float = 0.5
-@export var left_handed : float = false
+@export var lift_slope_boost : float = 1.0
 
 ## Below this speed the controller is considered "idle" and will ease back to rest pose.
 @export var idle_speed_threshold : float = 0.05
@@ -53,7 +53,8 @@ func _process(delta: float) -> void:
 	var time_scale := absf(legs.target_position.y)
 	for i in ik_targets.size():
 		var s := wrapf(sample + phase_offsets[i], 0, 1)
-		var lift = lerpf(lift_min.sample(s), lift_max.sample(s), weight) * (arm_lift_scale if i >= 2 else 1)
+		var lift_slope_scale := (2 - body.current_dot) * lift_slope_boost
+		var lift = lerpf(lift_min.sample(s), lift_max.sample(s), weight) * lift_slope_scale * (arm_lift_scale if i >= 2 else 1)
 		var stretch = lerpf(stretch_min.sample(s), stretch_max.sample(s), weight) * (arm_stretch_scale if i >= 2 else 1)
 		var aniso = abs(Vector3.FORWARD.dot(local_vel.normalized()))
 		var animated_offset := Vector3(stretch * time_scale * (1 - aniso) * horizontal_scale, lift * time_scale, stretch * time_scale * aniso)
