@@ -19,6 +19,7 @@ class_name WalkIKController
 @export var stance_height_bob_max : Curve
 @export var level_speed : float = 10.0
 @export var horizontal_scale : float = 0.5
+@export var left_handed : float = false
 
 ## Below this speed the controller is considered "idle" and will ease back to rest pose.
 @export var idle_speed_threshold : float = 0.05

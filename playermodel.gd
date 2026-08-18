@@ -1,5 +1,7 @@
 extends Skeleton3D
+class_name PlayerModel
 
+@export var left_handed : bool = false
 @export var cam_spring : SpringArm3D
 @export var fp_deadzone : float = 0.05
 @export var head_bone_name : String = "Head"
