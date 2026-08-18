@@ -6,7 +6,7 @@ class_name SkeletonOverlay
 @export var target_skeleton: Skeleton3D
 @export var IK_mods_disable : Array[IKModifier3D]
 @export var IK_mods_disable_LH : Array[IKModifier3D]
-@export var bone_mask: PackedStringArray = []
+@export var bone_mask: PackedStringArray
 @export_range(0.0, 1.0, 0.01) var weight: float = 1.0
 @export var active: bool = true
 
