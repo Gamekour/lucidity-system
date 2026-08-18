@@ -886,7 +886,6 @@ cam_ref = NodePath("../PhysicsPlayerController/cam_spring")
 IK_mods_disable = [NodePath("../PhysicsPlayerController/playermodel/Armature/GeneralSkeleton/IK_RH")]
 IK_mods_disable_LH = [NodePath("../PhysicsPlayerController/playermodel/Armature/GeneralSkeleton/IK_LH")]
 bone_mask = PackedStringArray("RightUpperArm", "RightLowerArm", "RightHand")
-active = false
 camera_aim_yaw_enabled = true
 metadata/_custom_type_script = "uid://c8qyp1ubjxh1u"
 

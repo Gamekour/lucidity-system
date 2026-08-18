@@ -17,8 +17,13 @@ class_name SkeletonOverlay
 		_mask_dirty = true
 
 @export_group("Camera Aim")
-## Bone the camera-driven aim rotation is applied to (typically the chest/upper-spine bone).
-@export var chest_bone_name: String = "Chest"
+## Bones the camera-driven aim rotation is applied to (e.g. chest/upper-spine bone).
+## These may overlap with bone_mask: when they do, the aim rotation is applied
+## as an offset on top of the copied source pose rotation instead of the rest pose.
+@export var camera_aim_bone_names: PackedStringArray = ["RightUpperArm", "LeftUpperArm"]:
+	set(value):
+		camera_aim_bone_names = value
+		_mask_dirty = true
 @export var camera_aim_active: bool = true
 @export_range(0.0, 1.0, 0.01) var camera_aim_weight: float = 1.0
 
@@ -44,9 +49,12 @@ class_name SkeletonOverlay
 @export_range(-180.0, 180.0, 0.1) var camera_aim_roll_clamp_max: float = 80.0
 
 var _pairs: Array[Vector2i] = []
-var _chest_bone_idx: int = -1
-var _chest_in_overlay: bool = false
-var _chest_rest_rotation: Quaternion = Quaternion.IDENTITY
+
+# One entry per resolved camera-aim bone:
+#   "idx"       -> bone index in target_skeleton
+#   "in_overlay"-> true if this bone is also driven by bone_mask (copied pose this frame)
+var _aim_bone_data: Array[Dictionary] = []
+
 var _mask_dirty: bool = true
 
 func _ready() -> void:
@@ -82,17 +90,49 @@ func _apply_overlay() -> void:
 func _apply_camera_aim() -> void:
 	if not camera_aim_active or camera_aim_weight <= 0.0:
 		return
-	if _chest_bone_idx == -1 or not is_instance_valid(cam_ref):
+	if _aim_bone_data.is_empty() or not is_instance_valid(cam_ref):
 		return
 	if not camera_aim_pitch_enabled and not camera_aim_yaw_enabled and not camera_aim_roll_enabled:
 		return
 
-	var base_rot: Quaternion
-	if _chest_in_overlay:
-		base_rot = target_skeleton.get_bone_pose_rotation(_chest_bone_idx)
-	else:
-		base_rot = _chest_rest_rotation
+	var aim_rot := _compute_aim_rotation()
+	var aim_basis := Basis(aim_rot)
 
+	for data in _aim_bone_data:
+		var idx: int = data["idx"]
+		var in_overlay: bool = data["in_overlay"]
+
+		if not in_overlay:
+			# Not refreshed by _apply_overlay this frame - reset to a clean rest-relative
+			# pose first so the aim offset doesn't compound frame after frame.
+			target_skeleton.set_bone_pose_rotation(idx, Quaternion.IDENTITY)
+
+		var base_pose_rot := target_skeleton.get_bone_pose_rotation(idx)
+
+		# Current orientation of the bone in skeleton-local space (matches the frame
+		# aim_rot was computed in), including rest pose + parent chain + current pose.
+		var current_global_basis := target_skeleton.get_bone_global_pose(idx).basis
+		var desired_global_basis := aim_basis * current_global_basis
+
+		# Convert the desired skeleton-space orientation back into this bone's own
+		# local pose space (relative to its parent and its own rest orientation),
+		# instead of assuming world axes line up with the bone's local axes.
+		var parent_idx := target_skeleton.get_bone_parent(idx)
+		var parent_global_basis := Basis.IDENTITY if parent_idx == -1 else target_skeleton.get_bone_global_pose(parent_idx).basis
+		var rest_basis := target_skeleton.get_bone_rest(idx).basis
+
+		var new_pose_basis := rest_basis.inverse() * parent_global_basis.inverse() * desired_global_basis
+		var new_pose_rot := new_pose_basis.orthonormalized().get_rotation_quaternion()
+
+		if camera_aim_weight >= 1.0:
+			target_skeleton.set_bone_pose_rotation(idx, new_pose_rot)
+		else:
+			target_skeleton.set_bone_pose_rotation(idx, base_pose_rot.slerp(new_pose_rot, camera_aim_weight))
+
+## Computes the camera-driven aim offset rotation (pitch/yaw/roll) relative to
+## the target skeleton's orientation. This is the same for every aim bone;
+## it's applied as an offset on top of each bone's own base rotation.
+func _compute_aim_rotation() -> Quaternion:
 	var skeleton_basis := target_skeleton.global_transform.basis.orthonormalized()
 	var cam_basis := cam_ref.global_transform.basis.orthonormalized()
 
@@ -106,14 +146,14 @@ func _apply_camera_aim() -> void:
 		if yaw_axis.length_squared() > 0.0:
 			var yaw_deg := rad_to_deg(atan2(local_forward.x, local_forward.z))
 			yaw_deg = clamp(yaw_deg + camera_aim_yaw_offset, camera_aim_yaw_clamp_min, camera_aim_yaw_clamp_max)
-			aim_rot = aim_rot * Quaternion(yaw_axis, deg_to_rad(yaw_deg))
+			aim_rot = aim_rot * Quaternion(yaw_axis, deg_to_rad(-yaw_deg))
 
 	if camera_aim_pitch_enabled:
 		var pitch_axis := camera_aim_pitch_axis.normalized()
 		if pitch_axis.length_squared() > 0.0:
 			var pitch_deg := -rad_to_deg(atan2(local_forward.y, horizontal_len))
 			pitch_deg = clamp(pitch_deg + camera_aim_pitch_offset, camera_aim_pitch_clamp_min, camera_aim_pitch_clamp_max)
-			aim_rot = aim_rot * Quaternion(pitch_axis, deg_to_rad(pitch_deg))
+			aim_rot = aim_rot * Quaternion(pitch_axis, deg_to_rad(pitch_deg + 180))
 
 	if camera_aim_roll_enabled:
 		var roll_axis := camera_aim_roll_axis.normalized()
@@ -123,12 +163,7 @@ func _apply_camera_aim() -> void:
 			roll_deg = clamp(roll_deg + camera_aim_roll_offset, camera_aim_roll_clamp_min, camera_aim_roll_clamp_max)
 			aim_rot = aim_rot * Quaternion(roll_axis, deg_to_rad(roll_deg))
 
-	var new_rot := base_rot * aim_rot
-
-	if camera_aim_weight >= 1.0:
-		target_skeleton.set_bone_pose_rotation(_chest_bone_idx, new_rot)
-	else:
-		target_skeleton.set_bone_pose_rotation(_chest_bone_idx, base_rot.slerp(new_rot, camera_aim_weight))
+	return aim_rot
 
 func _mirror_rotation(q: Quaternion) -> Quaternion:
 	match mirror_axis:
@@ -149,16 +184,10 @@ func _mirror_bone_name(bone_name: String) -> String:
 
 func _rebuild_pairs() -> void:
 	_pairs.clear()
+	_aim_bone_data.clear()
 	_mask_dirty = false
 	if not is_instance_valid(source_skeleton) or not is_instance_valid(target_skeleton):
 		return
-
-	_chest_bone_idx = target_skeleton.find_bone(chest_bone_name)
-	_chest_in_overlay = false
-	if _chest_bone_idx == -1 and not chest_bone_name.is_empty():
-		push_warning("SkeletonOverlay: chest bone '%s' not found in target_skeleton" % chest_bone_name)
-	else:
-		_chest_rest_rotation = target_skeleton.get_bone_rest(_chest_bone_idx).basis.get_rotation_quaternion()
 
 	for bone_name in bone_mask:
 		var target_idx := target_skeleton.find_bone(_mirror_bone_name(bone_name) if playermodel.left_handed else bone_name)
@@ -173,10 +202,23 @@ func _rebuild_pairs() -> void:
 			push_warning("SkeletonOverlay: bone '%s' not found in source_skeleton" % source_bone_name)
 			continue
 
-		if target_idx == _chest_bone_idx:
-			_chest_in_overlay = true
-
 		_pairs.append(Vector2i(target_idx, source_idx))
+
+	for bone_name in camera_aim_bone_names:
+		var resolved_name := _mirror_bone_name(bone_name) if playermodel.left_handed else bone_name
+		var idx := target_skeleton.find_bone(resolved_name)
+		if idx == -1:
+			if not bone_name.is_empty():
+				push_warning("SkeletonOverlay: camera aim bone '%s' not found in target_skeleton" % bone_name)
+			continue
+
+		var in_overlay := false
+		for pair in _pairs:
+			if pair.x == idx:
+				in_overlay = true
+				break
+
+		_aim_bone_data.append({"idx": idx, "in_overlay": in_overlay})
 
 func enable_bone(bone_name: String) -> void:
 	if bone_name not in bone_mask:
@@ -209,6 +251,26 @@ func set_mask(bone_names: PackedStringArray) -> void:
 
 func clear_mask() -> void:
 	bone_mask.clear()
+	_mask_dirty = true
+
+## Camera-aim bone list management, mirrors the bone_mask helpers above.
+func enable_camera_aim_bone(bone_name: String) -> void:
+	if bone_name not in camera_aim_bone_names:
+		camera_aim_bone_names.append(bone_name)
+		_mask_dirty = true
+
+func disable_camera_aim_bone(bone_name: String) -> void:
+	var idx := camera_aim_bone_names.find(bone_name)
+	if idx != -1:
+		camera_aim_bone_names.remove_at(idx)
+		_mask_dirty = true
+
+func set_camera_aim_bones(bone_names: PackedStringArray) -> void:
+	camera_aim_bone_names = bone_names
+	_mask_dirty = true
+
+func clear_camera_aim_bones() -> void:
+	camera_aim_bone_names.clear()
 	_mask_dirty = true
 
 func refresh() -> void:
