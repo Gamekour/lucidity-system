@@ -83,7 +83,6 @@ func _physics_process(delta: float) -> void:
 	var max_speed = max(lerpf(crouch_speed * roll_force, roll_force * sprint_multiplier * sprint_multiplier_scale, min(stance_height / speed_stance_stop, 1)), 0)
 	crouch_jump = Input.is_action_pressed("jump") && Input.is_action_pressed("crouch")
 	
-	# 1. EVALUATE GROUNDING & FLOOR VELOCITY FIRST
 	var slope_normal := up_dir
 	var floor_velocity := Vector3.ZERO
 	
@@ -106,7 +105,7 @@ func _physics_process(delta: float) -> void:
 		last_floor_point = current_floor_point
 		last_floor_offset = current_floor_node.to_local(current_floor_point)
 	else:
-		last_floor_node = null # Clears the floor node to prevent massive velocity spikes if you jump and land on the same platform later
+		last_floor_node = null
 
 	var speed = min(roll_force * roll_force_scale * (sprint_multiplier * sprint_multiplier_scale if (sprinting || crouch_jump) and shapecast.is_colliding() else 1.0), max_speed)
 	var virtual_torque = input_3d * speed
@@ -116,7 +115,6 @@ func _physics_process(delta: float) -> void:
 	var normal_force := mass * gravity_magnitude * slope_normal.dot(up_dir)
 	var friction_budget := maxf(normal_force, 0.0) * friction_coefficient * friction_coefficient_scale
 
-	# 2. MAKE MOVEMENT RELATIVE TO THE FLOOR
 	relative_velocity = linear_velocity - floor_velocity
 	var flat_velocity := relative_velocity - relative_velocity.project(up_dir)
 	var gravity_tangent := gravity_vec - slope_normal * gravity_vec.dot(slope_normal)
@@ -130,7 +128,6 @@ func _physics_process(delta: float) -> void:
 
 	var accel : Vector3
 	if grounded:
-		# Friction will now naturally drag the player to match the floor's velocity
 		accel = (target_force - (flat_velocity * mass) - slope_correction_force) * (acceleration * acceleration_scale) * (sprint_multiplier * sprint_multiplier_scale if sprinting || crouch_jump else 1)
 	else:
 		accel = _get_air_accel(target_force, flat_velocity, air_acceleration * air_acceleration_scale)
@@ -160,15 +157,11 @@ func _physics_process(delta: float) -> void:
 		var ride_height = abs(shapecast.target_position.y) + ride_height_offset
 		var displacement : float = (stance_height * ride_height) - current_distance
 		
-		# 3. MAKE DAMPING RELATIVE TO THE FLOOR
-		# This prevents the spring from fighting the platform's vertical movement (elevators)
 		var normal_velocity : float = relative_velocity.dot(slope_normal)
 		var spring_magnitude : float = displacement * spring_strength * spring_strength_scale - normal_velocity * spring_damping * spring_damping_scale
 		var spring_force : Vector3 = slope_normal * spring_magnitude
 		force += spring_force
 		
-	# 4. REMOVED direct floor_movement addition. 
-	# Because 'force' is now calculated relative to the floor, it already contains the perfect forces required.
 	apply_force(force, shapecast.position)
 
 func _process(delta: float) -> void:
