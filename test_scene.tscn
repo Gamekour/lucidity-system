@@ -290,6 +290,10 @@ size = Vector3(2, 1, 3)
 [sub_resource type="BoxMesh" id="BoxMesh_sb6tq"]
 size = Vector3(2, 1, 3)
 
+[sub_resource type="BoxShape3D" id="BoxShape3D_ie5li"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_wb0og"]
+
 [node name="Test Scene" type="Node3D" unique_id=667831700]
 
 [node name="PhysicsPlayerController" type="RigidBody3D" parent="." unique_id=290065418 node_paths=PackedStringArray("camera", "cam_spring", "shapecast")]
@@ -927,5 +931,14 @@ shape = SubResource("BoxShape3D_sb6tq")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="StaticBody3D4" unique_id=461989262]
 mesh = SubResource("BoxMesh_sb6tq")
+
+[node name="test_box" type="RigidBody3D" parent="." unique_id=1938987854]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.718382, 0.609126, 4.7683716e-07)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="test_box" unique_id=1091314629]
+shape = SubResource("BoxShape3D_ie5li")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="test_box" unique_id=1853692680]
+mesh = SubResource("BoxMesh_wb0og")
 
 [editable path="Body Block"]

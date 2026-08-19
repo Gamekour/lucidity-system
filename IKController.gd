@@ -38,7 +38,8 @@ func _process(delta: float) -> void:
 	var local_vel := body.global_basis.inverse() * body.linear_velocity
 	local_vel.y = 0
 	var vel_length := local_vel.length()
-	var polarity : float = 1 if local_vel.z < 0 else -1
+	var current_angle : float = (-body.global_basis.z).signed_angle_to(body.linear_velocity, body.current_up_dir)
+	var polarity : float = 1 if current_angle > deg_to_rad(-80) && current_angle < deg_to_rad(100) else -1
 	var weight = clampf(remap(vel_length, min_speed, max_speed, 0, 1), 0, 1)
 	var speed = lerpf(speed_min, speed_max, weight)
 	sample = wrapf(sample + delta * polarity * -vel_length * speed, 0, 1)

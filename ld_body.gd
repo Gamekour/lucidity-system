@@ -69,7 +69,6 @@ func _physics_process(_delta: float) -> void:
 	current_up_dir = up_dir
 	
 	var base_right := up_dir.cross(global_basis.z).normalized()
-	print(up_dir)
 	var shapecast_basis := Basis(base_right, up_dir, global_basis.z.normalized())
 	shapecast.global_basis = shapecast_basis.orthonormalized()
 
@@ -107,10 +106,6 @@ func _physics_process(_delta: float) -> void:
 	if grounded:
 		accel = (target_force - (flat_velocity * mass) - slope_correction_force) * (acceleration * acceleration_scale) * (sprint_multiplier * sprint_multiplier_scale if sprinting || crouch_jump else 1)
 	else:
-		# Source-engine style air strafing: only add speed towards the wish
-		# direction, and only up to the wish speed. Never bleed off existing
-		# velocity (in the wish direction or otherwise) the way the grounded
-		# PD-controller above does.
 		accel = _get_air_accel(target_force, flat_velocity, air_acceleration * air_acceleration_scale)
 	var force = accel.limit_length(friction_budget)
 	apply_force(force)
@@ -169,10 +164,8 @@ func _safe_slerp_up(from: Vector3, to: Vector3, weight: float) -> Vector3:
 	from = from.normalized()
 	to = to.normalized()
 	var dot := clampf(from.dot(to), -1.0, 1.0)
-	# Near-parallel: cross product is too small to give a reliable axis, so lerp instead.
 	if dot > 0.9995:
 		return from.lerp(to, weight).normalized()
-	# Near-opposite: pick any axis perpendicular to `from` to rotate around.
 	if dot < -0.9995:
 		var arbitrary := Vector3.RIGHT if abs(from.x) < 0.9 else Vector3.UP
 		var axis := from.cross(arbitrary).normalized()
@@ -226,8 +219,6 @@ func _get_body_target_angle(input_vector: Vector2) -> float:
 	
 	var move_yaw_offset := atan2(input_vector.x, input_vector.y)
 	
-	# Check "how sideways" using the raw angle, before the backward-fold below.
-	# Raw angle is symmetric: PI/2 = right, -PI/2 = left, 0 = forward, ±PI = backward.
 	if absf(absf(move_yaw_offset) - (PI / 2.0)) < body_turn_sideways_deadzone:
 		return target_angle_horizontal
 	
@@ -240,9 +231,6 @@ func _get_body_target_angle(input_vector: Vector2) -> float:
 	return wrapf(target_angle_horizontal - move_yaw_offset, -PI, PI)
 
 func _get_air_accel(target_force: Vector3, flat_velocity: Vector3, accel_strength: float) -> Vector3:
-	# Source-engine air strafing model, expressed in force-space so it plugs
-	# into the same apply_force pipeline the grounded controller uses.
-	# `target_force / mass` is the wish velocity implied by the input this frame.
 	var wish_velocity := target_force / mass
 	var wishspeed := wish_velocity.length()
 	if wishspeed < 0.0001 or accel_strength <= 0.0:
@@ -252,13 +240,8 @@ func _get_air_accel(target_force: Vector3, flat_velocity: Vector3, accel_strengt
 	var current_speed := flat_velocity.dot(wishdir)
 	var add_speed := wishspeed - current_speed
 	if add_speed <= 0.0:
-		# Already moving at or beyond wishspeed along wishdir - source engine
-		# applies no acceleration here and, crucially, does not touch any
-		# other component of velocity either.
 		return Vector3.ZERO
 
-	# Only ever pushes along wishdir, and only ever adds speed (never removes
-	# it), unlike the grounded (target_force - flat_velocity*mass) controller.
 	return wishdir * (add_speed * mass * accel_strength)
 
 func _get_lean_target_up(up_dir: Vector3, lean_input: Vector3) -> Vector3:
