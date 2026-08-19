@@ -1,5 +1,6 @@
 extends RigidBody3D
 class_name PhysicsPlayerController
+
 @export var camera : Camera3D
 @export var cam_spring : SpringArm3D
 @export var shapecast : ShapeCast3D
@@ -38,6 +39,7 @@ class_name PhysicsPlayerController
 @export var slope_stance_height_scale : float = 0.5
 @export var speed_stance_stop : float = 0.6
 
+var relative_velocity : Vector3 = Vector3.ZERO
 var stance_height : float = 0
 var target_angle_horizontal : float = 0
 var camera_pitch : float = 0.0
@@ -60,10 +62,14 @@ var current_up_dir : Vector3 = Vector3.UP
 var camera_up_dir : Vector3 = Vector3.UP
 var current_dot : float = 0.0
 
+var last_floor_offset := Vector3.ZERO
+var last_floor_point := Vector3.ZERO
+var last_floor_node : Node3D
+
 func _ready() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
-func _physics_process(_delta: float) -> void:
+func _physics_process(delta: float) -> void:
 	var gravity_vec : Vector3 = get_gravity()
 	var up_dir : Vector3 = _get_up_direction(gravity_vec).normalized()
 	current_up_dir = up_dir
@@ -76,23 +82,43 @@ func _physics_process(_delta: float) -> void:
 	var input_3d := _get_camera_relative_input(up_dir, input_vector)
 	var max_speed = max(lerpf(crouch_speed * roll_force, roll_force * sprint_multiplier * sprint_multiplier_scale, min(stance_height / speed_stance_stop, 1)), 0)
 	crouch_jump = Input.is_action_pressed("jump") && Input.is_action_pressed("crouch")
-	var speed = min(roll_force * roll_force_scale * (sprint_multiplier * sprint_multiplier_scale if (sprinting || crouch_jump) and shapecast.is_colliding() else 1.0), max_speed)
-	var virtual_torque = input_3d * speed
-	var target_force = up_dir.cross(virtual_torque) / (shapecast.shape as SphereShape3D).radius
-
+	
+	# 1. EVALUATE GROUNDING & FLOOR VELOCITY FIRST
 	var slope_normal := up_dir
+	var floor_velocity := Vector3.ZERO
+	
 	grounded = shapecast.is_colliding()
 	if (crouch_jump):
 		grounded = grounded && shapecast.get_closest_collision_safe_fraction() <= 0.5
+		
 	if grounded:
 		slope_normal = shapecast.get_collision_normal(0)
 		current_dot = up_dir.dot(slope_normal)
+		
+		var current_floor_node = shapecast.get_collider(0)
+		var current_floor_point = shapecast.get_collision_point(0)
+		
+		if current_floor_node == last_floor_node:
+			var floor_movement = (last_floor_node as Node3D).to_global(last_floor_offset) - last_floor_point
+			floor_velocity = floor_movement / delta
+			
+		last_floor_node = current_floor_node
+		last_floor_point = current_floor_point
+		last_floor_offset = current_floor_node.to_local(current_floor_point)
+	else:
+		last_floor_node = null # Clears the floor node to prevent massive velocity spikes if you jump and land on the same platform later
+
+	var speed = min(roll_force * roll_force_scale * (sprint_multiplier * sprint_multiplier_scale if (sprinting || crouch_jump) and shapecast.is_colliding() else 1.0), max_speed)
+	var virtual_torque = input_3d * speed
+	var target_force = up_dir.cross(virtual_torque) / (shapecast.shape as SphereShape3D).radius
 
 	var gravity_magnitude : float = gravity_vec.length()
 	var normal_force := mass * gravity_magnitude * slope_normal.dot(up_dir)
 	var friction_budget := maxf(normal_force, 0.0) * friction_coefficient * friction_coefficient_scale
 
-	var flat_velocity := linear_velocity - linear_velocity.project(up_dir)
+	# 2. MAKE MOVEMENT RELATIVE TO THE FLOOR
+	relative_velocity = linear_velocity - floor_velocity
+	var flat_velocity := relative_velocity - relative_velocity.project(up_dir)
 	var gravity_tangent := gravity_vec - slope_normal * gravity_vec.dot(slope_normal)
 
 	var slope_correction_force := gravity_tangent * mass * slope_correction
@@ -104,11 +130,11 @@ func _physics_process(_delta: float) -> void:
 
 	var accel : Vector3
 	if grounded:
+		# Friction will now naturally drag the player to match the floor's velocity
 		accel = (target_force - (flat_velocity * mass) - slope_correction_force) * (acceleration * acceleration_scale) * (sprint_multiplier * sprint_multiplier_scale if sprinting || crouch_jump else 1)
 	else:
 		accel = _get_air_accel(target_force, flat_velocity, air_acceleration * air_acceleration_scale)
 	var force = accel.limit_length(friction_budget)
-	apply_force(force)
 
 	var current_yaw := _get_current_yaw(up_dir)
 	var body_target_angle := _get_body_target_angle(input_vector)
@@ -133,10 +159,17 @@ func _physics_process(_delta: float) -> void:
 		var current_distance : float = shapecast.get_closest_collision_safe_fraction() * abs(shapecast.target_position.y)
 		var ride_height = abs(shapecast.target_position.y) + ride_height_offset
 		var displacement : float = (stance_height * ride_height) - current_distance
-		var normal_velocity : float = linear_velocity.dot(slope_normal)
+		
+		# 3. MAKE DAMPING RELATIVE TO THE FLOOR
+		# This prevents the spring from fighting the platform's vertical movement (elevators)
+		var normal_velocity : float = relative_velocity.dot(slope_normal)
 		var spring_magnitude : float = displacement * spring_strength * spring_strength_scale - normal_velocity * spring_damping * spring_damping_scale
 		var spring_force : Vector3 = slope_normal * spring_magnitude
-		apply_force(spring_force, shapecast.position)
+		force += spring_force
+		
+	# 4. REMOVED direct floor_movement addition. 
+	# Because 'force' is now calculated relative to the floor, it already contains the perfect forces required.
+	apply_force(force, shapecast.position)
 
 func _process(delta: float) -> void:
 	sprinting = Input.is_action_pressed("sprint")

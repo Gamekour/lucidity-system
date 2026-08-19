@@ -8,6 +8,7 @@
 [ext_resource type="Script" uid="uid://uwl2prsk3to" path="res://bone_root.gd" id="5_7cbxl"]
 [ext_resource type="Script" uid="uid://c8qyp1ubjxh1u" path="res://skeleton_overlay.gd" id="7_8pr8v"]
 [ext_resource type="PackedScene" uid="uid://b0krsjxwwhf65" path="res://Body Block.fbx" id="8_buypi"]
+[ext_resource type="Material" uid="uid://dnm5ak0rw2pxe" path="res://debug_mat.tres" id="9_njel3"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_ia1lp"]
 radius = 0.1
@@ -291,8 +292,10 @@ size = Vector3(2, 1, 3)
 size = Vector3(2, 1, 3)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_ie5li"]
+size = Vector3(5, 0.5, 5)
 
 [sub_resource type="BoxMesh" id="BoxMesh_wb0og"]
+size = Vector3(5, 0.5, 5)
 
 [node name="Test Scene" type="Node3D" unique_id=667831700]
 
@@ -300,6 +303,7 @@ size = Vector3(2, 1, 3)
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.8937, 3.3830867, 4.137167)
 collision_layer = 2
 mass = 69.0
+linear_damp_mode = 1
 script = ExtResource("1_ia1lp")
 camera = NodePath("cam_spring/Camera3D")
 cam_spring = NodePath("cam_spring")
@@ -933,12 +937,38 @@ shape = SubResource("BoxShape3D_sb6tq")
 mesh = SubResource("BoxMesh_sb6tq")
 
 [node name="test_box" type="RigidBody3D" parent="." unique_id=1938987854]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.718382, 0.609126, 4.7683716e-07)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.2648554, 0.6091262, -3.2850118)
+axis_lock_linear_y = true
+axis_lock_linear_z = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+axis_lock_angular_z = true
+linear_damp = 100.0
+constant_force = Vector3(100, 0, 0)
+constant_torque = Vector3(0, 100, 0)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="test_box" unique_id=1091314629]
 shape = SubResource("BoxShape3D_ie5li")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="test_box" unique_id=1853692680]
 mesh = SubResource("BoxMesh_wb0og")
+surface_material_override/0 = ExtResource("9_njel3")
+
+[node name="test_box2" type="RigidBody3D" parent="." unique_id=1164293210]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18.874273, -0.65916336, -62.872963)
+axis_lock_linear_x = true
+axis_lock_linear_y = true
+axis_lock_angular_x = true
+axis_lock_angular_y = true
+axis_lock_angular_z = true
+linear_damp = 100.0
+constant_force = Vector3(0, 0, 500)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="test_box2" unique_id=1285482729]
+shape = SubResource("BoxShape3D_ie5li")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="test_box2" unique_id=1778064053]
+mesh = SubResource("BoxMesh_wb0og")
+surface_material_override/0 = ExtResource("9_njel3")
 
 [editable path="Body Block"]
