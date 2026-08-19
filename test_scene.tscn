@@ -31,12 +31,12 @@ point_count = 4
 
 [sub_resource type="Curve" id="Curve_2nij2"]
 _limits = [0.0, 0.5, 0.0, 1.0]
-_data = [Vector2(0, 0), 0.0, 3.150794, 0, 0, Vector2(0.50377834, 0.5), 0.0, 0.0, 0, 0, Vector2(1, 0), -0.033741597, 0.0, 0, 0]
+_data = [Vector2(0, 0), 0.0, 3.150794, 0, 0, Vector2(0.415534, 0.5), 0.0, 0.0, 0, 0, Vector2(1, 0), -0.033741597, 0.0, 0, 0]
 point_count = 3
 
 [sub_resource type="Curve" id="Curve_7cbxl"]
-_limits = [-0.25, 0.5, 0.0, 1.0]
-_data = [Vector2(0, -0.25), 0.0, 0.0, 0, 0, Vector2(0.50125945, 0.5), -0.06089885, -0.06089885, 0, 0, Vector2(1, -0.25), 0.0, 0.0, 0, 0]
+_limits = [-0.4, 0.5, 0.0, 1.0]
+_data = [Vector2(0, -0.4), 0.0, 0.0, 0, 0, Vector2(0.50125945, 0.5), -0.06089885, -0.06089885, 0, 0, Vector2(1, -0.4), 0.0, 0.0, 0, 0]
 point_count = 3
 
 [sub_resource type="Curve" id="Curve_8pr8v"]
@@ -45,8 +45,8 @@ _data = [Vector2(0, 1), 0.0, 0.0, 0, 0, Vector2(0.24937026, 0.89937115), 0.0, 0.
 point_count = 5
 
 [sub_resource type="Curve" id="Curve_buypi"]
-_limits = [0.5, 1.5, 0.0, 1.0]
-_data = [Vector2(0, 0.88993716), 0.0, 0.0, 0, 0, Vector2(0.24937029, 1.0974844), 0.0, 0.0, 0, 0, Vector2(0.49874055, 0.87735856), 0.0, 0.0, 0, 0, Vector2(0.7506297, 1.0974844), 0.0, 0.0, 0, 0, Vector2(1, 0.88364786), 0.0, 0.0, 0, 0]
+_limits = [0.7, 0.95, 0.0, 1.0]
+_data = [Vector2(0, 0.7), 0.0, 0.0, 0, 0, Vector2(0.25048545, 0.95), 0.0, 0.0, 0, 0, Vector2(0.5048544, 0.7), 0.0, 0.0, 0, 0, Vector2(0.75145626, 0.95), 0.0, 0.0, 0, 0, Vector2(1, 0.7), 0.0, 0.0, 0, 0]
 point_count = 5
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_buypi"]
@@ -307,11 +307,13 @@ turn_strength = 100.0
 turn_damping = 10.0
 upright_strength = 2000.0
 cam_distance_min = 0.0
-crouch_speed = -0.5
 crawl_height = 0.3
-lean_strength = 200.0
+lean_strength = 100.0
 max_lean_angle = 0.5
+crouch_lean_angle = 1.0
 air_upright_assist_damping = 80.0
+min_camera_pitch = -1.3962634015954636
+max_camera_pitch = 1.3962634015954636
 slope_correction = 0.2
 slope_correction_damping = 4.0
 slope_stance_height_scale = 0.75
@@ -887,6 +889,7 @@ IK_mods_disable = [NodePath("../PhysicsPlayerController/playermodel/Armature/Gen
 IK_mods_disable_LH = [NodePath("../PhysicsPlayerController/playermodel/Armature/GeneralSkeleton/IK_LH")]
 bone_mask = PackedStringArray("RightUpperArm", "RightLowerArm", "RightHand")
 camera_aim_yaw_enabled = true
+camera_aim_roll_enabled = true
 metadata/_custom_type_script = "uid://c8qyp1ubjxh1u"
 
 [node name="StaticBody3D" type="StaticBody3D" parent="." unique_id=1477633783]

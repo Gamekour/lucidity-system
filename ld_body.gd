@@ -36,11 +36,14 @@ class_name PhysicsPlayerController
 @export var slope_correction : float = 1.0
 @export var slope_correction_damping : float = 0.0
 @export var slope_stance_height_scale : float = 0.5
+@export var speed_stance_stop : float = 0.6
 
 var stance_height : float = 0
 var target_angle_horizontal : float = 0
 var camera_pitch : float = 0.0
 var sprinting := false
+var crouch_jump := false
+var grounded := false
 
 var roll_force_scale : float = 1.0
 var sprint_multiplier_scale : float = 1.0
@@ -72,13 +75,16 @@ func _physics_process(_delta: float) -> void:
 
 	var input_vector := Input.get_vector("move_left", "move_right", "move_back", "move_forward")
 	var input_3d := _get_camera_relative_input(up_dir, input_vector)
-	var max_speed = max(lerpf(crouch_speed * roll_force, roll_force * sprint_multiplier * sprint_multiplier_scale, stance_height), 0)
-	var speed = min(roll_force * roll_force_scale * (sprint_multiplier * sprint_multiplier_scale if sprinting and shapecast.is_colliding() else 1.0), max_speed)
+	var max_speed = max(lerpf(crouch_speed * roll_force, roll_force * sprint_multiplier * sprint_multiplier_scale, min(stance_height / speed_stance_stop, 1)), 0)
+	crouch_jump = Input.is_action_pressed("jump") && Input.is_action_pressed("crouch")
+	var speed = min(roll_force * roll_force_scale * (sprint_multiplier * sprint_multiplier_scale if (sprinting || crouch_jump) and shapecast.is_colliding() else 1.0), max_speed)
 	var virtual_torque = input_3d * speed
 	var target_force = up_dir.cross(virtual_torque) / (shapecast.shape as SphereShape3D).radius
 
 	var slope_normal := up_dir
-	var grounded := shapecast.is_colliding()
+	grounded = shapecast.is_colliding()
+	if (crouch_jump):
+		grounded = grounded && shapecast.get_closest_collision_safe_fraction() <= 0.5
 	if grounded:
 		slope_normal = shapecast.get_collision_normal(0)
 		current_dot = up_dir.dot(slope_normal)
@@ -97,7 +103,15 @@ func _physics_process(_delta: float) -> void:
 		var velocity_along_slope := flat_velocity.dot(gravity_tangent_dir)
 		slope_correction_force += gravity_tangent_dir * velocity_along_slope * mass * slope_correction_damping * (1 - current_dot)
 
-	var accel = (target_force - (flat_velocity * mass) - slope_correction_force) * (acceleration * acceleration_scale if grounded else air_acceleration * air_acceleration_scale)
+	var accel : Vector3
+	if grounded:
+		accel = (target_force - (flat_velocity * mass) - slope_correction_force) * (acceleration * acceleration_scale) * (sprint_multiplier * sprint_multiplier_scale if sprinting || crouch_jump else 1)
+	else:
+		# Source-engine style air strafing: only add speed towards the wish
+		# direction, and only up to the wish speed. Never bleed off existing
+		# velocity (in the wish direction or otherwise) the way the grounded
+		# PD-controller above does.
+		accel = _get_air_accel(target_force, flat_velocity, air_acceleration * air_acceleration_scale)
 	var force = accel.limit_length(friction_budget)
 	apply_force(force)
 
@@ -115,11 +129,12 @@ func _physics_process(_delta: float) -> void:
 		upright_torque = _get_air_upright_torque(up_dir)
 
 	apply_torque(yaw_torque + upright_torque)
-
+	
+	stance_height = jump_height * jump_height_scale if Input.is_action_pressed("jump") else crawl_height if Input.is_action_pressed("crawl") else crouch_height if Input.is_action_pressed("crouch") else 1.0
+	stance_height *= stance_height_scale
+	stance_height -= (1 - current_dot) * slope_stance_height_scale
+	
 	if grounded:
-		stance_height = crawl_height if Input.is_action_pressed("crawl") else crouch_height if Input.is_action_pressed("crouch") else jump_height * jump_height_scale if Input.is_action_pressed("jump") else 1.0
-		stance_height *= stance_height_scale
-		stance_height -= (1 - current_dot) * slope_stance_height_scale
 		var current_distance : float = shapecast.get_closest_collision_safe_fraction() * abs(shapecast.target_position.y)
 		var ride_height = abs(shapecast.target_position.y) + ride_height_offset
 		var displacement : float = (stance_height * ride_height) - current_distance
@@ -224,9 +239,31 @@ func _get_body_target_angle(input_vector: Vector2) -> float:
 	
 	return wrapf(target_angle_horizontal - move_yaw_offset, -PI, PI)
 
+func _get_air_accel(target_force: Vector3, flat_velocity: Vector3, accel_strength: float) -> Vector3:
+	# Source-engine air strafing model, expressed in force-space so it plugs
+	# into the same apply_force pipeline the grounded controller uses.
+	# `target_force / mass` is the wish velocity implied by the input this frame.
+	var wish_velocity := target_force / mass
+	var wishspeed := wish_velocity.length()
+	if wishspeed < 0.0001 or accel_strength <= 0.0:
+		return Vector3.ZERO
+	var wishdir := wish_velocity / wishspeed
+
+	var current_speed := flat_velocity.dot(wishdir)
+	var add_speed := wishspeed - current_speed
+	if add_speed <= 0.0:
+		# Already moving at or beyond wishspeed along wishdir - source engine
+		# applies no acceleration here and, crucially, does not touch any
+		# other component of velocity either.
+		return Vector3.ZERO
+
+	# Only ever pushes along wishdir, and only ever adds speed (never removes
+	# it), unlike the grounded (target_force - flat_velocity*mass) controller.
+	return wishdir * (add_speed * mass * accel_strength)
+
 func _get_lean_target_up(up_dir: Vector3, lean_input: Vector3) -> Vector3:
 	var flat_lean := lean_input - lean_input.project(up_dir)
-	var lean_magnitude := clampf(flat_lean.length() * lean_strength, 0.0, 1.0)
+	var lean_magnitude := clampf(flat_lean.length() * lean_strength * (2 if crouch_jump else 1), 0.0, 1.0)
 	if lean_magnitude < 0.0001:
 		return up_dir
 	var lean_dir := flat_lean.normalized()

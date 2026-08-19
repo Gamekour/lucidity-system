@@ -20,9 +20,6 @@ func _process(delta: float) -> void:
 	var local_basis : Basis = parent_global_basis.inverse() * target_basis
 	local_basis = local_basis.orthonormalized()
 	
-	if (cam_spring.spring_length <= fp_deadzone):
-		set_bone_pose_scale(head_bone_index, Vector3.ONE * 0.001) # eventually toggle by camera activity
-		set_bone_pose_rotation(head_bone_index, local_basis.get_rotation_quaternion())
-	else:
-		set_bone_pose_scale(head_bone_index, Vector3.ONE)
-		set_bone_pose_rotation(head_bone_index, basis.get_rotation_quaternion())
+	set_bone_pose_scale(head_bone_index, Vector3.ONE * (0.001 if (cam_spring.spring_length <= fp_deadzone) else 1))
+
+	set_bone_pose_rotation(head_bone_index, local_basis.get_rotation_quaternion())

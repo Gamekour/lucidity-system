@@ -33,7 +33,8 @@ var sample : float = 0.0
 var pose_blend : float = 0.0
 
 func _process(delta: float) -> void:
-	_apply_gravity_counter_rotation(delta)
+	var t := clampf(body.stance_height * body.stance_height_scale * 2, 0, 1)
+	global_basis = body.basis.slerp(_apply_gravity_counter_rotation(delta), t)
 	var local_vel := body.global_basis.inverse() * body.linear_velocity
 	local_vel.y = 0
 	var vel_length := local_vel.length()
@@ -56,17 +57,16 @@ func _process(delta: float) -> void:
 		var s := wrapf(sample + phase_offsets[i], 0, 1)
 		var lift_slope_scale := (2 - body.current_dot) * lift_slope_boost
 		var lift = lerpf(lift_min.sample(s), lift_max.sample(s), weight) * lift_slope_scale * (arm_lift_scale if i >= 2 else 1)
-		var stretch = lerpf(stretch_min.sample(s), stretch_max.sample(s), weight) * (arm_stretch_scale if i >= 2 else 1)
+		var stretch = lerpf(stretch_min.sample(s), stretch_max.sample(s), weight) * (arm_stretch_scale if i >= 2 else 1) - ((1 - t) * 2 if i >= 2 else 0)
 		var aniso = abs(Vector3.FORWARD.dot(local_vel.normalized()))
-		var animated_offset := Vector3(stretch * time_scale * (1 - aniso) * horizontal_scale, lift * time_scale, stretch * time_scale * aniso)
+		var crouch_lift = (0.25 if Input.is_action_pressed("crouch") && !body.grounded else 0)
+		var animated_offset := Vector3(stretch * time_scale * (1 - aniso) * horizontal_scale, lift * time_scale + crouch_lift, stretch * time_scale * aniso)
 		var target_pos := (start_positions[i] + animated_offset * pose_blend)
 		ik_targets[i].look_at(to_global(target_pos), to_global(Vector3.UP), true)
 		ik_targets[i].spring_length = ik_targets[i].global_position.distance_to(to_global(target_pos))
 
-func _apply_gravity_counter_rotation(delta: float) -> void:
+func _apply_gravity_counter_rotation(delta: float) -> Basis:
 	var parent_node := get_parent()
-	if not (parent_node is Node3D):
-		return
 	var parent3d := parent_node as Node3D
 	var up := Vector3.UP
 	if body:
@@ -85,6 +85,6 @@ func _apply_gravity_counter_rotation(delta: float) -> void:
 	parent_fwd = parent_fwd.normalized()
 	var target_basis := Basis.looking_at(parent_fwd, up)
 	if level_speed <= 0.0:
-		global_transform.basis = target_basis
+		return target_basis
 	else:
-		global_transform.basis = global_transform.basis.slerp(target_basis, clampf(delta * level_speed, 0.0, 1.0))
+		return global_transform.basis.slerp(target_basis, clampf(delta * level_speed, 0.0, 1.0))
