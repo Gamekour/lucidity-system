@@ -33,7 +33,7 @@ var sample : float = 0.0
 var pose_blend : float = 0.0
 
 func _process(delta: float) -> void:
-	var t := clampf(body.stance_height * body.stance_height_scale * 2, 0, 1)
+	var t := clampf(legs.get_closest_collision_safe_fraction() * 2, 0, 1)
 	global_basis = body.basis.slerp(_apply_gravity_counter_rotation(delta), t)
 	var local_vel := body.global_basis.inverse() * body.relative_velocity
 	local_vel.y = 0

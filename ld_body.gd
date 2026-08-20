@@ -3,7 +3,8 @@ class_name PhysicsPlayerController
 
 @export var camera : Camera3D
 @export var cam_spring : SpringArm3D
-@export var shapecast : ShapeCast3D
+@export var shapecast_legs : ShapeCast3D
+@export var shapecast_arms : ShapeCast3D
 @export var roll_force : float = 100
 @export var sprint_multiplier : float = 2.0
 @export var friction_coefficient : float = 2.0
@@ -40,7 +41,17 @@ class_name PhysicsPlayerController
 @export var speed_stance_stop : float = 0.6
 @export var apply_reaction_forces : bool = true
 @export var apply_reaction_torque : bool = false
+@export var grab_strength_min : float = 100
+@export var grab_strength_max : float = 1000
+@export var grab_scale_max_mass : float = 69
+@export var grab_distance : float = 1.0
+@export var grab_damp_min : float = 50.0
+@export var grab_damp_max : float = 100.0
+@export var grab_max_angular_velocity : float = 10.0
+@export var grab_angular_damp : float = 5.0
 
+var grabbed_col : Node3D
+var grab_offset : Vector3 = Vector3.ZERO
 var relative_velocity : Vector3 = Vector3.ZERO
 var stance_height : float = 0
 var target_angle_horizontal : float = 0
@@ -48,6 +59,7 @@ var camera_pitch : float = 0.0
 var sprinting := false
 var crouch_jump := false
 var grounded := false
+var trying_to_grab := false
 
 var roll_force_scale : float = 1.0
 var sprint_multiplier_scale : float = 1.0
@@ -84,7 +96,7 @@ func _physics_process(delta: float) -> void:
 	
 	var base_right := up_dir.cross(global_basis.z).normalized()
 	var shapecast_basis := Basis(base_right, up_dir, global_basis.z.normalized())
-	shapecast.global_basis = shapecast_basis.orthonormalized()
+	shapecast_legs.global_basis = shapecast_basis.orthonormalized()
 
 	var input_vector := Input.get_vector("move_left", "move_right", "move_back", "move_forward")
 	var input_3d := _get_camera_relative_input(up_dir, input_vector)
@@ -94,16 +106,16 @@ func _physics_process(delta: float) -> void:
 	var slope_normal := up_dir
 	var floor_velocity := Vector3.ZERO
 	
-	grounded = shapecast.is_colliding()
+	grounded = shapecast_legs.is_colliding()
 	if (crouch_jump):
-		grounded = grounded && shapecast.get_closest_collision_safe_fraction() <= 0.5
+		grounded = grounded && shapecast_legs.get_closest_collision_safe_fraction() <= 0.5
 		
 	if grounded:
-		slope_normal = shapecast.get_collision_normal(0)
+		slope_normal = shapecast_legs.get_collision_normal(0)
 		current_dot = up_dir.dot(slope_normal)
 		
-		var current_floor_node = shapecast.get_collider(0)
-		var current_floor_point = shapecast.get_collision_point(0)
+		var current_floor_node = shapecast_legs.get_collider(0)
+		var current_floor_point = shapecast_legs.get_collision_point(0)
 		
 		# Cache the contact rigidbody + point for the reaction force applied
 		# at the end of this function.
@@ -121,9 +133,9 @@ func _physics_process(delta: float) -> void:
 		last_floor_node = null
 		floor_rigidbody = null
 
-	var speed = min(roll_force * roll_force_scale * (sprint_multiplier * sprint_multiplier_scale if (sprinting || crouch_jump) and shapecast.is_colliding() else 1.0), max_speed)
+	var speed = min(roll_force * roll_force_scale * (sprint_multiplier * sprint_multiplier_scale if (sprinting || crouch_jump) and shapecast_legs.is_colliding() else 1.0), max_speed)
 	var virtual_torque = input_3d * speed
-	var target_force = up_dir.cross(virtual_torque) / (shapecast.shape as SphereShape3D).radius
+	var target_force = up_dir.cross(virtual_torque) / (shapecast_legs.shape as SphereShape3D).radius
 
 	var gravity_magnitude : float = gravity_vec.length()
 	var normal_force := mass * gravity_magnitude * slope_normal.dot(up_dir)
@@ -168,8 +180,8 @@ func _physics_process(delta: float) -> void:
 	stance_height -= (1 - current_dot) * slope_stance_height_scale
 	
 	if grounded:
-		var current_distance : float = shapecast.get_closest_collision_safe_fraction() * abs(shapecast.target_position.y)
-		var ride_height = abs(shapecast.target_position.y) + ride_height_offset
+		var current_distance : float = shapecast_legs.get_closest_collision_safe_fraction() * abs(shapecast_legs.target_position.y)
+		var ride_height = abs(shapecast_legs.target_position.y) + ride_height_offset
 		var displacement : float = (stance_height * ride_height) - current_distance
 		
 		var normal_velocity : float = relative_velocity.dot(slope_normal)
@@ -177,21 +189,17 @@ func _physics_process(delta: float) -> void:
 		var spring_force : Vector3 = slope_normal * spring_magnitude
 		force += spring_force
 		
-	apply_force(force, shapecast.position)
+	apply_force(force, shapecast_legs.position)
 
-	# --- Newton's third law ---
-	# Everything above (`force`, applied at the shapecast/wheel contact, and
-	# optionally `total_torque`) is the reaction the ground exerts on us
-	# (suspension spring, friction/drive force, and the torque our "wheel"
-	# reacts against the ground with). If we're standing on another
-	# RigidBody3D, push back on it with the exact opposite force/torque at
-	# the actual contact point, so e.g. standing on a plank, boat, or cart
-	# actually shoves it down and away realistically.
 	if grounded and apply_reaction_forces and floor_rigidbody != null and is_instance_valid(floor_rigidbody):
 		var offset := floor_contact_point - floor_rigidbody.global_position
 		floor_rigidbody.apply_force(-force, offset)
 		if apply_reaction_torque:
 			floor_rigidbody.apply_torque(-total_torque)
+	
+	if (grabbed_col == null && trying_to_grab):
+		arm_cast()
+	arm_logic()
 
 func _process(delta: float) -> void:
 	sprinting = Input.is_action_pressed("sprint")
@@ -214,6 +222,11 @@ func _input(event: InputEvent) -> void:
 				cam_spring.spring_length = clampf(cam_spring.spring_length - cam_distance_max / 10, cam_distance_min, cam_distance_max)
 			if (event.button_index == MOUSE_BUTTON_WHEEL_DOWN):
 				cam_spring.spring_length = clampf(cam_spring.spring_length + cam_distance_max / 10, cam_distance_min, cam_distance_max)
+	if event.is_action_pressed("grab"):
+		trying_to_grab = true
+	if event.is_action_released("grab"):
+		grabbed_col = null
+		trying_to_grab = false
 
 func _safe_slerp_up(from: Vector3, to: Vector3, weight: float) -> Vector3:
 	from = from.normalized()
@@ -310,7 +323,7 @@ func _get_lean_target_up(up_dir: Vector3, lean_input: Vector3) -> Vector3:
 	return up_dir.rotated(lean_axis, lean_angle)
 
 func _get_crouch_lean_factor() -> float:
-	return clampf(inverse_lerp(1, crawl_height, stance_height), 0.0, 1.0)
+	return clampf(lerpf(max_lean_angle, 0, shapecast_legs.get_closest_collision_safe_fraction()) * 2, 0.0, 1.0)
 
 func _get_upright_torque(up_dir: Vector3, lean_input: Vector3, strength: float, damping: float) -> Vector3:
 	var target_up := _get_lean_target_up(up_dir, lean_input)
@@ -357,3 +370,70 @@ func _get_tilt_basis(up_dir: Vector3) -> Basis:
 	axis /= axis_length
 	var angle := Vector3.UP.angle_to(up_dir)
 	return Basis(axis, angle)
+
+func arm_cast() -> void:
+	if (shapecast_arms.is_colliding()):
+		grabbed_col = shapecast_arms.get_collider(0)
+		grab_offset = grabbed_col.to_local(shapecast_arms.get_collision_point(0))
+		trying_to_grab = false
+
+func arm_logic() -> void:
+	if (grabbed_col != null):
+		var is_rb = grabbed_col is RigidBody3D
+		var grab_position = grabbed_col.to_global(grab_offset)
+		var grab_position_target := shapecast_arms.to_global(Vector3.BACK * grab_distance)
+		var offset = (grab_position_target - grab_position)
+		if (offset.length() > shapecast_arms.target_position.length()):
+			grabbed_col = null
+			return
+		
+		var weight := 1.0
+		if (is_rb):
+			weight = clampf(grabbed_col.mass / grab_scale_max_mass, 0, 1)
+		var spring_k := lerpf(0, grab_strength_max, weight)
+		
+		var grabbed_point_velocity := Vector3.ZERO
+		if (is_rb):
+			grabbed_point_velocity = grabbed_col.linear_velocity \
+				+ grabbed_col.angular_velocity.cross(grab_position - grabbed_col.global_position)
+		var arm_point_velocity := linear_velocity \
+			+ angular_velocity.cross(grab_position_target - global_position)
+		var relative_velocity := grabbed_point_velocity - arm_point_velocity
+
+		var damp := lerpf(grab_damp_min, grab_damp_max, weight)
+		var force = offset * spring_k - relative_velocity * damp
+
+		if (is_rb):
+			var grabbed_lever_arm = grab_position - grabbed_col.global_position
+			grabbed_col.apply_force(force / 2, grabbed_lever_arm)
+			if grabbed_col.angular_velocity.length() > grab_max_angular_velocity:
+				grabbed_col.apply_torque(-grabbed_col.angular_velocity * grab_angular_damp)
+
+		var arm_lever_arm := shapecast_arms.global_position - global_position
+		if (linear_velocity.length() > grab_strength_max / mass / 20):
+			var force_scale = (force.normalized().dot(linear_velocity.normalized()) + 1) / 2
+			force *= force_scale
+		apply_force(-force / 2)
+
+#ignore for now, not used yet
+func climb_scan() -> void:
+	if (!shapecast_arms.is_colliding()):
+		return
+	
+	var nrm := shapecast_arms.get_collision_normal(0)
+	var project_vector := Vector3.UP
+	if (nrm.y < -0.05):
+		project_vector -= global_basis.z
+	elif (nrm.y > 0.05):
+		project_vector += global_basis.z
+		
+	var hit_vector := Vector3.UP
+	if (abs(nrm.y) > 0.05):
+		hit_vector = project_vector.project(nrm).normalized()
+		
+	var angle := shapecast_arms.global_basis.z.angle_to(hit_vector)
+	var dist := shapecast_arms.get_closest_collision_safe_fraction() * shapecast_arms.target_position.length()
+		
+	var sin_c := dist * sin(angle)
+	var a := 180 - (asin(sin_c) + angle)
+	var new_max_height = sin(a) / sin(angle)
