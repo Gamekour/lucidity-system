@@ -38,6 +38,8 @@ class_name PhysicsPlayerController
 @export var slope_correction_damping : float = 0.0
 @export var slope_stance_height_scale : float = 0.5
 @export var speed_stance_stop : float = 0.6
+@export var apply_reaction_forces : bool = true
+@export var apply_reaction_torque : bool = false
 
 var relative_velocity : Vector3 = Vector3.ZERO
 var stance_height : float = 0
@@ -65,6 +67,12 @@ var current_dot : float = 0.0
 var last_floor_offset := Vector3.ZERO
 var last_floor_point := Vector3.ZERO
 var last_floor_node : Node3D
+
+# Newton's third law bookkeeping: the rigidbody (if any) we're currently in
+# contact with, and the world-space point of contact, so we can push back
+# on it with an equal and opposite reaction force/torque.
+var floor_rigidbody : RigidBody3D = null
+var floor_contact_point : Vector3 = Vector3.ZERO
 
 func _ready() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
@@ -97,6 +105,11 @@ func _physics_process(delta: float) -> void:
 		var current_floor_node = shapecast.get_collider(0)
 		var current_floor_point = shapecast.get_collision_point(0)
 		
+		# Cache the contact rigidbody + point for the reaction force applied
+		# at the end of this function.
+		floor_contact_point = current_floor_point
+		floor_rigidbody = current_floor_node if current_floor_node is RigidBody3D else null
+		
 		if current_floor_node == last_floor_node:
 			var floor_movement = (last_floor_node as Node3D).to_global(last_floor_offset) - last_floor_point
 			floor_velocity = floor_movement / delta
@@ -106,6 +119,7 @@ func _physics_process(delta: float) -> void:
 		last_floor_offset = current_floor_node.to_local(current_floor_point)
 	else:
 		last_floor_node = null
+		floor_rigidbody = null
 
 	var speed = min(roll_force * roll_force_scale * (sprint_multiplier * sprint_multiplier_scale if (sprinting || crouch_jump) and shapecast.is_colliding() else 1.0), max_speed)
 	var virtual_torque = input_3d * speed
@@ -146,7 +160,8 @@ func _physics_process(delta: float) -> void:
 	else:
 		upright_torque = _get_air_upright_torque(up_dir)
 
-	apply_torque(yaw_torque + upright_torque)
+	var total_torque := yaw_torque + upright_torque
+	apply_torque(total_torque)
 	
 	stance_height = jump_height * jump_height_scale if Input.is_action_pressed("jump") else crawl_height if Input.is_action_pressed("crawl") else crouch_height if Input.is_action_pressed("crouch") else 1.0
 	stance_height *= stance_height_scale
@@ -163,6 +178,20 @@ func _physics_process(delta: float) -> void:
 		force += spring_force
 		
 	apply_force(force, shapecast.position)
+
+	# --- Newton's third law ---
+	# Everything above (`force`, applied at the shapecast/wheel contact, and
+	# optionally `total_torque`) is the reaction the ground exerts on us
+	# (suspension spring, friction/drive force, and the torque our "wheel"
+	# reacts against the ground with). If we're standing on another
+	# RigidBody3D, push back on it with the exact opposite force/torque at
+	# the actual contact point, so e.g. standing on a plank, boat, or cart
+	# actually shoves it down and away realistically.
+	if grounded and apply_reaction_forces and floor_rigidbody != null and is_instance_valid(floor_rigidbody):
+		var offset := floor_contact_point - floor_rigidbody.global_position
+		floor_rigidbody.apply_force(-force, offset)
+		if apply_reaction_torque:
+			floor_rigidbody.apply_torque(-total_torque)
 
 func _process(delta: float) -> void:
 	sprinting = Input.is_action_pressed("sprint")

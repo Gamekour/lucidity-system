@@ -301,6 +301,12 @@ size = Vector3(5, 0.5, 5)
 [sub_resource type="BoxMesh" id="BoxMesh_wb0og"]
 size = Vector3(5, 0.5, 5)
 
+[sub_resource type="BoxShape3D" id="BoxShape3D_vr1i5"]
+size = Vector3(4, 0.2, 4)
+
+[sub_resource type="BoxMesh" id="BoxMesh_rpuu0"]
+size = Vector3(4, 0.2, 4)
+
 [node name="Test Scene" type="Node3D" unique_id=667831700]
 
 [node name="PhysicsPlayerController" type="RigidBody3D" parent="." unique_id=290065418 node_paths=PackedStringArray("camera", "cam_spring", "shapecast")]
@@ -942,6 +948,7 @@ mesh = SubResource("BoxMesh_sb6tq")
 
 [node name="test_box" type="RigidBody3D" parent="." unique_id=1938987854]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.2648554, 0.6091262, -3.2850118)
+mass = 69.0
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="test_box" unique_id=1091314629]
 shape = SubResource("BoxShape3D_njel3")
@@ -957,8 +964,9 @@ axis_lock_linear_y = true
 axis_lock_angular_x = true
 axis_lock_angular_y = true
 axis_lock_angular_z = true
+mass = 69.0
 linear_damp = 100.0
-constant_force = Vector3(0, 0, 500)
+constant_force = Vector3(0, 0, 10000)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="test_box2" unique_id=1285482729]
 shape = SubResource("BoxShape3D_ie5li")
@@ -966,5 +974,31 @@ shape = SubResource("BoxShape3D_ie5li")
 [node name="MeshInstance3D" type="MeshInstance3D" parent="test_box2" unique_id=1778064053]
 mesh = SubResource("BoxMesh_wb0og")
 surface_material_override/0 = ExtResource("9_njel3")
+
+[node name="trampoline" type="RigidBody3D" parent="." unique_id=1113585117]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.5707397, 1.3844526, -6.788962)
+mass = 69.0
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="trampoline" unique_id=1746727096]
+shape = SubResource("BoxShape3D_vr1i5")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="trampoline" unique_id=158301785]
+mesh = SubResource("BoxMesh_rpuu0")
+surface_material_override/0 = ExtResource("9_njel3")
+
+[node name="SliderJoint3D" type="Generic6DOFJoint3D" parent="." unique_id=1795569767]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.5707397, 1.3844526, -6.788962)
+node_a = NodePath("../trampoline")
+node_b = NodePath("../trampoline_origin")
+linear_limit_y/enabled = false
+linear_spring_x/enabled = true
+linear_spring_y/enabled = true
+linear_spring_y/stiffness = 2500.0
+linear_spring_y/damping = 1.0
+linear_spring_z/enabled = true
+
+[node name="trampoline_origin" type="RigidBody3D" parent="." unique_id=1003355602]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.5707397, 1.3844526, -6.788962)
+freeze = true
 
 [editable path="Body Block"]
