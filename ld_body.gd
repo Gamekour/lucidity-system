@@ -50,6 +50,14 @@ class_name PhysicsPlayerController
 @export var grab_max_angular_velocity : float = 10.0
 @export var grab_angular_damp : float = 5.0
 
+# --- Ledge detection (non-rigidbody grabs) ---
+@export_group("Ledge Detection")
+@export var ledge_probe_steps : int = 6
+@export var ledge_step_height : float = 0.15
+@export var ledge_probe_depth : float = 0.35
+@export var ledge_surface_margin : float = 0.05
+@export_range(0.0, 90.0, 0.5, "radians_as_degrees") var ledge_max_surface_angle : float = deg_to_rad(45.0)
+
 var grabbed_col : Node3D
 var grab_offset : Vector3 = Vector3.ZERO
 var relative_velocity : Vector3 = Vector3.ZERO
@@ -372,10 +380,114 @@ func _get_tilt_basis(up_dir: Vector3) -> Basis:
 	return Basis(axis, angle)
 
 func arm_cast() -> void:
-	if (shapecast_arms.is_colliding()):
-		grabbed_col = shapecast_arms.get_collider(0)
-		grab_offset = grabbed_col.to_local(shapecast_arms.get_collision_point(0))
+	if not shapecast_arms.is_colliding():
+		return
+
+	var collider = shapecast_arms.get_collider(0)
+
+	# Rigidbodies are always grabbed directly at the initial hit - they're the
+	# thing being picked up, not a surface to climb.
+	if collider is RigidBody3D:
+		grabbed_col = collider
+		grab_offset = collider.to_local(shapecast_arms.get_collision_point(0))
 		trying_to_grab = false
+		return
+
+	# Anything else (static/kinematic geometry) is treated as a potential
+	# climbable face: search upward from the initial hit for a ledge.
+	var hit_point := shapecast_arms.get_collision_point(0)
+	var hit_normal := shapecast_arms.get_collision_normal(0)
+	var ledge := _find_ledge(hit_point, hit_normal)
+	if not ledge.is_empty():
+		grabbed_col = ledge.node
+		grab_offset = (ledge.node as Node3D).to_local(ledge.point)
+		trying_to_grab = false
+
+# Searches upward from an initial wall hit for a walkable ledge, without
+# assuming the wall is vertical.
+#
+# The key trick is the climb direction: rather than probing straight up
+# (world up_dir), we project up_dir onto the wall's own tangent plane -
+#     slope_up = up_dir - wall_normal * up_dir.dot(wall_normal)
+# up_dir.dot(wall_normal) is the cosine of the angle between "up" and the
+# wall's normal, so subtracting that component removes exactly the part of
+# up_dir that points into/out of the wall. What's left is the direction that
+# actually runs along the wall's face. On a plain vertical wall this reduces
+# to up_dir itself; on a sloped or overhanging face it leans the search path
+# forward or backward by the right trigonometric amount, so ledges that sit
+# above a receding or leaning surface (not directly overhead) are still found.
+#
+# Along that path we do a classic two-ray probe at each step: a forward ray
+# checks whether the wall is still solid at that height, and the moment it
+# isn't, a downward ray right there checks for a walkable surface. Every
+# probe point is also clamped to the arm's actual reach
+# (shapecast_arms.target_position.length()) so nothing beyond the arm's
+# physical range can ever be grabbed.
+func _find_ledge(wall_point: Vector3, wall_normal: Vector3) -> Dictionary:
+	var up_dir := current_up_dir
+	var space_state := get_world_3d().direct_space_state
+	var exclude := [get_rid()]
+	var mask := shapecast_arms.collision_mask
+
+	var into_wall := -wall_normal
+
+	var slope_up := up_dir - wall_normal * up_dir.dot(wall_normal)
+	if slope_up.length_squared() < 0.0001:
+		# Wall normal is (anti-)parallel to up - this is a floor/ceiling hit,
+		# not a climbable face.
+		return {}
+	slope_up = slope_up.normalized()
+
+	var arm_origin := shapecast_arms.global_position
+	var max_reach := shapecast_arms.target_position.length()
+	var walkable_cos := cos(ledge_max_surface_angle)
+
+	var probe_point := wall_point
+	var was_blocked := true
+
+	for i in range(ledge_probe_steps):
+		probe_point += slope_up * ledge_step_height
+		if (probe_point - arm_origin).length() > max_reach:
+			break
+
+		var forward_from := probe_point + wall_normal * ledge_surface_margin
+		var forward_to := forward_from + into_wall * ledge_probe_depth
+		var forward_query := PhysicsRayQueryParameters3D.create(forward_from, forward_to, mask, exclude)
+		var forward_hit := space_state.intersect_ray(forward_query)
+
+		if not forward_hit.is_empty():
+			# Wall face still present at this height - keep climbing.
+			was_blocked = true
+			continue
+
+		if not was_blocked:
+			# Already in open space above the wall with nothing found -
+			# no point probing further.
+			break
+
+		# Transition from solid wall to open space: this is the wall's top
+		# edge. Drop a ray down through that empty space to find the surface.
+		was_blocked = false
+
+		var down_from := forward_to + up_dir * (ledge_step_height * 0.5)
+		var down_to := down_from - up_dir * (ledge_step_height + ledge_surface_margin * 2.0)
+		var down_query := PhysicsRayQueryParameters3D.create(down_from, down_to, mask, exclude)
+		var down_hit := space_state.intersect_ray(down_query)
+
+		if down_hit.is_empty():
+			continue
+
+		var surface_normal : Vector3 = down_hit.normal
+		if surface_normal.dot(up_dir) < walkable_cos:
+			# Too steep to stand/hang on - not a valid ledge.
+			continue
+
+		if (down_hit.position - arm_origin).length() > max_reach:
+			continue
+
+		return {"node": down_hit.collider, "point": down_hit.position}
+
+	return {}
 
 func arm_logic() -> void:
 	if (grabbed_col != null):
@@ -414,26 +526,3 @@ func arm_logic() -> void:
 			var force_scale = (force.normalized().dot(linear_velocity.normalized()) + 1) / 2
 			force *= force_scale
 		apply_force(-force / 2)
-
-#ignore for now, not used yet
-func climb_scan() -> void:
-	if (!shapecast_arms.is_colliding()):
-		return
-	
-	var nrm := shapecast_arms.get_collision_normal(0)
-	var project_vector := Vector3.UP
-	if (nrm.y < -0.05):
-		project_vector -= global_basis.z
-	elif (nrm.y > 0.05):
-		project_vector += global_basis.z
-		
-	var hit_vector := Vector3.UP
-	if (abs(nrm.y) > 0.05):
-		hit_vector = project_vector.project(nrm).normalized()
-		
-	var angle := shapecast_arms.global_basis.z.angle_to(hit_vector)
-	var dist := shapecast_arms.get_closest_collision_safe_fraction() * shapecast_arms.target_position.length()
-		
-	var sin_c := dist * sin(angle)
-	var a := 180 - (asin(sin_c) + angle)
-	var new_max_height = sin(a) / sin(angle)
