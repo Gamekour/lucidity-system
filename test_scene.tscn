@@ -8,6 +8,7 @@
 [ext_resource type="Script" uid="uid://uwl2prsk3to" path="res://bone_root.gd" id="5_7cbxl"]
 [ext_resource type="Script" uid="uid://cqe4oym17w8sa" path="res://attachment_controller.gd" id="6_vr1i5"]
 [ext_resource type="Script" uid="uid://c8qyp1ubjxh1u" path="res://skeleton_overlay.gd" id="7_8pr8v"]
+[ext_resource type="Script" uid="uid://dnryq4yanmj62" path="res://AttachmentSlot.gd" id="7_rpuu0"]
 [ext_resource type="PackedScene" uid="uid://b0krsjxwwhf65" path="res://Body Block.fbx" id="8_buypi"]
 [ext_resource type="Material" uid="uid://dnm5ak0rw2pxe" path="res://debug_mat.tres" id="9_njel3"]
 
@@ -281,6 +282,12 @@ blend_shape_mode = 0
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_njel3"]
 radius = 0.1
+
+[sub_resource type="Resource" id="Resource_qpkhx"]
+script = ExtResource("7_rpuu0")
+slot_name = "Armor"
+bone_name = "Chest"
+metadata/_custom_type_script = "uid://dnryq4yanmj62"
 
 [sub_resource type="Environment" id="Environment_ia1lp"]
 background_mode = 1
@@ -891,6 +898,7 @@ target_position = Vector3(0, 0, 2)
 [node name="AttachmentController" type="Node3D" parent="PhysicsPlayerController" unique_id=799874758 node_paths=PackedStringArray("skeleton")]
 script = ExtResource("6_vr1i5")
 skeleton = NodePath("../playermodel/Armature/GeneralSkeleton")
+slot_definitions = Array[ExtResource("7_rpuu0")]([SubResource("Resource_qpkhx")])
 
 [node name="luciddebug" parent="." unique_id=1643952968 instance=ExtResource("1_uhqqe")]
 
@@ -995,6 +1003,7 @@ surface_material_override/0 = ExtResource("9_njel3")
 [node name="test_box4" type="RigidBody3D" parent="." unique_id=355081333]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.721491, 0.6091262, -3.2850118)
 mass = 32.0
+metadata/attachment_slot = "Armor"
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="test_box4" unique_id=152703587]
 shape = SubResource("BoxShape3D_oo8pe")

@@ -235,7 +235,7 @@ func _input(event: InputEvent) -> void:
 		trying_to_grab = false
 	if event.is_action_pressed("attach"):
 		if (grabbed_col is RigidBody3D):
-			attach_controller.attach(grabbed_col, self, "RightLowerArm")
+			attach_controller.attach(grabbed_col)
 			grabbed_col = null
 
 func _safe_slerp_up(from: Vector3, to: Vector3, weight: float) -> Vector3:
