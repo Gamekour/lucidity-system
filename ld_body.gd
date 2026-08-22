@@ -5,6 +5,7 @@ class_name PhysicsPlayerController
 @export var cam_spring : SpringArm3D
 @export var shapecast_legs : ShapeCast3D
 @export var shapecast_arms : ShapeCast3D
+@export var attach_controller : AttachmentController
 @export var roll_force : float = 100
 @export var sprint_multiplier : float = 2.0
 @export var friction_coefficient : float = 2.0
@@ -235,6 +236,10 @@ func _input(event: InputEvent) -> void:
 	if event.is_action_released("grab"):
 		grabbed_col = null
 		trying_to_grab = false
+	if event.is_action_pressed("attach"):
+		if (grabbed_col is RigidBody3D):
+			attach_controller.attach(grabbed_col, self)
+			grabbed_col = null
 
 func _safe_slerp_up(from: Vector3, to: Vector3, weight: float) -> Vector3:
 	from = from.normalized()
