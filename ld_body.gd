@@ -89,9 +89,6 @@ var last_floor_offset := Vector3.ZERO
 var last_floor_point := Vector3.ZERO
 var last_floor_node : Node3D
 
-# Newton's third law bookkeeping: the rigidbody (if any) we're currently in
-# contact with, and the world-space point of contact, so we can push back
-# on it with an equal and opposite reaction force/torque.
 var floor_rigidbody : RigidBody3D = null
 var floor_contact_point : Vector3 = Vector3.ZERO
 
@@ -238,7 +235,7 @@ func _input(event: InputEvent) -> void:
 		trying_to_grab = false
 	if event.is_action_pressed("attach"):
 		if (grabbed_col is RigidBody3D):
-			attach_controller.attach(grabbed_col, self)
+			attach_controller.attach(grabbed_col, self, "RightLowerArm")
 			grabbed_col = null
 
 func _safe_slerp_up(from: Vector3, to: Vector3, weight: float) -> Vector3:
