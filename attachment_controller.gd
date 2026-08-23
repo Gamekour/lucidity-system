@@ -27,6 +27,7 @@ func _ready() -> void:
 func _input(event: InputEvent) -> void:
 	if (event.is_action_pressed("hotbar_direct")):
 		current_hotbar_slot = int(event.as_text()) - 1
+		_on_hotbar_change()
 	if (event.is_action_pressed("drop")):
 		detach_hotbar_slot(current_hotbar_slot)
 
@@ -125,6 +126,28 @@ func _find_skeleton_overlay(body : Node3D) -> SkeletonOverlay:
 		return null
 	return origin_node
 
+func _on_hotbar_change() -> void:
+	for i in range(hotbar.size()):
+		var slot_def: AttachmentSlot = hotbar[i]
+		if slot_def == null or not attachment_slots.has(slot_def.slot_name):
+			continue
+
+		var slot: Dictionary = attachment_slots[slot_def.slot_name]
+		var occupant: RigidBody3D = slot["occupant"]
+		if occupant == null or not is_instance_valid(occupant):
+			continue
+
+		var skeleton_overlay := _find_skeleton_overlay(occupant)
+		if skeleton_overlay == null:
+			continue
+
+		var is_equipped: bool = i == current_hotbar_slot
+		if is_equipped and not slot["is_hidden"]:
+			skeleton_overlay.target_skeleton = skeleton
+			skeleton_overlay.active = true
+		else:
+			skeleton_overlay.active = false
+
 func _set_meshes_and_collisions_enabled(node: Node, enabled: bool) -> void:
 	if node is MeshInstance3D:
 		node.visible = enabled
@@ -158,7 +181,20 @@ func attach(child_body: RigidBody3D) -> bool:
 
 	var origin_xform: Transform3D = _find_attachment_origin(child_body)
 	var skeleton_overlay = _find_skeleton_overlay(child_body)
-	if (skeleton_overlay != null && !slot["is_hidden"]):
+	var is_equipped := false
+	var is_hotbar = slot["is_hotbar"]
+	if (is_hotbar):
+			var hotbar_index = 0
+			var i = 0
+			for chk_slot in hotbar:
+				if (chk_slot.slot_name == slot_name):
+					hotbar_index = i
+					continue
+				else:
+					i += 1
+			is_equipped = hotbar_index == current_hotbar_slot
+	var holstered = is_hotbar and not is_equipped
+	if (skeleton_overlay != null and not slot["is_hidden"] and not holstered):
 		skeleton_overlay.target_skeleton = skeleton
 		skeleton_overlay.active = true
 	slot["origin_xform_inv"] = origin_xform.affine_inverse()

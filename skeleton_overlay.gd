@@ -9,7 +9,12 @@ class_name SkeletonOverlay
 @export var IK_mods_disable_LH : Array[IKModifier3D]
 @export var bone_mask: PackedStringArray
 @export_range(0.0, 1.0, 0.01) var weight: float = 1.0
-@export var active: bool = true
+@export var active: bool = true:
+	set(value):
+		var changed := active != value
+		active = value
+		if changed and is_instance_valid(playermodel):
+			toggle_ik()
 
 @export_enum("X", "Y", "Z") var mirror_axis: int = 0:
 	set(value):
@@ -72,9 +77,6 @@ func _process(_delta: float) -> void:
 	_apply_camera_aim()
 
 func _apply_overlay() -> void:
-	var active_disable_list = IK_mods_disable_LH if playermodel.left_handed else IK_mods_disable
-	for ikmod in active_disable_list:
-		ikmod.influence = 0 if active else 1
 	for pair in _pairs:
 		var target_idx := pair.x
 		var source_idx := pair.y
@@ -86,6 +88,11 @@ func _apply_overlay() -> void:
 		else:
 			var current_rot := target_skeleton.get_bone_pose_rotation(target_idx)
 			target_skeleton.set_bone_pose_rotation(target_idx, current_rot.slerp(source_rot, weight))
+
+func toggle_ik():
+	var active_disable_list = IK_mods_disable_LH if playermodel.left_handed else IK_mods_disable
+	for ikmod in active_disable_list:
+		ikmod.influence = 0 if active else 1
 
 func _apply_camera_aim() -> void:
 	if not camera_aim_active or camera_aim_weight <= 0.0:
@@ -141,7 +148,7 @@ func _compute_aim_rotation() -> Quaternion:
 
 	var aim_rot := Quaternion.IDENTITY
 
-	if camera_aim_yaw_enabled:
+	if camera_aim_yaw_enabled && playermodel.is_fp:
 		var yaw_axis := camera_aim_yaw_axis.normalized()
 		if yaw_axis.length_squared() > 0.0:
 			var yaw_deg := rad_to_deg(atan2(local_forward.x, local_forward.z))

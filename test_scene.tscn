@@ -294,6 +294,7 @@ script = ExtResource("7_rpuu0")
 slot_name = "RightWrist"
 bone_name = "RightLowerArm"
 pos_offset = Vector3(0, 0.125, 0)
+is_hotbar = true
 metadata/_custom_type_script = "uid://dnryq4yanmj62"
 
 [sub_resource type="Environment" id="Environment_ia1lp"]
