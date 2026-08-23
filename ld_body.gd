@@ -3,6 +3,7 @@ class_name PhysicsPlayerController
 
 @export var camera : Camera3D
 @export var cam_spring : SpringArm3D
+@export var playermodel : PlayerModel
 @export var shapecast_legs : ShapeCast3D
 @export var shapecast_arms : ShapeCast3D
 @export var attach_controller : AttachmentController
@@ -306,10 +307,11 @@ func _get_body_target_angle(input_vector: Vector2) -> float:
 	
 	var move_yaw_offset := atan2(input_vector.x, input_vector.y)
 	
-	if absf(absf(move_yaw_offset) - (PI / 2.0)) < body_turn_sideways_deadzone:
+	if (absf(absf(move_yaw_offset) - (PI / 2.0)) < body_turn_sideways_deadzone) and playermodel.is_fp:
+		print("s")
 		return target_angle_horizontal
 	
-	if input_vector.y < 0.0:
+	if input_vector.y < 0.0 and playermodel.is_fp:
 		if (move_yaw_offset < 0.0):
 			move_yaw_offset += PI
 		else:

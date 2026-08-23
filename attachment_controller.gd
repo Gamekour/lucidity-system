@@ -14,16 +14,22 @@ const ATTACHMENT_ORIGIN_NAME: String = "attachment_origin"
 
 ## Editor-facing list of slot definitions.
 @export var slot_definitions: Array[AttachmentSlot]
+var hotbar : Array[AttachmentSlot]
+var current_hotbar_slot : int = 0
 
-## Runtime slot table, keyed by slot name.
-## Each value: {"parent": Node3D, "bone_name": String, "bone_idx": int, "local_xform": Transform3D,
-##              "occupant": RigidBody3D, "origin_xform_inv": Transform3D}
 var attachment_slots: Dictionary = {}
 
 func _ready() -> void:
 	if skeleton:
 		_connect_skeleton(skeleton)
 	_build_slots()
+	for slot in slot_definitions:
+		if (slot["is_hotbar"]):
+			hotbar.append(slot)
+
+func _input(event: InputEvent) -> void:
+	if (event.is_action_pressed("hotbar_direct")):
+		print(event.as_text())
 
 func _connect_skeleton(s: Skeleton3D) -> void:
 	# Make sure IK / modifiers run on the physics tick, matching RigidBody3D updates,
@@ -72,6 +78,8 @@ func _build_slots() -> void:
 			"local_xform": offset_xform,
 			"occupant": null,
 			"origin_xform_inv": Transform3D.IDENTITY,
+			"is_hotbar" : def.is_hotbar,
+			"is_hidden" : def.is_hidden
 		}
 
 ## Looks for a child node named ATTACHMENT_ORIGIN_NAME on the given body and
@@ -163,7 +171,18 @@ func _on_skeleton_updated() -> void:
 		var parent: Node3D = get_parent()
 
 		var target_xform: Transform3D
-		var bone_idx: int = slot["bone_idx"]
+		var is_equipped = false
+		if (slot["is_hotbar"]):
+			var hotbar_index = 0
+			var i = 0
+			for chk_slot in hotbar:
+				if (chk_slot.slot_name == slot_name):
+					hotbar_index = i
+					continue
+				else:
+					i += 1
+			is_equipped = hotbar_index == current_hotbar_slot
+		var bone_idx: int = slot["bone_idx"] if !slot["is_hotbar"] else skeleton.find_bone("RightHand")
 		if bone_idx != -1 and is_instance_valid(skeleton):
 			var bone_global_pose: Transform3D = skeleton.get_bone_global_pose(bone_idx)
 			target_xform = skeleton.global_transform * bone_global_pose * slot["local_xform"]

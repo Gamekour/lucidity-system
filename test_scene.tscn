@@ -287,6 +287,7 @@ radius = 0.1
 script = ExtResource("7_rpuu0")
 slot_name = "Armor"
 bone_name = "Chest"
+is_hotbar = true
 metadata/_custom_type_script = "uid://dnryq4yanmj62"
 
 [sub_resource type="Resource" id="Resource_rpuu0"]
@@ -339,7 +340,7 @@ size = Vector3(4, 0.2, 4)
 
 [node name="Test Scene" type="Node3D" unique_id=667831700]
 
-[node name="PhysicsPlayerController" type="RigidBody3D" parent="." unique_id=290065418 node_paths=PackedStringArray("camera", "cam_spring", "shapecast_legs", "shapecast_arms", "attach_controller")]
+[node name="PhysicsPlayerController" type="RigidBody3D" parent="." unique_id=290065418 node_paths=PackedStringArray("camera", "cam_spring", "playermodel", "shapecast_legs", "shapecast_arms", "attach_controller")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.8937, 3.3830867, 4.137167)
 collision_layer = 2
 mass = 69.0
@@ -350,6 +351,7 @@ linear_damp_mode = 1
 script = ExtResource("1_ia1lp")
 camera = NodePath("cam_spring/Camera3D")
 cam_spring = NodePath("cam_spring")
+playermodel = NodePath("playermodel/Armature/GeneralSkeleton")
 shapecast_legs = NodePath("shapecast_legs")
 shapecast_arms = NodePath("Headroot/shapecast_arms")
 attach_controller = NodePath("AttachmentController")
@@ -453,7 +455,7 @@ transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 0, -
 
 [node name="Armature" type="Node3D" parent="PhysicsPlayerController/playermodel" unique_id=1066523490]
 
-[node name="GeneralSkeleton" type="Skeleton3D" parent="PhysicsPlayerController/playermodel/Armature" unique_id=204165220 node_paths=PackedStringArray("cam_spring")]
+[node name="GeneralSkeleton" type="Skeleton3D" parent="PhysicsPlayerController/playermodel/Armature" unique_id=204165220 node_paths=PackedStringArray("body", "cam_spring")]
 motion_scale = 0.8534346
 modifier_callback_mode_process = 0
 bones/0/name = "Hips"
@@ -814,6 +816,7 @@ bones/50/position = Vector3(9.683163e-06, 0.45561245, 0.028439756)
 bones/50/rotation = Quaternion(0, 0.70710677, -0.70710677, 0)
 bones/50/scale = Vector3(1, 1, 1)
 script = ExtResource("3_2nij2")
+body = NodePath("../../..")
 cam_spring = NodePath("../../../cam_spring")
 metadata/_custom_type_script = "uid://kpuqgbh8b1s0"
 
