@@ -287,7 +287,6 @@ radius = 0.1
 script = ExtResource("7_rpuu0")
 slot_name = "Armor"
 bone_name = "Chest"
-is_hotbar = true
 metadata/_custom_type_script = "uid://dnryq4yanmj62"
 
 [sub_resource type="Resource" id="Resource_rpuu0"]

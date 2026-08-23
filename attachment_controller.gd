@@ -103,7 +103,8 @@ func _build_slots() -> void:
 			"occupant": null,
 			"origin_xform_inv": Transform3D.IDENTITY,
 			"is_hotbar" : def.is_hotbar,
-			"is_hidden" : def.is_hidden
+			"is_hidden" : def.is_hidden,
+			"temp_shown" : false
 		}
 
 ## Looks for a child node named ATTACHMENT_ORIGIN_NAME on the given body and
@@ -177,8 +178,11 @@ func attach(child_body: RigidBody3D) -> bool:
 	for i in body.find_children("*", "ShapeCast3D", true, false):
 		i.add_exception(child_body)
 
+	# Start hidden if the slot calls for it. If this is the currently-equipped
+	# hotbar slot, _on_skeleton_updated will reveal it again on the next tick.
 	if slot["is_hidden"]:
 		_set_meshes_and_collisions_enabled(child_body, false)
+		slot["temp_shown"] = false
 
 	slot["occupant"] = child_body
 	
@@ -195,6 +199,7 @@ func detach(child_body: RigidBody3D) -> void:
 			slot["origin_xform_inv"] = Transform3D.IDENTITY
 			if slot["is_hidden"]:
 				_set_meshes_and_collisions_enabled(child_body, true)
+			slot["temp_shown"] = false
 			break
 	child_body.freeze = false
 	
@@ -233,6 +238,16 @@ func _on_skeleton_updated() -> void:
 				else:
 					i += 1
 			is_equipped = hotbar_index == current_hotbar_slot
+
+		# If this slot is normally hidden, temporarily override that while it's
+		# the actively-selected hotbar item: show meshes + colliders. Drop back
+		# to hidden as soon as it's no longer equipped. Only toggle on change.
+		if slot["is_hidden"]:
+			var should_show: bool = is_equipped
+			if slot["temp_shown"] != should_show:
+				_set_meshes_and_collisions_enabled(child, should_show)
+				slot["temp_shown"] = should_show
+
 		var bone_idx: int = slot["bone_idx"] if !is_equipped else skeleton.find_bone("RightHand")
 		if bone_idx != -1 and is_instance_valid(skeleton):
 			var bone_global_pose: Transform3D = skeleton.get_bone_global_pose(bone_idx)
