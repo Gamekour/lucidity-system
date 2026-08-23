@@ -8,11 +8,16 @@ class_name AttachmentController
 ## is the name of the slot it wants to attach to.
 const SLOT_META_KEY: String = "attachment_slot"
 
+## Name of the optional child node on an attaching body whose local transform
+## is used as an additional offset on top of the slot's own offset.
+const ATTACHMENT_ORIGIN_NAME: String = "attachment_origin"
+
 ## Editor-facing list of slot definitions.
 @export var slot_definitions: Array[AttachmentSlot]
 
 ## Runtime slot table, keyed by slot name.
-## Each value: {"parent": Node3D, "bone_name": String, "bone_idx": int, "local_xform": Transform3D, "occupant": RigidBody3D}
+## Each value: {"parent": Node3D, "bone_name": String, "bone_idx": int, "local_xform": Transform3D,
+##              "occupant": RigidBody3D, "origin_xform_inv": Transform3D}
 var attachment_slots: Dictionary = {}
 
 func _ready() -> void:
@@ -66,7 +71,17 @@ func _build_slots() -> void:
 			"bone_idx": bone_idx,
 			"local_xform": offset_xform,
 			"occupant": null,
+			"origin_xform_inv": Transform3D.IDENTITY,
 		}
+
+## Looks for a child node named ATTACHMENT_ORIGIN_NAME on the given body and
+## returns its local transform (relative to the body). Returns identity if
+## no such node exists, so bodies without an origin marker behave as before.
+func _find_attachment_origin(body: Node3D) -> Transform3D:
+	var origin_node := body.get_node_or_null(ATTACHMENT_ORIGIN_NAME)
+	if origin_node == null or not (origin_node is Node3D):
+		return Transform3D.IDENTITY
+	return origin_node.transform
 
 ## Attempts to attach child_body to the slot named in its "attachment_slot" metadata.
 ## Returns true on success.
@@ -87,6 +102,11 @@ func attach(child_body: RigidBody3D) -> bool:
 
 	var parent_body: Node3D = slot["parent"]
 
+	# Resolve and cache the body's attachment_origin offset (if any) so we don't
+	# need to re-fetch the node every skeleton update.
+	var origin_xform: Transform3D = _find_attachment_origin(child_body)
+	slot["origin_xform_inv"] = origin_xform.affine_inverse()
+
 	child_body.get_parent().remove_child(child_body)
 	parent_body.add_child(child_body)
 	child_body.transform = Transform3D.IDENTITY
@@ -97,16 +117,23 @@ func attach(child_body: RigidBody3D) -> bool:
 	child_body.set_collision_layer_value(1, false)
 
 	slot["occupant"] = child_body
+	
+	if (parent_body is RigidBody3D and child_body is RigidBody3D):
+		parent_body.mass += child_body.mass
 	return true
 
 func detach(child_body: RigidBody3D) -> void:
+	var former_parent : Node3D = child_body.get_parent_node_3d()
 	for slot_name in attachment_slots.keys():
 		var slot: Dictionary = attachment_slots[slot_name]
 		if slot["occupant"] == child_body:
 			slot["occupant"] = null
+			slot["origin_xform_inv"] = Transform3D.IDENTITY
 			break
 	child_body.freeze = false
 	child_body.set_collision_layer_value(1, true)
+	if (former_parent is RigidBody3D and child_body is RigidBody3D):
+		former_parent.mass -= child_body.mass
 
 func _on_skeleton_updated() -> void:
 	for slot_name in attachment_slots.keys():
@@ -116,9 +143,14 @@ func _on_skeleton_updated() -> void:
 			continue
 		var parent: Node3D = get_parent()
 
+		var target_xform: Transform3D
 		var bone_idx: int = slot["bone_idx"]
 		if bone_idx != -1 and is_instance_valid(skeleton):
 			var bone_global_pose: Transform3D = skeleton.get_bone_global_pose(bone_idx)
-			child.global_transform = skeleton.global_transform * bone_global_pose * slot["local_xform"]
+			target_xform = skeleton.global_transform * bone_global_pose * slot["local_xform"]
 		else:
-			child.global_transform = parent.global_transform * slot["local_xform"]
+			target_xform = parent.global_transform * slot["local_xform"]
+
+		# Post-multiply by the inverse of the body's attachment_origin local transform
+		# so that the origin node (not the body's own origin) lands on the target.
+		child.global_transform = target_xform * slot["origin_xform_inv"]

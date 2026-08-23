@@ -194,7 +194,7 @@ func _physics_process(delta: float) -> void:
 		var spring_magnitude : float = displacement * spring_strength * spring_strength_scale - normal_velocity * spring_damping * spring_damping_scale
 		var spring_force : Vector3 = slope_normal * spring_magnitude
 		force += spring_force
-		
+	
 	apply_force(force, shapecast_legs.position)
 
 	if grounded and apply_reaction_forces and floor_rigidbody != null and is_instance_valid(floor_rigidbody):
@@ -237,6 +237,7 @@ func _input(event: InputEvent) -> void:
 		if (grabbed_col is RigidBody3D):
 			var success := attach_controller.attach(grabbed_col)
 			if (success):
+				(grabbed_col as RigidBody3D).remove_collision_exception_with(self)
 				grabbed_col = null
 
 func _safe_slerp_up(from: Vector3, to: Vector3, weight: float) -> Vector3:
@@ -388,16 +389,14 @@ func arm_cast() -> void:
 
 	var collider = shapecast_arms.get_collider(0)
 
-	# Rigidbodies are always grabbed directly at the initial hit - they're the
-	# thing being picked up, not a surface to climb.
 	if collider is RigidBody3D:
 		grabbed_col = collider
 		grab_offset = collider.to_local(shapecast_arms.get_collision_point(0))
 		trying_to_grab = false
+		if (grabbed_col is RigidBody3D):
+			grabbed_col.add_collision_exception_with(self)
 		return
 
-	# Anything else (static/kinematic geometry) is treated as a potential
-	# climbable face: search upward from the initial hit for a ledge.
 	var hit_point := shapecast_arms.get_collision_point(0)
 	var hit_normal := shapecast_arms.get_collision_normal(0)
 	var ledge := _find_ledge(hit_point, hit_normal)
@@ -406,26 +405,6 @@ func arm_cast() -> void:
 		grab_offset = (ledge.node as Node3D).to_local(ledge.point)
 		trying_to_grab = false
 
-# Searches upward from an initial wall hit for a walkable ledge, without
-# assuming the wall is vertical.
-#
-# The key trick is the climb direction: rather than probing straight up
-# (world up_dir), we project up_dir onto the wall's own tangent plane -
-#     slope_up = up_dir - wall_normal * up_dir.dot(wall_normal)
-# up_dir.dot(wall_normal) is the cosine of the angle between "up" and the
-# wall's normal, so subtracting that component removes exactly the part of
-# up_dir that points into/out of the wall. What's left is the direction that
-# actually runs along the wall's face. On a plain vertical wall this reduces
-# to up_dir itself; on a sloped or overhanging face it leans the search path
-# forward or backward by the right trigonometric amount, so ledges that sit
-# above a receding or leaning surface (not directly overhead) are still found.
-#
-# Along that path we do a classic two-ray probe at each step: a forward ray
-# checks whether the wall is still solid at that height, and the moment it
-# isn't, a downward ray right there checks for a walkable surface. Every
-# probe point is also clamped to the arm's actual reach
-# (shapecast_arms.target_position.length()) so nothing beyond the arm's
-# physical range can ever be grabbed.
 func _find_ledge(wall_point: Vector3, wall_normal: Vector3) -> Dictionary:
 	var up_dir := current_up_dir
 	var space_state := get_world_3d().direct_space_state
