@@ -235,8 +235,9 @@ func _input(event: InputEvent) -> void:
 		trying_to_grab = false
 	if event.is_action_pressed("attach"):
 		if (grabbed_col is RigidBody3D):
-			attach_controller.attach(grabbed_col)
-			grabbed_col = null
+			var success := attach_controller.attach(grabbed_col)
+			if (success):
+				grabbed_col = null
 
 func _safe_slerp_up(from: Vector3, to: Vector3, weight: float) -> Vector3:
 	from = from.normalized()
@@ -333,7 +334,7 @@ func _get_lean_target_up(up_dir: Vector3, lean_input: Vector3) -> Vector3:
 	return up_dir.rotated(lean_axis, lean_angle)
 
 func _get_crouch_lean_factor() -> float:
-	return clampf(lerpf(max_lean_angle, 0, shapecast_legs.get_closest_collision_safe_fraction()) * 2, 0.0, 1.0)
+	return clampf(0.75 - shapecast_legs.get_closest_collision_safe_fraction(), 0, 1) * 3
 
 func _get_upright_torque(up_dir: Vector3, lean_input: Vector3, strength: float, damping: float) -> Vector3:
 	var target_up := _get_lean_target_up(up_dir, lean_input)

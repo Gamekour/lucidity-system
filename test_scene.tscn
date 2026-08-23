@@ -283,7 +283,7 @@ blend_shape_mode = 0
 [sub_resource type="SphereShape3D" id="SphereShape3D_njel3"]
 radius = 0.1
 
-[sub_resource type="Resource" id="Resource_qpkhx"]
+[sub_resource type="Resource" id="Resource_vr1i5"]
 script = ExtResource("7_rpuu0")
 slot_name = "Armor"
 bone_name = "Chest"
@@ -354,7 +354,7 @@ cam_distance_min = 0.0
 crawl_height = 0.3
 lean_strength = 100.0
 max_lean_angle = 0.5
-crouch_lean_angle = 1.0
+crouch_lean_angle = 0.5
 air_upright_assist_strength = 1000.0
 air_upright_assist_damping = 100.0
 min_camera_pitch = -1.3962634015954636
@@ -898,7 +898,7 @@ target_position = Vector3(0, 0, 2)
 [node name="AttachmentController" type="Node3D" parent="PhysicsPlayerController" unique_id=799874758 node_paths=PackedStringArray("skeleton")]
 script = ExtResource("6_vr1i5")
 skeleton = NodePath("../playermodel/Armature/GeneralSkeleton")
-slot_definitions = Array[ExtResource("7_rpuu0")]([SubResource("Resource_qpkhx")])
+slot_definitions = Array[ExtResource("7_rpuu0")]([SubResource("Resource_vr1i5")])
 
 [node name="luciddebug" parent="." unique_id=1643952968 instance=ExtResource("1_uhqqe")]
 

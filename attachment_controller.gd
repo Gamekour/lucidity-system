@@ -9,7 +9,7 @@ class_name AttachmentController
 const SLOT_META_KEY: String = "attachment_slot"
 
 ## Editor-facing list of slot definitions.
-@export var slot_definitions: Array[AttachmentSlot] = []
+@export var slot_definitions: Array[AttachmentSlot]
 
 ## Runtime slot table, keyed by slot name.
 ## Each value: {"parent": Node3D, "bone_name": String, "bone_idx": int, "local_xform": Transform3D, "occupant": RigidBody3D}
@@ -51,11 +51,20 @@ func _build_slots() -> void:
 				if bone_idx == -1:
 					push_warning("AttachmentController: bone '%s' not found for slot '%s'." % [def.bone_name, def.slot_name])
 
+		# Build the local offset transform from the slot definition's pos/rot offsets.
+		# rot_offset is treated as degrees (matches Godot's editor-facing rotation convention).
+		var offset_basis: Basis = Basis.from_euler(Vector3(
+			deg_to_rad(def.rot_offset.x),
+			deg_to_rad(def.rot_offset.y),
+			deg_to_rad(def.rot_offset.z)
+		))
+		var offset_xform: Transform3D = Transform3D(offset_basis, def.pos_offset)
+
 		attachment_slots[def.slot_name] = {
 			"parent": parent_node,
 			"bone_name": def.bone_name,
 			"bone_idx": bone_idx,
-			"local_xform": Transform3D.IDENTITY,
+			"local_xform": offset_xform,
 			"occupant": null,
 		}
 
