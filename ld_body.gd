@@ -50,6 +50,7 @@ class_name PhysicsPlayerController
 @export var grab_damp_max : float = 100.0
 @export var grab_max_angular_velocity : float = 10.0
 @export var grab_angular_damp : float = 5.0
+@export var allow_grab : bool = true
 
 # --- Ledge detection (non-rigidbody grabs) ---
 @export_group("Ledge Detection")
@@ -60,6 +61,7 @@ class_name PhysicsPlayerController
 @export_range(0.0, 90.0, 0.5, "radians_as_degrees") var ledge_max_surface_angle : float = deg_to_rad(45.0)
 
 var grabbed_col : Node3D
+var grab_release_pending : Array[RigidBody3D]
 var grab_offset : Vector3 = Vector3.ZERO
 var relative_velocity : Vector3 = Vector3.ZERO
 var stance_height : float = 0
@@ -69,6 +71,7 @@ var sprinting := false
 var crouch_jump := false
 var grounded := false
 var trying_to_grab := false
+var allow_grab_default := true
 
 var roll_force_scale : float = 1.0
 var sprint_multiplier_scale : float = 1.0
@@ -94,6 +97,7 @@ var floor_contact_point : Vector3 = Vector3.ZERO
 
 func _ready() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	allow_grab_default = allow_grab
 
 func _physics_process(delta: float) -> void:
 	var gravity_vec : Vector3 = get_gravity()
@@ -203,9 +207,10 @@ func _physics_process(delta: float) -> void:
 		if apply_reaction_torque:
 			floor_rigidbody.apply_torque(-total_torque)
 	
-	if (grabbed_col == null && trying_to_grab):
+	if (grabbed_col == null && trying_to_grab && allow_grab):
 		arm_cast()
 	arm_logic()
+	_update_grab_release_pending()
 
 func _process(delta: float) -> void:
 	sprinting = Input.is_action_pressed("sprint")
@@ -231,6 +236,7 @@ func _input(event: InputEvent) -> void:
 	if event.is_action_pressed("grab"):
 		trying_to_grab = true
 	if event.is_action_released("grab"):
+		_queue_collision_exception_release(grabbed_col)
 		grabbed_col = null
 		trying_to_grab = false
 	if event.is_action_pressed("attach"):
@@ -238,6 +244,7 @@ func _input(event: InputEvent) -> void:
 			var success := attach_controller.attach(grabbed_col)
 			if (success):
 				(grabbed_col as RigidBody3D).remove_collision_exception_with(self)
+				grab_release_pending.erase(grabbed_col)
 				grabbed_col = null
 
 func _safe_slerp_up(from: Vector3, to: Vector3, weight: float) -> Vector3:
@@ -395,6 +402,7 @@ func arm_cast() -> void:
 		trying_to_grab = false
 		if (grabbed_col is RigidBody3D):
 			grabbed_col.add_collision_exception_with(self)
+			grab_release_pending.erase(grabbed_col)
 		return
 
 	var hit_point := shapecast_arms.get_collision_point(0)
@@ -478,6 +486,7 @@ func arm_logic() -> void:
 		var grab_position_target := shapecast_arms.to_global(Vector3.BACK * grab_distance)
 		var offset = (grab_position_target - grab_position)
 		if (offset.length() > shapecast_arms.target_position.length()):
+			_queue_collision_exception_release(grabbed_col)
 			grabbed_col = null
 			return
 		
@@ -508,3 +517,53 @@ func arm_logic() -> void:
 			var force_scale = (force.normalized().dot(linear_velocity.normalized()) + 1) / 2
 			force *= force_scale
 		apply_force(-force / 2)
+
+func _queue_collision_exception_release(col : Node3D) -> void:
+	# Called whenever a grab ends (release, out-of-reach, etc). The
+	# collision exception with the player is kept in place until the
+	# object is confirmed to no longer be overlapping the player, to
+	# avoid the object suddenly colliding with (and getting shoved by)
+	# the player the instant the grab is dropped.
+	if col is RigidBody3D and not grab_release_pending.has(col):
+		grab_release_pending.append(col)
+
+func _update_grab_release_pending() -> void:
+	if grab_release_pending.is_empty():
+		return
+
+	var space_state := get_world_3d().direct_space_state
+	# Use this body's own physics shape(s) to test for overlap against
+	# each pending object, rather than assuming a specific child node.
+	var shape_owners := get_shape_owners()
+
+	for i in range(grab_release_pending.size() - 1, -1, -1):
+		var body := grab_release_pending[i]
+		if not is_instance_valid(body):
+			grab_release_pending.remove_at(i)
+			continue
+
+		var still_overlapping := false
+		for owner_id in shape_owners:
+			var owner_transform := shape_owner_get_transform(owner_id)
+			var shape_count := shape_owner_get_shape_count(owner_id)
+			for shape_idx in range(shape_count):
+				var shape := shape_owner_get_shape(owner_id, shape_idx)
+				var query := PhysicsShapeQueryParameters3D.new()
+				query.shape = shape
+				query.transform = global_transform * owner_transform
+				query.exclude = [get_rid()]
+				query.collide_with_bodies = true
+				query.collide_with_areas = false
+				var results := space_state.intersect_shape(query, 4)
+				for result in results:
+					if result.get("collider") == body:
+						still_overlapping = true
+						break
+				if still_overlapping:
+					break
+			if still_overlapping:
+				break
+
+		if not still_overlapping:
+			body.remove_collision_exception_with(self)
+			grab_release_pending.remove_at(i)

@@ -107,6 +107,10 @@ func attach(child_body: RigidBody3D) -> bool:
 		return false
 
 	var parent_body: Node3D = slot["parent"]
+	
+	if (child_body.has_meta("allow_grab")):
+		if (parent_body is PhysicsPlayerController):
+			parent_body.allow_grab = child_body.get_meta("allow_grab")
 
 	# Resolve and cache the body's attachment_origin offset (if any) so we don't
 	# need to re-fetch the node every skeleton update.
@@ -147,6 +151,8 @@ func detach(child_body: RigidBody3D) -> void:
 		skeleton_overlay.active = false
 	if (former_parent is RigidBody3D and child_body is RigidBody3D):
 		former_parent.mass -= child_body.mass
+	if (former_parent is PhysicsPlayerController):
+		former_parent.allow_grab = former_parent.allow_grab_default
 
 func _on_skeleton_updated() -> void:
 	for slot_name in attachment_slots.keys():

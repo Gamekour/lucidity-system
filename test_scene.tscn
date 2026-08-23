@@ -999,6 +999,7 @@ surface_material_override/0 = ExtResource("9_njel3")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.721491, 0.6091262, -3.2850118)
 mass = 10.0
 metadata/attachment_slot = "Armor"
+metadata/allow_grab = false
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="test_box4" unique_id=152703587]
 shape = SubResource("BoxShape3D_oo8pe")
