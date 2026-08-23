@@ -29,7 +29,7 @@ func _ready() -> void:
 
 func _input(event: InputEvent) -> void:
 	if (event.is_action_pressed("hotbar_direct")):
-		print(event.as_text())
+		current_hotbar_slot = int(event.as_text()) - 1
 
 func _connect_skeleton(s: Skeleton3D) -> void:
 	# Make sure IK / modifiers run on the physics tick, matching RigidBody3D updates,
@@ -182,7 +182,7 @@ func _on_skeleton_updated() -> void:
 				else:
 					i += 1
 			is_equipped = hotbar_index == current_hotbar_slot
-		var bone_idx: int = slot["bone_idx"] if !slot["is_hotbar"] else skeleton.find_bone("RightHand")
+		var bone_idx: int = slot["bone_idx"] if !is_equipped else skeleton.find_bone("RightHand")
 		if bone_idx != -1 and is_instance_valid(skeleton):
 			var bone_global_pose: Transform3D = skeleton.get_bone_global_pose(bone_idx)
 			target_xform = skeleton.global_transform * bone_global_pose * slot["local_xform"]
