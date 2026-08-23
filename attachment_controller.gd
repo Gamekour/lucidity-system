@@ -82,6 +82,12 @@ func _find_attachment_origin(body: Node3D) -> Transform3D:
 	if origin_node == null or not (origin_node is Node3D):
 		return Transform3D.IDENTITY
 	return origin_node.transform
+	
+func _find_skeleton_overlay(body : Node3D) -> SkeletonOverlay:
+	var origin_node := body.get_node_or_null("SkeletonOverlay")
+	if origin_node == null or not (origin_node is SkeletonOverlay):
+		return null
+	return origin_node
 
 ## Attempts to attach child_body to the slot named in its "attachment_slot" metadata.
 ## Returns true on success.
@@ -105,6 +111,10 @@ func attach(child_body: RigidBody3D) -> bool:
 	# Resolve and cache the body's attachment_origin offset (if any) so we don't
 	# need to re-fetch the node every skeleton update.
 	var origin_xform: Transform3D = _find_attachment_origin(child_body)
+	var skeleton_overlay = _find_skeleton_overlay(child_body)
+	if (skeleton_overlay != null):
+		skeleton_overlay.target_skeleton = skeleton
+		skeleton_overlay.active = true
 	slot["origin_xform_inv"] = origin_xform.affine_inverse()
 
 	child_body.get_parent().remove_child(child_body)
@@ -132,6 +142,9 @@ func detach(child_body: RigidBody3D) -> void:
 			break
 	child_body.freeze = false
 	child_body.set_collision_layer_value(1, true)
+	var skeleton_overlay = _find_skeleton_overlay(child_body)
+	if (skeleton_overlay != null):
+		skeleton_overlay.active = false
 	if (former_parent is RigidBody3D and child_body is RigidBody3D):
 		former_parent.mass -= child_body.mass
 
