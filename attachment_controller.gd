@@ -3,18 +3,13 @@ class_name AttachmentController
 
 @export var body : PhysicsPlayerController
 @export var shapecast : ShapeCast3D
-## Skeleton used to resolve bone transforms for bone-attached bodies.
 @export var skeleton: Skeleton3D
+@export var playermodel: PlayerModel
 
-## Metadata key that a RigidBody3D must carry (via set_meta) whose value
-## is the name of the slot it wants to attach to.
 const SLOT_META_KEY: String = "attachment_slot"
 
-## Name of the optional child node on an attaching body whose local transform
-## is used as an additional offset on top of the slot's own offset.
 const ATTACHMENT_ORIGIN_NAME: String = "attachment_origin"
 
-## Editor-facing list of slot definitions.
 @export var slot_definitions: Array[AttachmentSlot]
 var hotbar : Array[AttachmentSlot]
 var current_hotbar_slot : int = 0
@@ -35,9 +30,6 @@ func _input(event: InputEvent) -> void:
 	if (event.is_action_pressed("drop")):
 		detach_hotbar_slot(current_hotbar_slot)
 
-## Detaches whatever occupant is currently in the hotbar slot at the given
-## hotbar index (index into the `hotbar` array, not the attachment_slots dict).
-## Does nothing if the index is out of range or the slot is empty.
 func detach_hotbar_slot(hotbar_index: int) -> void:
 	if hotbar_index < 0 or hotbar_index >= hotbar.size():
 		push_warning("AttachmentController: invalid hotbar index '%d'." % hotbar_index)
@@ -56,8 +48,6 @@ func detach_hotbar_slot(hotbar_index: int) -> void:
 	detach(occupant)
 
 func _connect_skeleton(s: Skeleton3D) -> void:
-	# Make sure IK / modifiers run on the physics tick, matching RigidBody3D updates,
-	# instead of the default _process timing.
 	s.modifier_callback_mode_process = Skeleton3D.MODIFIER_CALLBACK_MODE_PROCESS_PHYSICS
 	if not s.skeleton_updated.is_connected(_on_skeleton_updated):
 		s.skeleton_updated.connect(_on_skeleton_updated)
@@ -86,8 +76,6 @@ func _build_slots() -> void:
 				if bone_idx == -1:
 					push_warning("AttachmentController: bone '%s' not found for slot '%s'." % [def.bone_name, def.slot_name])
 
-		# Build the local offset transform from the slot definition's pos/rot offsets.
-		# rot_offset is treated as degrees (matches Godot's editor-facing rotation convention).
 		var offset_basis: Basis = Basis.from_euler(Vector3(
 			deg_to_rad(def.rot_offset.x),
 			deg_to_rad(def.rot_offset.y),
@@ -107,15 +95,30 @@ func _build_slots() -> void:
 			"temp_shown" : false
 		}
 
-## Looks for a child node named ATTACHMENT_ORIGIN_NAME on the given body and
-## returns its local transform (relative to the body). Returns identity if
-## no such node exists, so bodies without an origin marker behave as before.
 func _find_attachment_origin(body: Node3D) -> Transform3D:
 	var origin_node := body.get_node_or_null(ATTACHMENT_ORIGIN_NAME)
 	if origin_node == null or not (origin_node is Node3D):
 		return Transform3D.IDENTITY
 	return origin_node.transform
 	
+func _is_left_handed() -> bool:
+	return is_instance_valid(playermodel) and playermodel.left_handed
+
+func _mirror_bone_name(bone_name: String) -> String:
+	if bone_name.find("Left") != -1:
+		return bone_name.replace("Left", "Right")
+	elif bone_name.find("Right") != -1:
+		return bone_name.replace("Right", "Left")
+	return bone_name
+
+func _resolve_bone_idx(slot: Dictionary) -> int:
+	var bone_name: String = slot["bone_name"]
+	if bone_name == "" or not is_instance_valid(skeleton):
+		return -1
+	if _is_left_handed():
+		bone_name = _mirror_bone_name(bone_name)
+	return skeleton.find_bone(bone_name)
+
 func _find_skeleton_overlay(body : Node3D) -> SkeletonOverlay:
 	var origin_node := body.get_node_or_null("SkeletonOverlay")
 	if origin_node == null or not (origin_node is SkeletonOverlay):
@@ -132,8 +135,6 @@ func _set_meshes_and_collisions_enabled(node: Node, enabled: bool) -> void:
 	for child in node.get_children():
 		_set_meshes_and_collisions_enabled(child, enabled)
 
-## Attempts to attach child_body to the slot named in its "attachment_slot" metadata.
-## Returns true on success.
 func attach(child_body: RigidBody3D) -> bool:
 	if not child_body.has_meta(SLOT_META_KEY):
 		push_warning("AttachmentController: '%s' has no '%s' metadata set." % [child_body.name, SLOT_META_KEY])
@@ -155,8 +156,6 @@ func attach(child_body: RigidBody3D) -> bool:
 		if (parent_body is PhysicsPlayerController):
 			parent_body.allow_grab = child_body.get_meta("allow_grab")
 
-	# Resolve and cache the body's attachment_origin offset (if any) so we don't
-	# need to re-fetch the node every skeleton update.
 	var origin_xform: Transform3D = _find_attachment_origin(child_body)
 	var skeleton_overlay = _find_skeleton_overlay(child_body)
 	if (skeleton_overlay != null && !slot["is_hidden"]):
@@ -178,8 +177,6 @@ func attach(child_body: RigidBody3D) -> bool:
 	for i in body.find_children("*", "ShapeCast3D", true, false):
 		i.add_exception(child_body)
 
-	# Start hidden if the slot calls for it. If this is the currently-equipped
-	# hotbar slot, _on_skeleton_updated will reveal it again on the next tick.
 	if slot["is_hidden"]:
 		_set_meshes_and_collisions_enabled(child_body, false)
 		slot["temp_shown"] = false
@@ -239,22 +236,22 @@ func _on_skeleton_updated() -> void:
 					i += 1
 			is_equipped = hotbar_index == current_hotbar_slot
 
-		# If this slot is normally hidden, temporarily override that while it's
-		# the actively-selected hotbar item: show meshes + colliders. Drop back
-		# to hidden as soon as it's no longer equipped. Only toggle on change.
 		if slot["is_hidden"]:
 			var should_show: bool = is_equipped
 			if slot["temp_shown"] != should_show:
 				_set_meshes_and_collisions_enabled(child, should_show)
 				slot["temp_shown"] = should_show
 
-		var bone_idx: int = slot["bone_idx"] if !is_equipped else skeleton.find_bone("RightHand")
+		var bone_idx: int
+		if is_equipped:
+			var hand_bone_name: String = _mirror_bone_name("RightHand") if _is_left_handed() else "RightHand"
+			bone_idx = skeleton.find_bone(hand_bone_name) if is_instance_valid(skeleton) else -1
+		else:
+			bone_idx = _resolve_bone_idx(slot)
 		if bone_idx != -1 and is_instance_valid(skeleton):
 			var bone_global_pose: Transform3D = skeleton.get_bone_global_pose(bone_idx)
 			target_xform = skeleton.global_transform * bone_global_pose * slot["local_xform"]
 		else:
 			target_xform = parent.global_transform * slot["local_xform"]
 
-		# Post-multiply by the inverse of the body's attachment_origin local transform
-		# so that the origin node (not the body's own origin) lands on the target.
 		child.global_transform = target_xform * slot["origin_xform_inv"]
