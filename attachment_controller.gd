@@ -1,6 +1,8 @@
 extends Node
 class_name AttachmentController
 
+@export var body : PhysicsPlayerController
+@export var shapecast : ShapeCast3D
 ## Skeleton used to resolve bone transforms for bone-attached bodies.
 @export var skeleton: Skeleton3D
 
@@ -30,6 +32,28 @@ func _ready() -> void:
 func _input(event: InputEvent) -> void:
 	if (event.is_action_pressed("hotbar_direct")):
 		current_hotbar_slot = int(event.as_text()) - 1
+	if (event.is_action_pressed("drop")):
+		detach_hotbar_slot(current_hotbar_slot)
+
+## Detaches whatever occupant is currently in the hotbar slot at the given
+## hotbar index (index into the `hotbar` array, not the attachment_slots dict).
+## Does nothing if the index is out of range or the slot is empty.
+func detach_hotbar_slot(hotbar_index: int) -> void:
+	if hotbar_index < 0 or hotbar_index >= hotbar.size():
+		push_warning("AttachmentController: invalid hotbar index '%d'." % hotbar_index)
+		return
+
+	var slot_def: AttachmentSlot = hotbar[hotbar_index]
+	if slot_def == null or not attachment_slots.has(slot_def.slot_name):
+		push_warning("AttachmentController: hotbar slot at index '%d' not found in attachment_slots." % hotbar_index)
+		return
+
+	var slot: Dictionary = attachment_slots[slot_def.slot_name]
+	var occupant: RigidBody3D = slot["occupant"]
+	if occupant == null or not is_instance_valid(occupant):
+		return
+
+	detach(occupant)
 
 func _connect_skeleton(s: Skeleton3D) -> void:
 	# Make sure IK / modifiers run on the physics tick, matching RigidBody3D updates,
@@ -146,7 +170,12 @@ func attach(child_body: RigidBody3D) -> bool:
 	child_body.freeze_mode = RigidBody3D.FREEZE_MODE_KINEMATIC
 	child_body.linear_velocity = Vector3.ZERO
 	child_body.angular_velocity = Vector3.ZERO
-	child_body.set_collision_layer_value(1, false)
+	
+	body.add_collision_exception_with(child_body)
+	for i in body.find_children("*", "SpringArm3D", true, false):
+		i.add_excluded_object(child_body.get_rid())
+	for i in body.find_children("*", "ShapeCast3D", true, false):
+		i.add_exception(child_body)
 
 	if slot["is_hidden"]:
 		_set_meshes_and_collisions_enabled(child_body, false)
@@ -168,7 +197,13 @@ func detach(child_body: RigidBody3D) -> void:
 				_set_meshes_and_collisions_enabled(child_body, true)
 			break
 	child_body.freeze = false
-	child_body.set_collision_layer_value(1, true)
+	
+	body._queue_collision_exception_release(child_body)
+	shapecast.remove_exception(child_body)
+	for i in body.find_children("*", "SpringArm3D", true, false):
+		i.remove_excluded_object(child_body.get_rid())
+	for i in body.find_children("*", "ShapeCast3D", true, false):
+		i.remove_exception(child_body)
 	var skeleton_overlay = _find_skeleton_overlay(child_body)
 	if (skeleton_overlay != null):
 		skeleton_overlay.active = false
@@ -176,6 +211,7 @@ func detach(child_body: RigidBody3D) -> void:
 		former_parent.mass -= child_body.mass
 	if (former_parent is PhysicsPlayerController):
 		former_parent.allow_grab = former_parent.allow_grab_default
+	child_body.reparent(get_tree().root)
 
 func _on_skeleton_updated() -> void:
 	for slot_name in attachment_slots.keys():

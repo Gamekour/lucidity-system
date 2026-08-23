@@ -907,8 +907,10 @@ transform = Transform3D(1.0000001, 8.149157e-10, -3.4197e-10, -3.4923758e-10, 1.
 shape = SubResource("SphereShape3D_njel3")
 target_position = Vector3(0, 0, 2)
 
-[node name="AttachmentController" type="Node3D" parent="PhysicsPlayerController" unique_id=799874758 node_paths=PackedStringArray("skeleton")]
+[node name="AttachmentController" type="Node3D" parent="PhysicsPlayerController" unique_id=799874758 node_paths=PackedStringArray("body", "shapecast", "skeleton")]
 script = ExtResource("6_vr1i5")
+body = NodePath("..")
+shapecast = NodePath("../shapecast_legs")
 skeleton = NodePath("../playermodel/Armature/GeneralSkeleton")
 slot_definitions = Array[ExtResource("7_rpuu0")]([SubResource("Resource_vr1i5"), SubResource("Resource_rpuu0")])
 

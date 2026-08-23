@@ -51,6 +51,8 @@ class_name PhysicsPlayerController
 @export var grab_damp_max : float = 100.0
 @export var grab_max_angular_velocity : float = 10.0
 @export var grab_angular_damp : float = 5.0
+@export var max_floor_force_scale : float = 100.0
+@export var max_floor_torque_scale : float = 100.0
 @export var allow_grab : bool = true
 
 # --- Ledge detection (non-rigidbody grabs) ---
@@ -204,9 +206,11 @@ func _physics_process(delta: float) -> void:
 
 	if grounded and apply_reaction_forces and floor_rigidbody != null and is_instance_valid(floor_rigidbody):
 		var offset := floor_contact_point - floor_rigidbody.global_position
-		floor_rigidbody.apply_force(-force, offset)
+		var floor_force = force.limit_length(floor_rigidbody.mass * max_floor_force_scale)
+		floor_rigidbody.apply_force(-floor_force, offset)
 		if apply_reaction_torque:
-			floor_rigidbody.apply_torque(-total_torque)
+			var floor_torque = total_torque.limit_length(floor_rigidbody.mass * max_floor_torque_scale)
+			floor_rigidbody.apply_torque(-floor_torque)
 	
 	if (grabbed_col == null && trying_to_grab && allow_grab):
 		arm_cast()
