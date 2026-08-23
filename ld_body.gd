@@ -55,13 +55,18 @@ class_name PhysicsPlayerController
 @export var max_floor_torque_scale : float = 100.0
 @export var allow_grab : bool = true
 
-# --- Ledge detection (non-rigidbody grabs) ---
 @export_group("Ledge Detection")
 @export var ledge_probe_steps : int = 6
 @export var ledge_step_height : float = 0.15
 @export var ledge_probe_depth : float = 0.35
 @export var ledge_surface_margin : float = 0.05
 @export_range(0.0, 90.0, 0.5, "radians_as_degrees") var ledge_max_surface_angle : float = deg_to_rad(45.0)
+
+@export_group("Climbing")
+@export var climb_scan_speed : float = 1.5
+@export_range(0.0, 90.0, 0.5, "radians_as_degrees") var climb_scan_min_angle : float = deg_to_rad(20.0)
+@export_range(0.0, 90.0, 0.5, "radians_as_degrees") var climb_scan_max_angle : float = deg_to_rad(80.0)
+@export var climb_scan_input_deadzone : float = 0.15
 
 var grabbed_col : Node3D
 var grab_release_pending : Array[RigidBody3D]
@@ -75,6 +80,12 @@ var crouch_jump := false
 var grounded := false
 var trying_to_grab := false
 var allow_grab_default := true
+
+var climbing_ledge : bool = false
+var climb_scan_active : bool = false
+var climb_scan_angle : float = 0.0
+var climb_scan_base_basis : Basis = Basis.IDENTITY
+var climb_scan_last_hit : Dictionary = {}
 
 var roll_force_scale : float = 1.0
 var sprint_multiplier_scale : float = 1.0
@@ -130,8 +141,6 @@ func _physics_process(delta: float) -> void:
 		var current_floor_node = shapecast_legs.get_collider(0)
 		var current_floor_point = shapecast_legs.get_collision_point(0)
 		
-		# Cache the contact rigidbody + point for the reaction force applied
-		# at the end of this function.
 		floor_contact_point = current_floor_point
 		floor_rigidbody = current_floor_node if current_floor_node is RigidBody3D else null
 		
@@ -215,6 +224,7 @@ func _physics_process(delta: float) -> void:
 	if (grabbed_col == null && trying_to_grab && allow_grab):
 		arm_cast()
 	arm_logic()
+	_process_climb_scan(delta, input_vector)
 	_update_grab_release_pending()
 
 func _process(delta: float) -> void:
@@ -244,6 +254,8 @@ func _input(event: InputEvent) -> void:
 		_queue_collision_exception_release(grabbed_col)
 		grabbed_col = null
 		trying_to_grab = false
+		climbing_ledge = false
+		_reset_climb_scan()
 	if event.is_action_pressed("attach"):
 		if (grabbed_col is RigidBody3D):
 			var success := attach_controller.attach(grabbed_col)
@@ -251,6 +263,8 @@ func _input(event: InputEvent) -> void:
 				(grabbed_col as RigidBody3D).remove_collision_exception_with(self)
 				grab_release_pending.erase(grabbed_col)
 				grabbed_col = null
+				climbing_ledge = false
+				_reset_climb_scan()
 
 func _safe_slerp_up(from: Vector3, to: Vector3, weight: float) -> Vector3:
 	from = from.normalized()
@@ -310,8 +324,9 @@ func _get_body_target_angle(input_vector: Vector2) -> float:
 		return target_angle_horizontal
 	
 	var move_yaw_offset := atan2(input_vector.x, input_vector.y)
-	
-	if (absf(absf(move_yaw_offset) - (PI / 2.0)) < body_turn_sideways_deadzone) and playermodel.is_fp:
+	var climbing = grabbed_col != null
+	climbing = climbing and not (grabbed_col is RigidBody3D)
+	if ((absf(absf(move_yaw_offset) - (PI / 2.0)) < body_turn_sideways_deadzone) and playermodel.is_fp) or climbing:
 		return target_angle_horizontal
 	
 	if input_vector.y < 0.0 and playermodel.is_fp:
@@ -405,6 +420,8 @@ func arm_cast() -> void:
 		grabbed_col = collider
 		grab_offset = collider.to_local(shapecast_arms.get_collision_point(0))
 		trying_to_grab = false
+		climbing_ledge = false
+		_reset_climb_scan()
 		if (grabbed_col is RigidBody3D):
 			grabbed_col.add_collision_exception_with(self)
 			grab_release_pending.erase(grabbed_col)
@@ -417,6 +434,8 @@ func arm_cast() -> void:
 		grabbed_col = ledge.node
 		grab_offset = (ledge.node as Node3D).to_local(ledge.point)
 		trying_to_grab = false
+		climbing_ledge = true
+		_reset_climb_scan()
 
 func _find_ledge(wall_point: Vector3, wall_normal: Vector3) -> Dictionary:
 	var up_dir := current_up_dir
@@ -428,8 +447,6 @@ func _find_ledge(wall_point: Vector3, wall_normal: Vector3) -> Dictionary:
 
 	var slope_up := up_dir - wall_normal * up_dir.dot(wall_normal)
 	if slope_up.length_squared() < 0.0001:
-		# Wall normal is (anti-)parallel to up - this is a floor/ceiling hit,
-		# not a climbable face.
 		return {}
 	slope_up = slope_up.normalized()
 
@@ -451,17 +468,12 @@ func _find_ledge(wall_point: Vector3, wall_normal: Vector3) -> Dictionary:
 		var forward_hit := space_state.intersect_ray(forward_query)
 
 		if not forward_hit.is_empty():
-			# Wall face still present at this height - keep climbing.
 			was_blocked = true
 			continue
 
 		if not was_blocked:
-			# Already in open space above the wall with nothing found -
-			# no point probing further.
 			break
 
-		# Transition from solid wall to open space: this is the wall's top
-		# edge. Drop a ray down through that empty space to find the surface.
 		was_blocked = false
 
 		var down_from := forward_to + up_dir * (ledge_step_height * 0.5)
@@ -474,7 +486,6 @@ func _find_ledge(wall_point: Vector3, wall_normal: Vector3) -> Dictionary:
 
 		var surface_normal : Vector3 = down_hit.normal
 		if surface_normal.dot(up_dir) < walkable_cos:
-			# Too steep to stand/hang on - not a valid ledge.
 			continue
 
 		if (down_hit.position - arm_origin).length() > max_reach:
@@ -483,6 +494,84 @@ func _find_ledge(wall_point: Vector3, wall_normal: Vector3) -> Dictionary:
 		return {"node": down_hit.collider, "point": down_hit.position}
 
 	return {}
+
+func _reset_climb_scan() -> void:
+	climb_scan_active = false
+	climb_scan_angle = 0.0
+	climb_scan_last_hit = {}
+
+func _commit_climb_hit(hit: Dictionary) -> void:
+	_queue_collision_exception_release(grabbed_col)
+	grabbed_col = hit.node
+	grab_offset = (hit.node as Node3D).to_local(hit.point)
+	climbing_ledge = true
+	_reset_climb_scan()
+
+func _scan_for_ledge_at_angle(pitch: float, yaw: float) -> Dictionary:
+	var base_right := climb_scan_base_basis.x
+	var base_up := climb_scan_base_basis.y
+	var base_dir := climb_scan_base_basis.z
+
+	var swept_dir := base_dir.rotated(base_right, pitch).rotated(base_up, yaw).normalized()
+
+	var arm_origin := shapecast_arms.global_position
+	var max_reach := shapecast_arms.target_position.length()
+
+	var space_state := get_world_3d().direct_space_state
+	var query := PhysicsRayQueryParameters3D.create(
+		arm_origin, arm_origin + swept_dir * max_reach,
+		shapecast_arms.collision_mask, [get_rid()]
+	)
+	var hit := space_state.intersect_ray(query)
+	if hit.is_empty():
+		return {}
+	if hit.collider is RigidBody3D:
+		return {}
+
+	var ledge := _find_ledge(hit.position, hit.normal)
+	if ledge.is_empty():
+		return {}
+
+	ledge["angle"] = absf(pitch) + absf(yaw)
+	return ledge
+
+func _process_climb_scan(delta: float, input_vector: Vector2) -> void:
+	if not climbing_ledge or grabbed_col == null:
+		_reset_climb_scan()
+		return
+
+	if input_vector.length() < climb_scan_input_deadzone:
+		_reset_climb_scan()
+		return
+
+	if not climb_scan_active:
+		climb_scan_active = true
+		climb_scan_angle = 0.0
+		climb_scan_last_hit = {}
+		climb_scan_base_basis = shapecast_arms.global_basis
+
+	climb_scan_angle += climb_scan_speed * delta
+
+	var scan_finished := climb_scan_angle >= climb_scan_max_angle
+	climb_scan_angle = minf(climb_scan_angle, climb_scan_max_angle)
+
+	var dir := input_vector.normalized()
+	var pitch := -dir.y * climb_scan_angle
+	var yaw := -dir.x * climb_scan_angle
+
+	var hit := _scan_for_ledge_at_angle(pitch, yaw)
+	if not hit.is_empty():
+		if hit.angle < climb_scan_min_angle:
+			climb_scan_last_hit = hit
+		else:
+			_commit_climb_hit(hit)
+			return
+
+	if scan_finished:
+		if not climb_scan_last_hit.is_empty():
+			_commit_climb_hit(climb_scan_last_hit)
+		else:
+			_reset_climb_scan()
 
 func arm_logic() -> void:
 	if (grabbed_col != null):
@@ -493,6 +582,8 @@ func arm_logic() -> void:
 		if (offset.length() > shapecast_arms.target_position.length()):
 			_queue_collision_exception_release(grabbed_col)
 			grabbed_col = null
+			climbing_ledge = false
+			_reset_climb_scan()
 			return
 		
 		var weight := 1.0
@@ -524,11 +615,6 @@ func arm_logic() -> void:
 		apply_force(-force / 2)
 
 func _queue_collision_exception_release(col : Node3D) -> void:
-	# Called whenever a grab ends (release, out-of-reach, etc). The
-	# collision exception with the player is kept in place until the
-	# object is confirmed to no longer be overlapping the player, to
-	# avoid the object suddenly colliding with (and getting shoved by)
-	# the player the instant the grab is dropped.
 	if col is RigidBody3D and not grab_release_pending.has(col):
 		grab_release_pending.append(col)
 
@@ -537,8 +623,6 @@ func _update_grab_release_pending() -> void:
 		return
 
 	var space_state := get_world_3d().direct_space_state
-	# Use this body's own physics shape(s) to test for overlap against
-	# each pending object, rather than assuming a specific child node.
 	var shape_owners := get_shape_owners()
 
 	for i in range(grab_release_pending.size() - 1, -1, -1):
