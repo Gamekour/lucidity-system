@@ -97,6 +97,16 @@ func _find_skeleton_overlay(body : Node3D) -> SkeletonOverlay:
 		return null
 	return origin_node
 
+func _set_meshes_and_collisions_enabled(node: Node, enabled: bool) -> void:
+	if node is MeshInstance3D:
+		node.visible = enabled
+	elif node is CollisionShape3D:
+		node.disabled = not enabled
+	elif node is CollisionPolygon3D:
+		node.disabled = not enabled
+	for child in node.get_children():
+		_set_meshes_and_collisions_enabled(child, enabled)
+
 ## Attempts to attach child_body to the slot named in its "attachment_slot" metadata.
 ## Returns true on success.
 func attach(child_body: RigidBody3D) -> bool:
@@ -124,7 +134,7 @@ func attach(child_body: RigidBody3D) -> bool:
 	# need to re-fetch the node every skeleton update.
 	var origin_xform: Transform3D = _find_attachment_origin(child_body)
 	var skeleton_overlay = _find_skeleton_overlay(child_body)
-	if (skeleton_overlay != null):
+	if (skeleton_overlay != null && !slot["is_hidden"]):
 		skeleton_overlay.target_skeleton = skeleton
 		skeleton_overlay.active = true
 	slot["origin_xform_inv"] = origin_xform.affine_inverse()
@@ -137,6 +147,9 @@ func attach(child_body: RigidBody3D) -> bool:
 	child_body.linear_velocity = Vector3.ZERO
 	child_body.angular_velocity = Vector3.ZERO
 	child_body.set_collision_layer_value(1, false)
+
+	if slot["is_hidden"]:
+		_set_meshes_and_collisions_enabled(child_body, false)
 
 	slot["occupant"] = child_body
 	
@@ -151,6 +164,8 @@ func detach(child_body: RigidBody3D) -> void:
 		if slot["occupant"] == child_body:
 			slot["occupant"] = null
 			slot["origin_xform_inv"] = Transform3D.IDENTITY
+			if slot["is_hidden"]:
+				_set_meshes_and_collisions_enabled(child_body, true)
 			break
 	child_body.freeze = false
 	child_body.set_collision_layer_value(1, true)
