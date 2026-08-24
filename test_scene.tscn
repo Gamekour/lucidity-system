@@ -18,7 +18,7 @@ radius = 0.1
 height = 0.71154785
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_wb0og"]
-radius = 0.09
+radius = 0.07
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_ia1lp"]
 radius = 0.25
@@ -401,8 +401,8 @@ turn_damping = 10.0
 upright_strength = 2000.0
 cam_distance_min = 0.0
 crawl_height = 0.3
-lean_strength = 100.0
-max_lean_angle = 0.5
+lean_strength = 1000.0
+max_lean_angle = 50.0
 crouch_lean_angle = 0.5
 air_upright_assist_strength = 1000.0
 air_upright_assist_damping = 100.0
@@ -444,7 +444,7 @@ ik_targets = [NodePath("spring_RF"), NodePath("spring_LF"), NodePath("spring_RH"
 start_positions = Array[Vector3]([Vector3(0.07, -0.852, 0), Vector3(-0.07, -0.852, 0), Vector3(0.15, -0.172, 0), Vector3(-0.15, -0.172, 0)])
 speed_min = 0.75
 speed_max = 0.4
-min_speed = 1.5
+min_speed = 3.0
 max_speed = 4.0
 lift_min = SubResource("Curve_sasra")
 stretch_min = SubResource("Curve_coq8p")

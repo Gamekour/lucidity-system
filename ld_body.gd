@@ -70,7 +70,7 @@ class_name PhysicsPlayerController
 @export_group("Climbing")
 @export var climb_scan_speed : float = 1.5
 @export_range(0.0, 90.0, 0.5, "radians_as_degrees") var climb_scan_min_angle : float = deg_to_rad(20.0)
-@export_range(0.0, 90.0, 0.5, "radians_as_degrees") var climb_scan_max_angle : float = deg_to_rad(80.0)
+@export_range(0.0, 90.0, 0.5, "radians_as_degrees") var climb_scan_max_angle : float = deg_to_rad(40.0)
 @export var climb_scan_input_deadzone : float = 0.15
 
 var grabbed_col : Node3D
@@ -365,7 +365,7 @@ func _get_air_accel(target_force: Vector3, flat_velocity: Vector3, accel_strengt
 	return wishdir * (add_speed * mass * accel_strength)
 
 func _get_lean_target_up(up_dir: Vector3, lean_input: Vector3) -> Vector3:
-	var flat_lean := lean_input - lean_input.project(up_dir)
+	var flat_lean := lean_input
 	var lean_magnitude := clampf(flat_lean.length() * lean_strength * (2 if crouch_jump else 1), 0.0, 1.0)
 	
 	# Transform local animation lean (pitch/roll) into world space using character basis
@@ -373,8 +373,8 @@ func _get_lean_target_up(up_dir: Vector3, lean_input: Vector3) -> Vector3:
 	var world_anim_offset := global_basis.orthonormalized() * local_anim_offset
 	var flat_anim_lean := world_anim_offset - world_anim_offset.project(up_dir)
 
-	var combined_lean := flat_lean * lean_magnitude + flat_anim_lean
-	if combined_lean.length_squared() < 0.0001:
+	var combined_lean := flat_lean * lean_magnitude
+	if combined_lean.length() < 0.0001:
 		return up_dir
 
 	var lean_dir := combined_lean.normalized()
@@ -391,13 +391,16 @@ func _get_upright_torque(up_dir: Vector3, lean_input: Vector3, strength: float, 
 
 	var crouch_factor := _get_crouch_lean_factor()
 	if crouch_factor > 0.0001:
-		var axes := _get_camera_relative_axes(up_dir)
-		var flat_forward : Vector3 = axes[0]
+		# Use the player's body forward vector instead of the camera's
+		var body_forward := -global_basis.z
+		var flat_forward := (body_forward - up_dir * body_forward.dot(up_dir)).normalized()
+		
 		var lean_axis := flat_forward.cross(up_dir)
 		var lean_axis_length := lean_axis.length()
 		if lean_axis_length > 0.0001:
 			lean_axis /= lean_axis_length
 			target_up = target_up.rotated(lean_axis, crouch_factor * -crouch_lean_angle)
+			print(target_up)
 
 	return _upright_torque_towards(up_dir, target_up, strength, damping)
 
