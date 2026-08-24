@@ -60,6 +60,8 @@ func _process(delta: float) -> void:
 		var lift = lerpf(lift_min.sample(s), lift_max.sample(s), weight) * lift_slope_scale * (arm_lift_scale if i >= 2 else 1)
 		var stretch = lerpf(stretch_min.sample(s), stretch_max.sample(s), weight) * (arm_stretch_scale if i >= 2 else 1) - ((1 - t) * 2 if i >= 2 else 0)
 		var aniso = abs(Vector3.FORWARD.dot(local_vel.normalized()))
+		if (i >= 2):
+			aniso = 1
 		var crouch_lift = (0.25 if Input.is_action_pressed("crouch") && !body.grounded else 0)
 		var animated_offset := Vector3(stretch * time_scale * (1 - aniso) * horizontal_scale, lift * time_scale + crouch_lift, stretch * time_scale * aniso)
 		var target_pos := (start_positions[i] + animated_offset * pose_blend)

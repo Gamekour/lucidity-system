@@ -143,10 +143,12 @@ func _on_hotbar_change() -> void:
 
 		var is_equipped: bool = i == current_hotbar_slot
 		if is_equipped and not slot["is_hidden"]:
-			skeleton_overlay.playermodel = playermodel
 			skeleton_overlay.active = true
 		else:
 			skeleton_overlay.active = false
+			if (body != null):
+				if (body is PhysicsPlayerController):
+					body.overlay_eulers = Vector3.ZERO
 
 func _set_meshes_and_collisions_enabled(node: Node, enabled: bool) -> void:
 	if node is MeshInstance3D:
@@ -194,9 +196,12 @@ func attach(child_body: RigidBody3D) -> bool:
 					i += 1
 			is_equipped = hotbar_index == current_hotbar_slot
 	var holstered = is_hotbar and not is_equipped
-	if (skeleton_overlay != null and not slot["is_hidden"] and not holstered):
+	if (skeleton_overlay != null):
 		skeleton_overlay.playermodel = playermodel
-		skeleton_overlay.set_deferred("active", true)
+		if (parent_body is PhysicsPlayerController):
+			skeleton_overlay.body = parent_body
+		if (not slot["is_hidden"] and not holstered):
+			skeleton_overlay.set_deferred("active", true)
 	slot["origin_xform_inv"] = origin_xform.affine_inverse()
 
 	child_body.get_parent().remove_child(child_body)
@@ -249,6 +254,7 @@ func detach(child_body: RigidBody3D) -> void:
 		former_parent.mass -= child_body.mass
 	if (former_parent is PhysicsPlayerController):
 		former_parent.allow_grab = former_parent.allow_grab_default
+		former_parent.overlay_eulers = Vector3.ZERO
 	child_body.reparent(get_tree().root)
 
 func _on_skeleton_updated() -> void:

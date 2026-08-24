@@ -2,15 +2,14 @@ extends Node
 class_name SkeletonOverlay
 
 @export var playermodel : PlayerModel
-## Scene asset containing the source Skeleton3D (and, optionally, an AnimationPlayer)
-## to copy poses from. Instantiated when the overlay becomes active and
-## freed when it becomes inactive.
+@export var body : PhysicsPlayerController
 @export var source_scene: PackedScene
 @export var cam_ref : Node3D
 @export var IK_mods_disable : Array[IKModifier3D]
 @export var IK_mods_disable_LH : Array[IKModifier3D]
 @export var bone_mask: PackedStringArray
 @export_range(0.0, 1.0, 0.01) var weight: float = 1.0
+@export_range(0.0, 1.0, 0.01) var hip_lean_scale: float = 0.5
 @export var active: bool = true:
 	set(value):
 		var changed := active != value
@@ -100,10 +99,14 @@ func _process(_delta: float) -> void:
 	_apply_camera_aim()
 
 func _apply_overlay() -> void:
+	var hip_idx := playermodel.find_bone("Hips")
 	for pair in _pairs:
 		var target_idx := pair.x
 		var source_idx := pair.y
 		var source_rot := _source_skeleton.get_bone_pose_rotation(source_idx)
+		if (target_idx == hip_idx and body != null):
+			body.overlay_eulers = source_rot.get_euler()
+			continue
 		if playermodel.left_handed:
 			source_rot = _mirror_rotation(source_rot)
 		if weight >= 1.0:

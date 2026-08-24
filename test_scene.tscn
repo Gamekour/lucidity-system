@@ -10,7 +10,7 @@
 [ext_resource type="Script" uid="uid://c8qyp1ubjxh1u" path="res://skeleton_overlay.gd" id="7_8pr8v"]
 [ext_resource type="Script" uid="uid://dnryq4yanmj62" path="res://AttachmentSlot.gd" id="7_rpuu0"]
 [ext_resource type="Material" uid="uid://dnm5ak0rw2pxe" path="res://debug_mat.tres" id="9_njel3"]
-[ext_resource type="PackedScene" uid="uid://cgtji358yld1f" path="res://body_block.tscn" id="12_4gito"]
+[ext_resource type="PackedScene" uid="uid://1q405i8mu7nw" path="res://silly_dancing.tscn" id="11_oo8pe"]
 [ext_resource type="Script" uid="uid://b11yeup1xif5d" path="res://toggle_button.gd" id="12_oo8pe"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_ia1lp"]
@@ -1273,10 +1273,9 @@ shape = SubResource("BoxShape3D_rpuu0")
 mesh = SubResource("BoxMesh_oo8pe")
 surface_material_override/0 = ExtResource("9_njel3")
 
-[node name="SkeletonOverlay" type="Node" parent="test_box3" unique_id=513702763 node_paths=PackedStringArray("playermodel", "cam_ref", "IK_mods_disable", "IK_mods_disable_LH")]
+[node name="SkeletonOverlay" type="Node" parent="test_box3" unique_id=513702763 node_paths=PackedStringArray("cam_ref", "IK_mods_disable", "IK_mods_disable_LH")]
 script = ExtResource("7_8pr8v")
-playermodel = NodePath("../../PhysicsPlayerController/playermodel/Armature/GeneralSkeleton")
-source_scene = ExtResource("12_4gito")
+source_scene = ExtResource("11_oo8pe")
 cam_ref = NodePath("../../PhysicsPlayerController/cam_spring")
 IK_mods_disable = [NodePath("../../PhysicsPlayerController/playermodel/Armature/GeneralSkeleton/IK_RH")]
 IK_mods_disable_LH = [NodePath("../../PhysicsPlayerController/playermodel/Armature/GeneralSkeleton/IK_LH")]

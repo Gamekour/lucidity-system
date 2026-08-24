@@ -55,6 +55,9 @@ class_name PhysicsPlayerController
 @export var max_floor_torque_scale : float = 100.0
 @export var grab_vertical_strength_multiplier : float = 2.5
 @export var grab_force_central_scale : float = 0.0
+@export var stance_height_rot_min : float = 0.5
+@export var stance_height_rot_max : float = 0.6
+
 @export var allow_grab : bool = true
 
 @export_group("Ledge Detection")
@@ -74,7 +77,8 @@ var grabbed_col : Node3D
 var grab_release_pending : Array[RigidBody3D]
 var grab_offset : Vector3 = Vector3.ZERO
 var relative_velocity : Vector3 = Vector3.ZERO
-var stance_height : float = 0
+var overlay_eulers : Vector3 = Vector3.ZERO
+var stance_height : float = 0.0
 var target_angle_horizontal : float = 0
 var camera_pitch : float = 0.0
 var sprinting := false
@@ -328,13 +332,13 @@ func _get_current_yaw(up_dir: Vector3) -> float:
 
 func _get_body_target_angle(input_vector: Vector2) -> float:
 	if input_vector.length() < body_turn_input_deadzone:
-		return target_angle_horizontal
+		return target_angle_horizontal + overlay_eulers.y
 	
 	var move_yaw_offset := atan2(input_vector.x, input_vector.y)
 	var climbing = grabbed_col != null
 	climbing = climbing and not (grabbed_col is RigidBody3D)
-	if ((absf(absf(move_yaw_offset) - (PI / 2.0)) < body_turn_sideways_deadzone) and playermodel.is_fp) or climbing:
-		return target_angle_horizontal
+	if ((absf(absf(move_yaw_offset) - (PI / 2.0)) < body_turn_sideways_deadzone) and playermodel.is_fp) or climbing or stance_height < stance_height_rot_min:
+		return target_angle_horizontal + overlay_eulers.y
 	
 	if input_vector.y < 0.0 and playermodel.is_fp:
 		if (move_yaw_offset < 0.0):
@@ -342,7 +346,9 @@ func _get_body_target_angle(input_vector: Vector2) -> float:
 		else:
 			move_yaw_offset -= PI
 	
-	return wrapf(target_angle_horizontal - move_yaw_offset, -PI, PI)
+	var yaw_scale = clamp((stance_height - stance_height_rot_min) / (stance_height_rot_max - stance_height_rot_min), 0, 1)
+	
+	return wrapf(((target_angle_horizontal - move_yaw_offset) * yaw_scale) + overlay_eulers.y, -PI, PI)
 
 func _get_air_accel(target_force: Vector3, flat_velocity: Vector3, accel_strength: float) -> Vector3:
 	var wish_velocity := target_force / mass
@@ -361,11 +367,20 @@ func _get_air_accel(target_force: Vector3, flat_velocity: Vector3, accel_strengt
 func _get_lean_target_up(up_dir: Vector3, lean_input: Vector3) -> Vector3:
 	var flat_lean := lean_input - lean_input.project(up_dir)
 	var lean_magnitude := clampf(flat_lean.length() * lean_strength * (2 if crouch_jump else 1), 0.0, 1.0)
-	if lean_magnitude < 0.0001:
+	
+	# Transform local animation lean (pitch/roll) into world space using character basis
+	var local_anim_offset := Vector3(overlay_eulers.x, 0.0, overlay_eulers.z)
+	var world_anim_offset := global_basis.orthonormalized() * local_anim_offset
+	var flat_anim_lean := world_anim_offset - world_anim_offset.project(up_dir)
+
+	var combined_lean := flat_lean * lean_magnitude + flat_anim_lean
+	if combined_lean.length_squared() < 0.0001:
 		return up_dir
-	var lean_dir := flat_lean.normalized()
+
+	var lean_dir := combined_lean.normalized()
 	var lean_axis := up_dir.cross(lean_dir).normalized()
-	var lean_angle := lean_magnitude * max_lean_angle
+	var lean_angle := minf(combined_lean.length() * max_lean_angle, max_lean_angle)
+
 	return up_dir.rotated(lean_axis, lean_angle)
 
 func _get_crouch_lean_factor() -> float:
