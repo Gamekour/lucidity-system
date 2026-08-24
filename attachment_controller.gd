@@ -143,7 +143,7 @@ func _on_hotbar_change() -> void:
 
 		var is_equipped: bool = i == current_hotbar_slot
 		if is_equipped and not slot["is_hidden"]:
-			skeleton_overlay.target_skeleton = skeleton
+			skeleton_overlay.playermodel = playermodel
 			skeleton_overlay.active = true
 		else:
 			skeleton_overlay.active = false
@@ -195,8 +195,8 @@ func attach(child_body: RigidBody3D) -> bool:
 			is_equipped = hotbar_index == current_hotbar_slot
 	var holstered = is_hotbar and not is_equipped
 	if (skeleton_overlay != null and not slot["is_hidden"] and not holstered):
-		skeleton_overlay.target_skeleton = skeleton
-		skeleton_overlay.active = true
+		skeleton_overlay.playermodel = playermodel
+		skeleton_overlay.set_deferred("active", true)
 	slot["origin_xform_inv"] = origin_xform.affine_inverse()
 
 	child_body.get_parent().remove_child(child_body)
