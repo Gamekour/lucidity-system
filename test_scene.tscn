@@ -412,10 +412,11 @@ slope_correction = 0.2
 slope_correction_damping = 4.0
 slope_stance_height_scale = 0.75
 grab_strength_min = 4000.0
-grab_strength_max = 4000.0
+grab_strength_max = 8000.0
 grab_scale_max_mass = 100.0
 grab_damp_min = 100.0
 grab_damp_max = 400.0
+grab_force_central_scale = 0.9
 metadata/_custom_type_script = "uid://d1j4l28b3mks7"
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="PhysicsPlayerController" unique_id=257326396]

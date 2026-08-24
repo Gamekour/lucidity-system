@@ -54,6 +54,7 @@ class_name PhysicsPlayerController
 @export var max_floor_force_scale : float = 100.0
 @export var max_floor_torque_scale : float = 100.0
 @export var grab_vertical_strength_multiplier : float = 2.5
+@export var grab_force_central_scale : float = 0.0
 @export var allow_grab : bool = true
 
 @export_group("Ledge Detection")
@@ -625,7 +626,8 @@ func arm_logic() -> void:
 
 		if (is_rb):
 			var grabbed_lever_arm = grab_position - grabbed_col.global_position
-			grabbed_col.apply_force(force / 2, grabbed_lever_arm)
+			grabbed_col.apply_force(force * 0.5 * (1.0 - grab_force_central_scale), grabbed_lever_arm)
+			grabbed_col.apply_force(force * 0.5 * (grab_force_central_scale))
 			if grabbed_col.angular_velocity.length() > grab_max_angular_velocity:
 				grabbed_col.apply_torque(-grabbed_col.angular_velocity * grab_angular_damp)
 
