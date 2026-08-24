@@ -400,7 +400,6 @@ func _get_upright_torque(up_dir: Vector3, lean_input: Vector3, strength: float, 
 		if lean_axis_length > 0.0001:
 			lean_axis /= lean_axis_length
 			target_up = target_up.rotated(lean_axis, crouch_factor * -crouch_lean_angle)
-			print(target_up)
 
 	return _upright_torque_towards(up_dir, target_up, strength, damping)
 

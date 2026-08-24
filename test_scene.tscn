@@ -452,6 +452,7 @@ lift_max = SubResource("Curve_2nij2")
 stretch_max = SubResource("Curve_7cbxl")
 stance_height_bob_min = SubResource("Curve_8pr8v")
 stance_height_bob_max = SubResource("Curve_buypi")
+air_offset_max = 0.3
 metadata/_custom_type_script = "uid://drcmxxe77jx4w"
 
 [node name="spring_RF" type="SpringArm3D" parent="PhysicsPlayerController/rig_root" unique_id=1507942179]
