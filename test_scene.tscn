@@ -11,6 +11,7 @@
 [ext_resource type="Script" uid="uid://dnryq4yanmj62" path="res://AttachmentSlot.gd" id="7_rpuu0"]
 [ext_resource type="PackedScene" uid="uid://b0krsjxwwhf65" path="res://Body Block.fbx" id="8_buypi"]
 [ext_resource type="Material" uid="uid://dnm5ak0rw2pxe" path="res://debug_mat.tres" id="9_njel3"]
+[ext_resource type="Script" uid="uid://b11yeup1xif5d" path="res://toggle_button.gd" id="12_oo8pe"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_ia1lp"]
 radius = 0.1
@@ -343,6 +344,21 @@ size = Vector3(4, 0.2, 4)
 
 [sub_resource type="BoxMesh" id="BoxMesh_rpuu0"]
 size = Vector3(4, 0.2, 4)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_fbuy2"]
+size = Vector3(0.25, 0.25, 0.25)
+
+[sub_resource type="BoxMesh" id="BoxMesh_0k8yu"]
+size = Vector3(0.25, 0.25, 0.25)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_rpuu0"]
+albedo_color = Color(1, 0, 0, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_0k8yu"]
+size = Vector3(0.3, 1, 0.3)
+
+[sub_resource type="BoxMesh" id="BoxMesh_hiucn"]
+size = Vector3(0.3, 1, 0.3)
 
 [node name="Test Scene" type="Node3D" unique_id=667831700]
 
@@ -1189,5 +1205,33 @@ linear_spring_z/enabled = true
 [node name="trampoline_origin" type="RigidBody3D" parent="." unique_id=1003355602]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.5707397, 1.3844526, -6.788962)
 freeze = true
+
+[node name="button_stand" type="Node3D" parent="." unique_id=656464267]
+
+[node name="Button" type="StaticBody3D" parent="button_stand" unique_id=1950027997 node_paths=PackedStringArray("target_node")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.111624, 0.93414533, -1.1920929e-07)
+script = ExtResource("12_oo8pe")
+target_node = NodePath("../debug_button")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="button_stand/Button" unique_id=1263199107]
+shape = SubResource("BoxShape3D_fbuy2")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="button_stand/Button" unique_id=1348475594]
+mesh = SubResource("BoxMesh_0k8yu")
+surface_material_override/0 = SubResource("StandardMaterial3D_rpuu0")
+
+[node name="Button_holder" type="StaticBody3D" parent="button_stand" unique_id=151063078]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.111624, 0.43782842, -1.1920929e-07)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="button_stand/Button_holder" unique_id=2105222931]
+shape = SubResource("BoxShape3D_0k8yu")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="button_stand/Button_holder" unique_id=1460800075]
+mesh = SubResource("BoxMesh_hiucn")
+
+[node name="debug_button" type="Label3D" parent="button_stand" unique_id=653740238]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 3.2909157, 1.3448734, 0)
+visible = false
+text = "hello"
 
 [editable path="Body Block"]

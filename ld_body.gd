@@ -268,7 +268,9 @@ func _input(event: InputEvent) -> void:
 				_reset_climb_scan()
 	if (event.is_action_pressed("interact")):
 		if (shapecast_arms.is_colliding()):
-			print(shapecast_arms.get_collider(0))
+			var col = shapecast_arms.get_collider(0)
+			if (col.has_method("_interact")):
+				col.call("_interact")
 
 func _safe_slerp_up(from: Vector3, to: Vector3, weight: float) -> Vector3:
 	from = from.normalized()
