@@ -53,6 +53,7 @@ class_name PhysicsPlayerController
 @export var grab_angular_damp : float = 5.0
 @export var max_floor_force_scale : float = 100.0
 @export var max_floor_torque_scale : float = 100.0
+@export var grab_vertical_strength_multiplier : float = 2.5
 @export var allow_grab : bool = true
 
 @export_group("Ledge Detection")
@@ -174,10 +175,10 @@ func _physics_process(delta: float) -> void:
 		var velocity_along_slope := flat_velocity.dot(gravity_tangent_dir)
 		slope_correction_force += gravity_tangent_dir * velocity_along_slope * mass * slope_correction_damping * (1 - current_dot)
 
-	var accel : Vector3
+	var accel := Vector3.ZERO
 	if grounded:
 		accel = (target_force - (flat_velocity * mass) - slope_correction_force) * (acceleration * acceleration_scale) * (sprint_multiplier * sprint_multiplier_scale if sprinting || crouch_jump else 1)
-	else:
+	elif not (grabbed_col != null and not grabbed_col is RigidBody3D):
 		accel = _get_air_accel(target_force, flat_velocity, air_acceleration * air_acceleration_scale)
 	var force = accel.limit_length(friction_budget)
 
@@ -265,6 +266,9 @@ func _input(event: InputEvent) -> void:
 				grabbed_col = null
 				climbing_ledge = false
 				_reset_climb_scan()
+	if (event.is_action_pressed("interact")):
+		if (shapecast_arms.is_colliding()):
+			print(shapecast_arms.get_collider(0))
 
 func _safe_slerp_up(from: Vector3, to: Vector3, weight: float) -> Vector3:
 	from = from.normalized()
@@ -589,6 +593,8 @@ func arm_logic() -> void:
 		var weight := 1.0
 		if (is_rb):
 			weight = clampf(grabbed_col.mass / grab_scale_max_mass, 0, 1)
+		else:
+			weight = clampf(mass / grab_scale_max_mass, 0, 1)
 		var spring_k := lerpf(0, grab_strength_max, weight)
 		
 		var grabbed_point_velocity := Vector3.ZERO
@@ -600,7 +606,20 @@ func arm_logic() -> void:
 		var relative_velocity := grabbed_point_velocity - arm_point_velocity
 
 		var damp := lerpf(grab_damp_min, grab_damp_max, weight)
-		var force = offset * spring_k - relative_velocity * damp
+
+		# Split into body-relative "up" component and the rest, so
+		# vertical grab motion is stiffer/stronger than horizontal.
+		var body_up := global_basis.y
+		var offset_vert := offset.project(body_up)
+		var offset_horiz = offset - offset_vert
+		var vel_vert := relative_velocity.project(body_up)
+		var vel_horiz := relative_velocity - vel_vert
+
+		var force_vert := offset_vert * spring_k * grab_vertical_strength_multiplier \
+			- vel_vert * damp * grab_vertical_strength_multiplier
+		var force_horiz = offset_horiz * spring_k - vel_horiz * damp
+
+		var force = force_vert + force_horiz
 
 		if (is_rb):
 			var grabbed_lever_arm = grab_position - grabbed_col.global_position
