@@ -92,6 +92,7 @@ var climb_scan_active : bool = false
 var climb_scan_angle : float = 0.0
 var climb_scan_base_basis : Basis = Basis.IDENTITY
 var climb_scan_last_hit : Dictionary = {}
+var climb_grab_tick : int = 0
 
 var roll_force_scale : float = 1.0
 var sprint_multiplier_scale : float = 1.0
@@ -368,7 +369,6 @@ func _get_lean_target_up(up_dir: Vector3, lean_input: Vector3) -> Vector3:
 	var flat_lean := lean_input
 	var lean_magnitude := clampf(flat_lean.length() * lean_strength * (2 if crouch_jump else 1), 0.0, 1.0)
 	
-	# Transform local animation lean (pitch/roll) into world space using character basis
 	var local_anim_offset := Vector3(overlay_eulers.x, 0.0, overlay_eulers.z)
 	var world_anim_offset := global_basis.orthonormalized() * local_anim_offset
 	var flat_anim_lean := world_anim_offset - world_anim_offset.project(up_dir)
@@ -391,7 +391,6 @@ func _get_upright_torque(up_dir: Vector3, lean_input: Vector3, strength: float, 
 
 	var crouch_factor := _get_crouch_lean_factor()
 	if crouch_factor > 0.0001:
-		# Use the player's body forward vector instead of the camera's
 		var body_forward := -global_basis.z
 		var flat_forward := (body_forward - up_dir * body_forward.dot(up_dir)).normalized()
 		
@@ -529,6 +528,7 @@ func _commit_climb_hit(hit: Dictionary) -> void:
 	grabbed_col = hit.node
 	grab_offset = (hit.node as Node3D).to_local(hit.point)
 	climbing_ledge = true
+	climb_grab_tick += 1
 	_reset_climb_scan()
 
 func _scan_for_ledge_at_angle(pitch: float, yaw: float) -> Dictionary:
@@ -627,8 +627,6 @@ func arm_logic() -> void:
 
 		var damp := lerpf(grab_damp_min, grab_damp_max, weight)
 
-		# Split into body-relative "up" component and the rest, so
-		# vertical grab motion is stiffer/stronger than horizontal.
 		var body_up := global_basis.y
 		var offset_vert := offset.project(body_up)
 		var offset_horiz = offset - offset_vert

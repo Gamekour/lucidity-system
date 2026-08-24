@@ -21,35 +21,26 @@ class_name WalkIKController
 @export var horizontal_scale : float = 0.5
 @export var lift_slope_boost : float = 1.0
 
-## Below this speed the controller is considered "idle" and will ease back to rest pose.
 @export var idle_speed_threshold : float = 0.05
-## How quickly (units/sec of blend) the pose eases toward the animated walk pose when moving starts.
 @export var pose_blend_in_speed : float = 3.0
-## How quickly (units/sec of blend) the pose eases back toward the rest pose when moving stops.
 @export var pose_blend_out_speed : float = 2.0
 
-## --- Airborne behavior ---
-## When airborne, limbs trail opposite the body's velocity instead of following the walk curves.
 @export var air_offset_scale : float = 0.15
-## Clamp on how far (in local units) an airborne limb can be dragged from its rest position.
 @export var air_offset_max : float = 0.6
-## How quickly (units/sec of blend) the pose eases toward the airborne pose when leaving the ground.
 @export var air_blend_in_speed : float = 4.0
-## How quickly (units/sec of blend) the pose eases back toward the grounded pose when landing.
 @export var air_blend_out_speed : float = 6.0
 
 var sample : float = 0.0
-## 0 = fully at rest pose (start_positions, neutral stance height), 1 = fully animated walk pose.
 var pose_blend : float = 0.0
-## 0 = fully grounded pose, 1 = fully airborne (velocity-trailing) pose.
 var air_blend : float = 0.0
+var last_climb_grab_tick : int = 0
 
 func _process(delta: float) -> void:
 	var t := clampf(legs.get_closest_collision_safe_fraction() * 2, 0, 1)
 	global_basis = body.basis.slerp(_apply_gravity_counter_rotation(delta), t)
 
-	# Full 3D local-space velocity (used for airborne trailing), plus a flattened copy for the
-	# existing ground-walk logic.
+	var is_climbing := body.climbing_ledge
+
 	var local_vel_full := body.global_basis.inverse() * body.relative_velocity
 	var local_vel := local_vel_full
 	local_vel.y = 0
@@ -58,15 +49,20 @@ func _process(delta: float) -> void:
 	var polarity : float = 1 if current_angle > deg_to_rad(-80) && current_angle < deg_to_rad(100) else -1
 	var weight = clampf(remap(vel_length, min_speed, max_speed, 0, 1), 0, 1)
 	var speed = lerpf(speed_min, speed_max, weight)
-	sample = wrapf(sample + delta * polarity * -vel_length * speed, 0, 1)
 
-	# Ease the pose blend toward "animated" while moving, and toward "rest" while idle.
+	if is_climbing:
+		if body.climb_grab_tick != last_climb_grab_tick:
+			last_climb_grab_tick = body.climb_grab_tick
+			sample = wrapf(sample + 0.5, 0, 1)
+	else:
+		last_climb_grab_tick = body.climb_grab_tick
+		sample = wrapf(sample + delta * polarity * -vel_length * speed, 0, 1)
+
 	var is_moving := vel_length > idle_speed_threshold
 	var target_blend := 1.0 if is_moving else 0.0
 	var blend_rate := pose_blend_in_speed if is_moving else pose_blend_out_speed
 	pose_blend = move_toward(pose_blend, target_blend, delta * blend_rate)
 
-	# Ease the air blend toward "airborne" when off the ground, and back to "grounded" on landing.
 	var target_air_blend := 0.0 if body.grounded else 1.0
 	var air_blend_rate := air_blend_in_speed if !body.grounded else air_blend_out_speed
 	air_blend = move_toward(air_blend, target_air_blend, delta * air_blend_rate)
@@ -76,14 +72,13 @@ func _process(delta: float) -> void:
 
 	var time_scale := absf(legs.target_position.y)
 
-	# Airborne trailing direction/magnitude (shared by all limbs, scaled per-limb below).
 	var air_dir := Vector3.ZERO
 	var air_speed := local_vel_full.length()
 	if air_speed > 0.0001:
 		air_dir = -local_vel_full / air_speed
 
 	for i in ik_targets.size():
-		var s := wrapf(sample + phase_offsets[i], 0, 1)
+		var s := wrapf(sample + phase_offsets[i], 0, 1) if body.grabbed_col == null or body.climbing_ledge or i < 2 else 0.0
 		var lift_slope_scale := (2 - body.current_dot) * lift_slope_boost
 		var lift = lerpf(lift_min.sample(s), lift_max.sample(s), weight) * lift_slope_scale * (arm_lift_scale if i >= 2 else 1)
 		var stretch = lerpf(stretch_min.sample(s), stretch_max.sample(s), weight) * (arm_stretch_scale if i >= 2 else 1) - ((1 - t) * 2 if i >= 2 else 0)
@@ -98,9 +93,14 @@ func _process(delta: float) -> void:
 		var air_offset := air_dir * clampf(air_speed * air_offset_scale, 0.0, air_offset_max) * limb_scale
 		var airborne_pos := start_positions[i] + air_offset
 
-		var target_pos := grounded_pos.lerp(airborne_pos, air_blend)
+		var limb_air_blend := 1.0 if (is_climbing and i < 2) else air_blend
+		var target_pos := grounded_pos.lerp(airborne_pos, limb_air_blend)
 		ik_targets[i].look_at(to_global(target_pos), to_global(Vector3.UP), true)
 		ik_targets[i].spring_length = ik_targets[i].global_position.distance_to(to_global(target_pos))
+		if body.grabbed_col != null and i >= 2:
+			var body_yaw := body.global_basis.get_euler().y
+			var yaw_right := Vector3.RIGHT
+			ik_targets[i].rotate(yaw_right, deg_to_rad(90))
 
 func _apply_gravity_counter_rotation(delta: float) -> Basis:
 	var parent_node := get_parent()
