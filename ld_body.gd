@@ -1,51 +1,47 @@
 extends RigidBody3D
 class_name PhysicsPlayerController
 
+@export_category("Player Model")
 @export var playermodel_scene : PackedScene
-@export var roll_force : float = 100
-@export var sprint_multiplier : float = 2.0
-@export var friction_coefficient : float = 2.0
-@export var acceleration : float = 5.0
-@export var air_acceleration : float = 1.0
-@export var ride_height_offset : float = -0.1
-@export var spring_strength : float = 10000.0
-@export var spring_damping : float = 1000.0
-@export var turn_strength : float = 5000.0
-@export var turn_damping : float = 100.0
-@export var sens : Vector2 = Vector2(0.5,0.5)
-@export var upright_strength : float = 1000.0
-@export var upright_damping : float = 100.0
-@export var cam_distance_max : float = 4.0
-@export var cam_distance_min : float = -0.06
-@export var crouch_speed : float = 0.5
-@export var crouch_height : float = 0.5
-@export var crawl_height : float = 0.25
-@export var lean_strength : float = 1.0
-@export var max_lean_angle : float = 0.35
-@export var crouch_lean_angle : float = 0.6
-@export var air_upright_assist_strength : float = 400.0
-@export var air_upright_assist_damping : float = 40.0
-@export var jump_height : float = 2.0
-@export_range(0.0, PI, 0.01, "radians_as_degrees") var body_turn_max_angle : float = deg_to_rad(70.0)
+@export var shapecast_legs_length_scale : float = 1.5
+@export_category("Movement Parameters")
+@export var roll_force := 10.0
+@export var sprint_multiplier := 3.0
+@export var acceleration := 5.0
+@export var air_acceleration := 1.0
+@export var sens := Vector2(0.5,0.5)
+@export var crouch_speed := 0.5
+@export var speed_stance_stop : float = 0.6
+@export var crouch_height := 0.5
+@export var crawl_height := 0.3
+@export var jump_height := 2.0
+@export_category("Camera")
+@export_range(-90.0, 90.0, 0.5, "radians_as_degrees") var min_camera_pitch : float = deg_to_rad(-80.0)
+@export_range(-90.0, 90.0, 0.5, "radians_as_degrees") var max_camera_pitch : float = deg_to_rad(80.0)
+@export_category("Physics Tuning")
+@export var apply_reaction_forces : bool = true
+@export var apply_reaction_torque : bool = false
+@export var friction_coefficient := 2.0
+@export var ride_height_offset := -0.1
+@export var spring_strength := 5000.0
+@export var spring_damping := 1000.0
+@export var turn_strength := 100.0
+@export var turn_damping := 10.0
+@export var upright_strength := 1000.0
+@export var upright_damping := 100.0
+@export var cam_distance_max := 4.0
+@export var cam_distance_min := 0.0
+@export var lean_strength := 1000.0
+@export var max_lean_angle := 50.0
+@export var crouch_lean_angle := 0.5
+@export var air_upright_assist_strength := 1000.0
+@export var air_upright_assist_damping := 100.0
 @export var body_turn_input_deadzone : float = 0.15
 @export var camera_tilt_smoothing : float = 10.0
 @export var body_turn_sideways_deadzone: float = deg_to_rad(15.0)
-@export_range(-90.0, 90.0, 0.5, "radians_as_degrees") var min_camera_pitch : float = deg_to_rad(-85.0)
-@export_range(-90.0, 90.0, 0.5, "radians_as_degrees") var max_camera_pitch : float = deg_to_rad(85.0)
 @export var slope_correction : float = 1.0
 @export var slope_correction_damping : float = 0.0
 @export var slope_stance_height_scale : float = 0.5
-@export var speed_stance_stop : float = 0.6
-@export var apply_reaction_forces : bool = true
-@export var apply_reaction_torque : bool = false
-@export var grab_strength_min : float = 100
-@export var grab_strength_max : float = 1000
-@export var grab_scale_max_mass : float = 69
-@export var grab_distance : float = 1.0
-@export var grab_damp_min : float = 50.0
-@export var grab_damp_max : float = 100.0
-@export var grab_max_angular_velocity : float = 10.0
-@export var grab_angular_damp : float = 5.0
 @export var max_floor_force_scale : float = 100.0
 @export var max_floor_torque_scale : float = 100.0
 @export var grab_vertical_strength_multiplier : float = 2.5
@@ -53,10 +49,18 @@ class_name PhysicsPlayerController
 @export var stance_height_rot_min : float = 0.5
 @export var stance_height_rot_max : float = 0.6
 @export_range(0.0, 360.0, 0.5, "radians_as_degrees") var max_look_angle_horizontal : float = deg_to_rad(40.0)
-@export var shapecast_legs_length_scale : float = 1.5
-
+@export_category("Grab Physics")
 @export var allow_grab : bool = true
-
+@export var grab_strength_min : float = 100
+@export var grab_strength_max : float = 1000
+@export var grab_scale_max_mass : float = 69
+@export var grab_distance : float = 1.0
+@export var grab_damp_min : float = 400.0
+@export var grab_damp_max : float = 500.0
+@export var grab_damp_static : float = 1000.0
+@export var grab_max_angular_velocity : float = 10.0
+@export var grab_angular_damp : float = 5.0
+@export var grab_lift_offset := 0.25
 @export_group("Ledge Detection")
 @export var ledge_probe_steps : int = 6
 @export var ledge_step_height : float = 0.15
@@ -232,7 +236,7 @@ func _physics_process(delta: float) -> void:
 
 	var accel := Vector3.ZERO
 	if grounded:
-		accel = (target_force - (flat_velocity * mass) - slope_correction_force) * (acceleration * acceleration_scale) * (sprint_multiplier * sprint_multiplier_scale if sprinting || crouch_jump else 1)
+		accel = (target_force - (flat_velocity * mass) - slope_correction_force) * (acceleration * acceleration_scale) * (sprint_multiplier * sprint_multiplier_scale if sprinting || crouch_jump else 1.0)
 	elif not (grabbed_col != null and not grabbed_col is RigidBody3D):
 		accel = _get_air_accel(target_force, flat_velocity, air_acceleration * air_acceleration_scale)
 	var force = accel.limit_length(friction_budget)
@@ -309,6 +313,9 @@ func _input(event: InputEvent) -> void:
 		trying_to_grab = true
 	if event.is_action_released("grab"):
 		_queue_collision_exception_release(grabbed_col)
+		if (ik_controller != null):
+			for spring in ik_controller.ik_springs:
+				spring.remove_excluded_object(grabbed_col.get_rid())
 		grabbed_col = null
 		trying_to_grab = false
 		climbing_ledge = false
@@ -319,6 +326,9 @@ func _input(event: InputEvent) -> void:
 			if (success):
 				(grabbed_col as RigidBody3D).remove_collision_exception_with(self)
 				grab_release_pending.erase(grabbed_col)
+				if (ik_controller != null):
+					for spring in ik_controller.ik_springs:
+						spring.remove_excluded_object(grabbed_col.get_rid())
 				grabbed_col = null
 				climbing_ledge = false
 				_reset_climb_scan()
@@ -424,7 +434,7 @@ func _get_lean_target_up(up_dir: Vector3, lean_input: Vector3) -> Vector3:
 	var flat_anim_lean := world_anim_offset - world_anim_offset.project(up_dir)
 
 	var combined_lean := flat_lean * lean_magnitude
-	if combined_lean.length() < 0.0001:
+	if combined_lean.length() + flat_anim_lean.length() < 0.0001:
 		return up_dir
 
 	var lean_dir := combined_lean.normalized()
@@ -450,14 +460,14 @@ func _get_upright_torque(up_dir: Vector3, lean_input: Vector3, strength: float, 
 			lean_axis /= lean_axis_length
 			target_up = target_up.rotated(lean_axis, crouch_factor * -crouch_lean_angle)
 
-	return _upright_torque_towards(up_dir, target_up, strength, damping)
+	return _upright_torque_towards(target_up, strength, damping)
 
 func _get_air_upright_torque(up_dir: Vector3) -> Vector3:
 	if air_upright_assist_strength <= 0.0:
 		return Vector3.ZERO
-	return _upright_torque_towards(up_dir, up_dir, air_upright_assist_strength, air_upright_assist_damping)
+	return _upright_torque_towards(up_dir, air_upright_assist_strength, air_upright_assist_damping)
 
-func _upright_torque_towards(up_dir: Vector3, target_up: Vector3, strength: float, damping: float) -> Vector3:
+func _upright_torque_towards(target_up: Vector3, strength: float, damping: float) -> Vector3:
 	var current_up := global_basis.y
 	var axis := current_up.cross(target_up)
 	var axis_length := axis.length()
@@ -495,9 +505,11 @@ func arm_cast() -> void:
 		trying_to_grab = false
 		climbing_ledge = false
 		_reset_climb_scan()
-		if (grabbed_col is RigidBody3D):
-			grabbed_col.add_collision_exception_with(self)
-			grab_release_pending.erase(grabbed_col)
+		grabbed_col.add_collision_exception_with(self)
+		grab_release_pending.erase(grabbed_col)
+		if (ik_controller != null):
+			for spring in ik_controller.ik_springs:
+				spring.add_excluded_object(collider.get_rid())
 		return
 
 	var hit_point := shapecast_arms.get_collision_point(0)
@@ -651,7 +663,7 @@ func arm_logic() -> void:
 	if (grabbed_col != null):
 		var is_rb = grabbed_col is RigidBody3D
 		var grab_position = grabbed_col.to_global(grab_offset)
-		var grab_position_target := shapecast_arms.to_global(Vector3.BACK * grab_distance)
+		var grab_position_target := shapecast_arms.to_global((Vector3.BACK * grab_distance) + (Vector3.UP * (grab_lift_offset if grabbed_col is RigidBody3D else 0.0)))
 		var offset = (grab_position_target - grab_position)
 		if (offset.length() > shapecast_arms.target_position.length()):
 			_queue_collision_exception_release(grabbed_col)
@@ -673,18 +685,18 @@ func arm_logic() -> void:
 				+ grabbed_col.angular_velocity.cross(grab_position - grabbed_col.global_position)
 		var arm_point_velocity := linear_velocity \
 			+ angular_velocity.cross(grab_position_target - global_position)
-		var relative_velocity := grabbed_point_velocity - arm_point_velocity
+		var grab_relative_velocity := grabbed_point_velocity - arm_point_velocity
 
 		var damp := lerpf(grab_damp_min, grab_damp_max, weight)
 
 		var body_up := global_basis.y
 		var offset_vert := offset.project(body_up)
 		var offset_horiz = offset - offset_vert
-		var vel_vert := relative_velocity.project(body_up)
-		var vel_horiz := relative_velocity - vel_vert
+		var vel_vert := grab_relative_velocity.project(body_up)
+		var vel_horiz := grab_relative_velocity - vel_vert
 
 		var force_vert := offset_vert * spring_k * grab_vertical_strength_multiplier \
-			- vel_vert * damp * grab_vertical_strength_multiplier
+			- vel_vert * (damp if grabbed_col is RigidBody3D else grab_damp_static)
 		var force_horiz = offset_horiz * spring_k - vel_horiz * damp
 
 		var force = force_vert + force_horiz
@@ -696,7 +708,6 @@ func arm_logic() -> void:
 			if grabbed_col.angular_velocity.length() > grab_max_angular_velocity:
 				grabbed_col.apply_torque(-grabbed_col.angular_velocity * grab_angular_damp)
 
-		var arm_lever_arm := shapecast_arms.global_position - global_position
 		if (linear_velocity.length() > grab_strength_max / mass / 20):
 			var force_scale = (force.normalized().dot(linear_velocity.normalized()) + 1) / 2
 			force *= force_scale
