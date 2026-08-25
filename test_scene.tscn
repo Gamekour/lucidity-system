@@ -56,6 +56,39 @@ point_count = 5
 [sub_resource type="SphereShape3D" id="SphereShape3D_buypi"]
 radius = 0.02
 
+[sub_resource type="SphereShape3D" id="SphereShape3D_njel3"]
+radius = 0.1
+
+[sub_resource type="Resource" id="Resource_vr1i5"]
+script = ExtResource("7_rpuu0")
+slot_name = "Armor"
+bone_name = "Chest"
+metadata/_custom_type_script = "uid://dnryq4yanmj62"
+
+[sub_resource type="Resource" id="Resource_rpuu0"]
+script = ExtResource("7_rpuu0")
+slot_name = "RightWrist"
+bone_name = "RightLowerArm"
+pos_offset = Vector3(0, 0.125, 0)
+is_hotbar = true
+metadata/_custom_type_script = "uid://dnryq4yanmj62"
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_oo8pe"]
+radius = 0.05
+height = 0.26367188
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_4gito"]
+radius = 0.05
+height = 0.30273438
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_fbuy2"]
+radius = 0.07324219
+height = 0.3881836
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_0k8yu"]
+radius = 0.057617188
+height = 0.47973633
+
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_3vi0m"]
 resource_name = "atlas"
 cull_mode = 2
@@ -281,39 +314,6 @@ _surfaces = [{
 }]
 blend_shape_mode = 0
 
-[sub_resource type="SphereShape3D" id="SphereShape3D_njel3"]
-radius = 0.1
-
-[sub_resource type="Resource" id="Resource_vr1i5"]
-script = ExtResource("7_rpuu0")
-slot_name = "Armor"
-bone_name = "Chest"
-metadata/_custom_type_script = "uid://dnryq4yanmj62"
-
-[sub_resource type="Resource" id="Resource_rpuu0"]
-script = ExtResource("7_rpuu0")
-slot_name = "RightWrist"
-bone_name = "RightLowerArm"
-pos_offset = Vector3(0, 0.125, 0)
-is_hotbar = true
-metadata/_custom_type_script = "uid://dnryq4yanmj62"
-
-[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_oo8pe"]
-radius = 0.05
-height = 0.26367188
-
-[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_4gito"]
-radius = 0.05
-height = 0.30273438
-
-[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_fbuy2"]
-radius = 0.07324219
-height = 0.3881836
-
-[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_0k8yu"]
-radius = 0.057617188
-height = 0.47973633
-
 [sub_resource type="Environment" id="Environment_ia1lp"]
 background_mode = 1
 background_color = Color(0.00041321453, 0.04256989, 0.28678074, 1)
@@ -389,9 +389,9 @@ linear_damp_mode = 1
 script = ExtResource("1_ia1lp")
 camera = NodePath("cam_spring/Camera3D")
 cam_spring = NodePath("cam_spring")
-playermodel = NodePath("playermodel/Armature/GeneralSkeleton")
+playermodel = NodePath("GeneralSkeleton")
 shapecast_legs = NodePath("shapecast_legs")
-shapecast_arms = NodePath("Headroot/shapecast_arms")
+shapecast_arms = NodePath("head_root/shapecast_arms")
 attach_controller = NodePath("AttachmentController")
 roll_force = 10.0
 sprint_multiplier = 3.0
@@ -436,10 +436,11 @@ spring_length = 0.0
 [node name="Camera3D" type="Camera3D" parent="PhysicsPlayerController/cam_spring" unique_id=1300883146]
 near = 0.01
 
-[node name="rig_root" type="Node3D" parent="PhysicsPlayerController" unique_id=479230259 node_paths=PackedStringArray("body", "legs", "ik_targets")]
+[node name="rig_root" type="Node3D" parent="PhysicsPlayerController" unique_id=479230259 node_paths=PackedStringArray("body", "shapecast_legs", "head_root", "ik_targets")]
 script = ExtResource("2_sasra")
 body = NodePath("..")
-legs = NodePath("../shapecast_legs")
+shapecast_legs = NodePath("../shapecast_legs")
+head_root = NodePath("../head_root")
 ik_targets = [NodePath("spring_RF"), NodePath("spring_LF"), NodePath("spring_RH"), NodePath("spring_LH")]
 start_positions = Array[Vector3]([Vector3(0.07, -0.852, 0), Vector3(-0.07, -0.852, 0), Vector3(0.15, -0.172, 0), Vector3(-0.15, -0.172, 0)])
 speed_min = 0.75
@@ -491,12 +492,147 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.069999695, 0.22103882, 0.38
 [node name="pole_LH" type="Node3D" parent="PhysicsPlayerController/rig_root" unique_id=11763739]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.069999695, 0.220546, 0.3812933)
 
-[node name="playermodel" type="Node3D" parent="PhysicsPlayerController" unique_id=1194981195]
-transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 0, -0.897, 0)
+[node name="head_root" type="Node3D" parent="PhysicsPlayerController" unique_id=645627365 node_paths=PackedStringArray("skeleton")]
+transform = Transform3D(-0.9999993, 0.0011594346, 8.293265e-05, 0.0011594346, 0.99999934, -9.625626e-08, -8.29327e-05, -1.01474676e-10, -1, -8.4877014e-05, 0.3287406, 6.532669e-05)
+script = ExtResource("5_7cbxl")
+skeleton = NodePath("../GeneralSkeleton")
+metadata/_custom_type_script = "uid://uwl2prsk3to"
 
-[node name="Armature" type="Node3D" parent="PhysicsPlayerController/playermodel" unique_id=1066523490]
+[node name="cam_pos" type="RemoteTransform3D" parent="PhysicsPlayerController/head_root" unique_id=772255754]
+transform = Transform3D(1, 8.420134e-15, 0, 8.393005e-15, 1, 0, 0, 6.4212524e-14, 1, 9.1552734e-05, 0.078856945, 0)
+remote_path = NodePath("../../cam_spring")
+update_rotation = false
+update_scale = false
 
-[node name="GeneralSkeleton" type="Skeleton3D" parent="PhysicsPlayerController/playermodel/Armature" unique_id=204165220 node_paths=PackedStringArray("body", "cam_spring")]
+[node name="shapecast_arms" type="ShapeCast3D" parent="PhysicsPlayerController/head_root" unique_id=2006578723]
+transform = Transform3D(1.0000001, 8.149157e-10, -3.4197e-10, -3.4923758e-10, 1.0000001, 6.3948846e-13, 1.09139364e-10, 5.3290705e-13, 1, 0.0001296997, 0.11216545, 0)
+shape = SubResource("SphereShape3D_njel3")
+target_position = Vector3(0, 0, 2)
+
+[node name="AttachmentController" type="Node3D" parent="PhysicsPlayerController" unique_id=799874758 node_paths=PackedStringArray("body", "shapecast", "skeleton", "playermodel")]
+script = ExtResource("6_vr1i5")
+body = NodePath("..")
+shapecast = NodePath("../shapecast_legs")
+skeleton = NodePath("../GeneralSkeleton")
+playermodel = NodePath("../GeneralSkeleton")
+slot_definitions = Array[ExtResource("7_rpuu0")]([SubResource("Resource_vr1i5"), SubResource("Resource_rpuu0")])
+
+[node name="hitboxes" type="Node3D" parent="PhysicsPlayerController" unique_id=1940404361]
+
+[node name="LeftUpperArm" type="BoneAttachment3D" parent="PhysicsPlayerController/hitboxes" unique_id=1191023728]
+transform = Transform3D(0.39976147, -0.12379478, 0.9082212, 0.78854287, -0.4587162, -0.40960932, 0.46732327, 0.87991726, -0.08575957, -0.08622265, 0.26440215, 0)
+bone_name = "LeftUpperArm"
+bone_idx = 4
+use_external_skeleton = true
+external_skeleton = NodePath("../../GeneralSkeleton")
+
+[node name="hitbox" type="StaticBody3D" parent="PhysicsPlayerController/hitboxes/LeftUpperArm" unique_id=1798932135]
+collision_layer = 2
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="PhysicsPlayerController/hitboxes/LeftUpperArm/hitbox" unique_id=237773180]
+transform = Transform3D(1.0000001, -2.682209e-07, -1.9744039e-07, -2.9802322e-08, 1, -5.5134296e-07, -1.4156103e-07, 7.4505806e-08, 0.9999993, 1.4305115e-06, 0.1074214, -2.861023e-06)
+shape = SubResource("CapsuleShape3D_oo8pe")
+
+[node name="LeftLowerArm" type="BoneAttachment3D" parent="PhysicsPlayerController/hitboxes" unique_id=742385330]
+transform = Transform3D(0.9082253, 0.19750796, 0.368941, -0.40960124, 0.6002125, 0.68700224, -0.08575465, -0.77507144, 0.62602764, -0.11542225, 0.15620375, 0.20754814)
+bone_name = "LeftLowerArm"
+bone_idx = 5
+use_external_skeleton = true
+external_skeleton = NodePath("../../GeneralSkeleton")
+
+[node name="hitbox" type="StaticBody3D" parent="PhysicsPlayerController/hitboxes/LeftLowerArm" unique_id=321424764]
+collision_layer = 2
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="PhysicsPlayerController/hitboxes/LeftLowerArm/hitbox" unique_id=620348115]
+transform = Transform3D(1.0000004, -2.7567148e-07, -4.8056245e-07, -4.4703484e-08, 1, -5.066395e-07, -1.3783574e-07, 1.1920929e-07, 1, 9.536743e-07, 0.12695241, -2.861023e-06)
+shape = SubResource("CapsuleShape3D_4gito")
+
+[node name="RightUpperArm" type="BoneAttachment3D" parent="PhysicsPlayerController/hitboxes" unique_id=492222529]
+transform = Transform3D(0.40306163, 0.12284584, -0.9068903, -0.7903354, -0.4529055, -0.41260922, -0.46142295, 0.8830546, -0.08545948, 0.08622265, 0.26440215, 0)
+bone_name = "RightUpperArm"
+bone_idx = 27
+use_external_skeleton = true
+external_skeleton = NodePath("../../GeneralSkeleton")
+
+[node name="hitbox" type="StaticBody3D" parent="PhysicsPlayerController/hitboxes/RightUpperArm" unique_id=1933459978]
+collision_layer = 2
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="PhysicsPlayerController/hitboxes/RightUpperArm/hitbox" unique_id=694327533]
+transform = Transform3D(1.0000001, -2.682209e-07, -1.9744039e-07, -2.9802322e-08, 1, -5.5134296e-07, -1.4156103e-07, 7.4505806e-08, 0.9999993, 1.4305115e-06, 0.1074214, -2.861023e-06)
+shape = SubResource("CapsuleShape3D_oo8pe")
+
+[node name="RightLowerArm" type="BoneAttachment3D" parent="PhysicsPlayerController/hitboxes" unique_id=1912755169]
+transform = Transform3D(0.906891, -0.19673148, -0.3726196, 0.4126081, 0.593971, 0.690618, 0.08545908, -0.7800612, 0.6198399, 0.115198135, 0.15757418, 0.2082882)
+bone_name = "RightLowerArm"
+bone_idx = 28
+use_external_skeleton = true
+external_skeleton = NodePath("../../GeneralSkeleton")
+
+[node name="hitbox" type="StaticBody3D" parent="PhysicsPlayerController/hitboxes/RightLowerArm" unique_id=928886291]
+collision_layer = 2
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="PhysicsPlayerController/hitboxes/RightLowerArm/hitbox" unique_id=1950157083]
+transform = Transform3D(1.0000004, -2.7567148e-07, -4.8056245e-07, -4.4703484e-08, 1, -5.066395e-07, -1.3783574e-07, 1.1920929e-07, 1, 9.536743e-07, 0.12695241, -2.861023e-06)
+shape = SubResource("CapsuleShape3D_4gito")
+
+[node name="LeftUpperLeg" type="BoneAttachment3D" parent="PhysicsPlayerController/hitboxes" unique_id=1480869157]
+transform = Transform3D(-0.8157866, -0.0013893275, 0.5783514, 0.57278085, -0.14041984, 0.8075918, 0.08009, 0.9900911, 0.115348406, -0.068808556, -0.07487202, 0.01635313)
+bone_name = "LeftUpperLeg"
+bone_idx = 45
+use_external_skeleton = true
+external_skeleton = NodePath("../../GeneralSkeleton")
+
+[node name="hitbox" type="StaticBody3D" parent="PhysicsPlayerController/hitboxes/LeftUpperLeg" unique_id=1584685917]
+collision_layer = 2
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="PhysicsPlayerController/hitboxes/LeftUpperLeg/hitbox" unique_id=1611382611]
+transform = Transform3D(1, 7.45099e-08, 3.6517147e-06, -7.450579e-08, 1, -1.1250468e-06, -3.6517147e-06, 1.1250465e-06, 1, 4.7683716e-06, 0.16967678, -4.2915344e-06)
+shape = SubResource("CapsuleShape3D_fbuy2")
+
+[node name="LeftLowerLeg" type="BoneAttachment3D" parent="PhysicsPlayerController/hitboxes" unique_id=233736728]
+transform = Transform3D(0.8046129, 0.025122367, -0.593268, 0.5904809, 0.0716334, 0.8038664, 0.06269285, -0.9971145, 0.042802893, -0.064852715, -0.114993095, 0.34357977)
+bone_name = "LeftLowerLeg"
+bone_idx = 46
+use_external_skeleton = true
+external_skeleton = NodePath("../../GeneralSkeleton")
+
+[node name="hitbox" type="StaticBody3D" parent="PhysicsPlayerController/hitboxes/LeftLowerLeg" unique_id=1905413024]
+collision_layer = 2
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="PhysicsPlayerController/hitboxes/LeftLowerLeg/hitbox" unique_id=693141910]
+transform = Transform3D(1, -3.0546948e-07, 3.6230788e-06, 3.054739e-07, 1, -1.2144634e-06, -3.6230783e-06, 1.2144645e-06, 1, 4.2915344e-06, 0.21545172, -3.8146973e-06)
+shape = SubResource("CapsuleShape3D_0k8yu")
+
+[node name="RightUpperLeg" type="BoneAttachment3D" parent="PhysicsPlayerController/hitboxes" unique_id=1875569249]
+transform = Transform3D(-0.81579244, 0.0013894709, -0.57834315, -0.5727726, -0.14042056, 0.80759746, -0.08008911, 0.990091, 0.11534982, 0.068808556, -0.07487202, 0.01635313)
+bone_name = "RightUpperLeg"
+bone_idx = 48
+use_external_skeleton = true
+external_skeleton = NodePath("../../GeneralSkeleton")
+
+[node name="hitbox" type="StaticBody3D" parent="PhysicsPlayerController/hitboxes/RightUpperLeg" unique_id=884326149]
+collision_layer = 2
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="PhysicsPlayerController/hitboxes/RightUpperLeg/hitbox" unique_id=1800766493]
+transform = Transform3D(1, 7.45099e-08, 3.6517147e-06, -7.450579e-08, 1, -1.1250468e-06, -3.6517147e-06, 1.1250465e-06, 1, 4.7683716e-06, 0.16967678, -4.2915344e-06)
+shape = SubResource("CapsuleShape3D_fbuy2")
+
+[node name="LeftLowerLeg2" type="BoneAttachment3D" parent="PhysicsPlayerController/hitboxes" unique_id=248854396]
+transform = Transform3D(0.8046209, -0.025122015, 0.5932572, -0.59047014, 0.07163325, 0.80387425, -0.06269183, -0.9971146, 0.042803783, 0.064852715, -0.114993095, 0.34357977)
+bone_name = "RightLowerLeg"
+bone_idx = 49
+use_external_skeleton = true
+external_skeleton = NodePath("../../GeneralSkeleton")
+
+[node name="hitbox" type="StaticBody3D" parent="PhysicsPlayerController/hitboxes/LeftLowerLeg2" unique_id=483647526]
+collision_layer = 2
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="PhysicsPlayerController/hitboxes/LeftLowerLeg2/hitbox" unique_id=417574194]
+transform = Transform3D(1, -3.0546948e-07, 3.6230788e-06, 3.054739e-07, 1, -1.2144634e-06, -3.6230783e-06, 1.2144645e-06, 1, 4.2915344e-06, 0.21545172, -3.8146973e-06)
+shape = SubResource("CapsuleShape3D_0k8yu")
+
+[node name="GeneralSkeleton" type="Skeleton3D" parent="PhysicsPlayerController" unique_id=204165220 node_paths=PackedStringArray("body", "cam_spring")]
+transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 0, -0.8970001, 0)
 motion_scale = 0.8534346
 modifier_callback_mode_process = 0
 bones/0/name = "Hips"
@@ -857,25 +993,25 @@ bones/50/position = Vector3(9.683163e-06, 0.45561245, 0.028439756)
 bones/50/rotation = Quaternion(0, 0.70710677, -0.70710677, 0)
 bones/50/scale = Vector3(1, 1, 1)
 script = ExtResource("3_2nij2")
-body = NodePath("../../..")
-cam_spring = NodePath("../../../cam_spring")
+body = NodePath("..")
+cam_spring = NodePath("../cam_spring")
 metadata/_custom_type_script = "uid://kpuqgbh8b1s0"
 
-[node name="Body" type="MeshInstance3D" parent="PhysicsPlayerController/playermodel/Armature/GeneralSkeleton" unique_id=2139072486]
+[node name="Body" type="MeshInstance3D" parent="PhysicsPlayerController/GeneralSkeleton" unique_id=2139072486]
 mesh = SubResource("ArrayMesh_d068y")
 skin = SubResource("Skin_v3g3t")
 skeleton = NodePath("..")
 
-[node name="Body_Minimal" type="MeshInstance3D" parent="PhysicsPlayerController/playermodel/Armature/GeneralSkeleton" unique_id=1714993024]
+[node name="Body_Minimal" type="MeshInstance3D" parent="PhysicsPlayerController/GeneralSkeleton" unique_id=1714993024]
 mesh = SubResource("ArrayMesh_nrgt2")
 skin = SubResource("Skin_v3g3t")
 skeleton = NodePath("..")
 
-[node name="IK_RF" type="TwoBoneIK3D" parent="PhysicsPlayerController/playermodel/Armature/GeneralSkeleton" unique_id=1206094189]
+[node name="IK_RF" type="TwoBoneIK3D" parent="PhysicsPlayerController/GeneralSkeleton" unique_id=1206094189]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 0, -0.89670515, 0)
 setting_count = 1
-settings/0/target_node = NodePath("../../../../rig_root/spring_RF/IK_RF")
-settings/0/pole_node = NodePath("../../../../rig_root/pole_RF")
+settings/0/target_node = NodePath("../../rig_root/spring_RF/IK_RF")
+settings/0/pole_node = NodePath("../../rig_root/pole_RF")
 settings/0/root_bone_name = "RightUpperLeg"
 settings/0/root_bone = 48
 settings/0/middle_bone_name = "RightLowerLeg"
@@ -886,11 +1022,11 @@ settings/0/end_bone = 50
 settings/0/use_virtual_end = false
 settings/0/extend_end_bone = false
 
-[node name="IK_LF" type="TwoBoneIK3D" parent="PhysicsPlayerController/playermodel/Armature/GeneralSkeleton" unique_id=866102430]
+[node name="IK_LF" type="TwoBoneIK3D" parent="PhysicsPlayerController/GeneralSkeleton" unique_id=866102430]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 0, -0.89670515, 0)
 setting_count = 1
-settings/0/target_node = NodePath("../../../../rig_root/spring_LF/IK_LF")
-settings/0/pole_node = NodePath("../../../../rig_root/pole_LF")
+settings/0/target_node = NodePath("../../rig_root/spring_LF/IK_LF")
+settings/0/pole_node = NodePath("../../rig_root/pole_LF")
 settings/0/root_bone_name = "LeftUpperLeg"
 settings/0/root_bone = 45
 settings/0/middle_bone_name = "LeftLowerLeg"
@@ -901,11 +1037,11 @@ settings/0/end_bone = 47
 settings/0/use_virtual_end = false
 settings/0/extend_end_bone = false
 
-[node name="IK_RH" type="TwoBoneIK3D" parent="PhysicsPlayerController/playermodel/Armature/GeneralSkeleton" unique_id=1514150750]
+[node name="IK_RH" type="TwoBoneIK3D" parent="PhysicsPlayerController/GeneralSkeleton" unique_id=1514150750]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 0, -0.89670515, 0)
 setting_count = 1
-settings/0/target_node = NodePath("../../../../rig_root/spring_RH/IK_RH")
-settings/0/pole_node = NodePath("../../../../rig_root/pole_RH")
+settings/0/target_node = NodePath("../../rig_root/spring_RH/IK_RH")
+settings/0/pole_node = NodePath("../../rig_root/pole_RH")
 settings/0/root_bone_name = "RightUpperArm"
 settings/0/root_bone = 27
 settings/0/middle_bone_name = "RightLowerArm"
@@ -916,11 +1052,11 @@ settings/0/end_bone = 29
 settings/0/use_virtual_end = false
 settings/0/extend_end_bone = false
 
-[node name="IK_LH" type="TwoBoneIK3D" parent="PhysicsPlayerController/playermodel/Armature/GeneralSkeleton" unique_id=863233133]
+[node name="IK_LH" type="TwoBoneIK3D" parent="PhysicsPlayerController/GeneralSkeleton" unique_id=863233133]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 0, -0.89670515, 0)
 setting_count = 1
-settings/0/target_node = NodePath("../../../../rig_root/spring_LH/IK_LH")
-settings/0/pole_node = NodePath("../../../../rig_root/pole_LH")
+settings/0/target_node = NodePath("../../rig_root/spring_LH/IK_LH")
+settings/0/pole_node = NodePath("../../rig_root/pole_LH")
 settings/0/root_bone_name = "LeftUpperArm"
 settings/0/root_bone = 4
 settings/0/middle_bone_name = "LeftLowerArm"
@@ -930,145 +1066,6 @@ settings/0/end_bone_name = "LeftHand"
 settings/0/end_bone = 6
 settings/0/use_virtual_end = false
 settings/0/extend_end_bone = false
-
-[node name="Headroot" type="Node3D" parent="PhysicsPlayerController" unique_id=645627365 node_paths=PackedStringArray("skeleton")]
-transform = Transform3D(-0.9999993, 0.0011594346, 8.293265e-05, 0.0011594346, 0.99999934, -9.625626e-08, -8.29327e-05, -1.01474676e-10, -1, -8.4877014e-05, 0.3287406, 6.532669e-05)
-script = ExtResource("5_7cbxl")
-skeleton = NodePath("../playermodel/Armature/GeneralSkeleton")
-metadata/_custom_type_script = "uid://uwl2prsk3to"
-
-[node name="cam_pos" type="RemoteTransform3D" parent="PhysicsPlayerController/Headroot" unique_id=772255754]
-transform = Transform3D(1, 8.420134e-15, 0, 8.393005e-15, 1, 0, 0, 6.4212524e-14, 1, 9.1552734e-05, 0.078856945, 0)
-remote_path = NodePath("../../cam_spring")
-update_rotation = false
-update_scale = false
-
-[node name="shapecast_arms" type="ShapeCast3D" parent="PhysicsPlayerController/Headroot" unique_id=2006578723]
-transform = Transform3D(1.0000001, 8.149157e-10, -3.4197e-10, -3.4923758e-10, 1.0000001, 6.3948846e-13, 1.09139364e-10, 5.3290705e-13, 1, 0.0001296997, 0.11216545, 0)
-shape = SubResource("SphereShape3D_njel3")
-target_position = Vector3(0, 0, 2)
-
-[node name="AttachmentController" type="Node3D" parent="PhysicsPlayerController" unique_id=799874758 node_paths=PackedStringArray("body", "shapecast", "skeleton", "playermodel")]
-script = ExtResource("6_vr1i5")
-body = NodePath("..")
-shapecast = NodePath("../shapecast_legs")
-skeleton = NodePath("../playermodel/Armature/GeneralSkeleton")
-playermodel = NodePath("../playermodel/Armature/GeneralSkeleton")
-slot_definitions = Array[ExtResource("7_rpuu0")]([SubResource("Resource_vr1i5"), SubResource("Resource_rpuu0")])
-
-[node name="hitboxes" type="Node3D" parent="PhysicsPlayerController" unique_id=1940404361]
-
-[node name="LeftUpperArm" type="BoneAttachment3D" parent="PhysicsPlayerController/hitboxes" unique_id=1191023728]
-transform = Transform3D(0.39976147, -0.12379478, 0.9082212, 0.78854287, -0.4587162, -0.40960932, 0.46732327, 0.87991726, -0.08575957, -0.08622265, 0.26440215, 0)
-bone_name = "LeftUpperArm"
-bone_idx = 4
-use_external_skeleton = true
-external_skeleton = NodePath("../../playermodel/Armature/GeneralSkeleton")
-
-[node name="hitbox" type="StaticBody3D" parent="PhysicsPlayerController/hitboxes/LeftUpperArm" unique_id=1798932135]
-collision_layer = 2
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="PhysicsPlayerController/hitboxes/LeftUpperArm/hitbox" unique_id=237773180]
-transform = Transform3D(1.0000001, -2.682209e-07, -1.9744039e-07, -2.9802322e-08, 1, -5.5134296e-07, -1.4156103e-07, 7.4505806e-08, 0.9999993, 1.4305115e-06, 0.1074214, -2.861023e-06)
-shape = SubResource("CapsuleShape3D_oo8pe")
-
-[node name="LeftLowerArm" type="BoneAttachment3D" parent="PhysicsPlayerController/hitboxes" unique_id=742385330]
-transform = Transform3D(0.9082253, 0.19750796, 0.368941, -0.40960124, 0.6002125, 0.68700224, -0.08575465, -0.77507144, 0.62602764, -0.11542225, 0.15620375, 0.20754814)
-bone_name = "LeftLowerArm"
-bone_idx = 5
-use_external_skeleton = true
-external_skeleton = NodePath("../../playermodel/Armature/GeneralSkeleton")
-
-[node name="hitbox" type="StaticBody3D" parent="PhysicsPlayerController/hitboxes/LeftLowerArm" unique_id=321424764]
-collision_layer = 2
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="PhysicsPlayerController/hitboxes/LeftLowerArm/hitbox" unique_id=620348115]
-transform = Transform3D(1.0000004, -2.7567148e-07, -4.8056245e-07, -4.4703484e-08, 1, -5.066395e-07, -1.3783574e-07, 1.1920929e-07, 1, 9.536743e-07, 0.12695241, -2.861023e-06)
-shape = SubResource("CapsuleShape3D_4gito")
-
-[node name="RightUpperArm" type="BoneAttachment3D" parent="PhysicsPlayerController/hitboxes" unique_id=492222529]
-transform = Transform3D(0.40306163, 0.12284584, -0.9068903, -0.7903354, -0.4529055, -0.41260922, -0.46142295, 0.8830546, -0.08545948, 0.08622265, 0.26440215, 0)
-bone_name = "RightUpperArm"
-bone_idx = 27
-use_external_skeleton = true
-external_skeleton = NodePath("../../playermodel/Armature/GeneralSkeleton")
-
-[node name="hitbox" type="StaticBody3D" parent="PhysicsPlayerController/hitboxes/RightUpperArm" unique_id=1933459978]
-collision_layer = 2
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="PhysicsPlayerController/hitboxes/RightUpperArm/hitbox" unique_id=694327533]
-transform = Transform3D(1.0000001, -2.682209e-07, -1.9744039e-07, -2.9802322e-08, 1, -5.5134296e-07, -1.4156103e-07, 7.4505806e-08, 0.9999993, 1.4305115e-06, 0.1074214, -2.861023e-06)
-shape = SubResource("CapsuleShape3D_oo8pe")
-
-[node name="RightLowerArm" type="BoneAttachment3D" parent="PhysicsPlayerController/hitboxes" unique_id=1912755169]
-transform = Transform3D(0.906891, -0.19673148, -0.3726196, 0.4126081, 0.593971, 0.690618, 0.08545908, -0.7800612, 0.6198399, 0.115198135, 0.15757418, 0.2082882)
-bone_name = "RightLowerArm"
-bone_idx = 28
-use_external_skeleton = true
-external_skeleton = NodePath("../../playermodel/Armature/GeneralSkeleton")
-
-[node name="hitbox" type="StaticBody3D" parent="PhysicsPlayerController/hitboxes/RightLowerArm" unique_id=928886291]
-collision_layer = 2
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="PhysicsPlayerController/hitboxes/RightLowerArm/hitbox" unique_id=1950157083]
-transform = Transform3D(1.0000004, -2.7567148e-07, -4.8056245e-07, -4.4703484e-08, 1, -5.066395e-07, -1.3783574e-07, 1.1920929e-07, 1, 9.536743e-07, 0.12695241, -2.861023e-06)
-shape = SubResource("CapsuleShape3D_4gito")
-
-[node name="LeftUpperLeg" type="BoneAttachment3D" parent="PhysicsPlayerController/hitboxes" unique_id=1480869157]
-transform = Transform3D(-0.8157866, -0.0013893275, 0.5783514, 0.57278085, -0.14041984, 0.8075918, 0.08009, 0.9900911, 0.115348406, -0.068808556, -0.07487202, 0.01635313)
-bone_name = "LeftUpperLeg"
-bone_idx = 45
-use_external_skeleton = true
-external_skeleton = NodePath("../../playermodel/Armature/GeneralSkeleton")
-
-[node name="hitbox" type="StaticBody3D" parent="PhysicsPlayerController/hitboxes/LeftUpperLeg" unique_id=1584685917]
-collision_layer = 2
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="PhysicsPlayerController/hitboxes/LeftUpperLeg/hitbox" unique_id=1611382611]
-transform = Transform3D(1, 7.45099e-08, 3.6517147e-06, -7.450579e-08, 1, -1.1250468e-06, -3.6517147e-06, 1.1250465e-06, 1, 4.7683716e-06, 0.16967678, -4.2915344e-06)
-shape = SubResource("CapsuleShape3D_fbuy2")
-
-[node name="LeftLowerLeg" type="BoneAttachment3D" parent="PhysicsPlayerController/hitboxes" unique_id=233736728]
-transform = Transform3D(0.8046129, 0.025122367, -0.593268, 0.5904809, 0.0716334, 0.8038664, 0.06269285, -0.9971145, 0.042802893, -0.064852715, -0.114993095, 0.34357977)
-bone_name = "LeftLowerLeg"
-bone_idx = 46
-use_external_skeleton = true
-external_skeleton = NodePath("../../playermodel/Armature/GeneralSkeleton")
-
-[node name="hitbox" type="StaticBody3D" parent="PhysicsPlayerController/hitboxes/LeftLowerLeg" unique_id=1905413024]
-collision_layer = 2
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="PhysicsPlayerController/hitboxes/LeftLowerLeg/hitbox" unique_id=693141910]
-transform = Transform3D(1, -3.0546948e-07, 3.6230788e-06, 3.054739e-07, 1, -1.2144634e-06, -3.6230783e-06, 1.2144645e-06, 1, 4.2915344e-06, 0.21545172, -3.8146973e-06)
-shape = SubResource("CapsuleShape3D_0k8yu")
-
-[node name="RightUpperLeg" type="BoneAttachment3D" parent="PhysicsPlayerController/hitboxes" unique_id=1875569249]
-transform = Transform3D(-0.81579244, 0.0013894709, -0.57834315, -0.5727726, -0.14042056, 0.80759746, -0.08008911, 0.990091, 0.11534982, 0.068808556, -0.07487202, 0.01635313)
-bone_name = "RightUpperLeg"
-bone_idx = 48
-use_external_skeleton = true
-external_skeleton = NodePath("../../playermodel/Armature/GeneralSkeleton")
-
-[node name="hitbox" type="StaticBody3D" parent="PhysicsPlayerController/hitboxes/RightUpperLeg" unique_id=884326149]
-collision_layer = 2
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="PhysicsPlayerController/hitboxes/RightUpperLeg/hitbox" unique_id=1800766493]
-transform = Transform3D(1, 7.45099e-08, 3.6517147e-06, -7.450579e-08, 1, -1.1250468e-06, -3.6517147e-06, 1.1250465e-06, 1, 4.7683716e-06, 0.16967678, -4.2915344e-06)
-shape = SubResource("CapsuleShape3D_fbuy2")
-
-[node name="LeftLowerLeg2" type="BoneAttachment3D" parent="PhysicsPlayerController/hitboxes" unique_id=248854396]
-transform = Transform3D(0.8046209, -0.025122015, 0.5932572, -0.59047014, 0.07163325, 0.80387425, -0.06269183, -0.9971146, 0.042803783, 0.064852715, -0.114993095, 0.34357977)
-bone_name = "RightLowerLeg"
-bone_idx = 49
-use_external_skeleton = true
-external_skeleton = NodePath("../../playermodel/Armature/GeneralSkeleton")
-
-[node name="hitbox" type="StaticBody3D" parent="PhysicsPlayerController/hitboxes/LeftLowerLeg2" unique_id=483647526]
-collision_layer = 2
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="PhysicsPlayerController/hitboxes/LeftLowerLeg2/hitbox" unique_id=417574194]
-transform = Transform3D(1, -3.0546948e-07, 3.6230788e-06, 3.054739e-07, 1, -1.2144634e-06, -3.6230783e-06, 1.2144645e-06, 1, 4.2915344e-06, 0.21545172, -3.8146973e-06)
-shape = SubResource("CapsuleShape3D_0k8yu")
 
 [node name="luciddebug" parent="." unique_id=1643952968 instance=ExtResource("1_uhqqe")]
 
@@ -1278,8 +1275,8 @@ surface_material_override/0 = ExtResource("9_njel3")
 script = ExtResource("7_8pr8v")
 source_scene = ExtResource("11_oo8pe")
 cam_ref = NodePath("../../PhysicsPlayerController/cam_spring")
-IK_mods_disable = [NodePath("../../PhysicsPlayerController/playermodel/Armature/GeneralSkeleton/IK_RH")]
-IK_mods_disable_LH = [NodePath("../../PhysicsPlayerController/playermodel/Armature/GeneralSkeleton/IK_LH")]
+IK_mods_disable = [NodePath("../../PhysicsPlayerController/GeneralSkeleton/IK_RH")]
+IK_mods_disable_LH = [NodePath("../../PhysicsPlayerController/GeneralSkeleton/IK_LH")]
 bone_mask = PackedStringArray("RightUpperArm", "RightLowerArm", "RightHand")
 active = false
 camera_aim_yaw_enabled = true

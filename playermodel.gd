@@ -24,11 +24,8 @@ func _process(delta: float) -> void:
 		set_bone_pose_rotation(head_bone_index, local_basis.get_rotation_quaternion())
 	else:
 		var current_up_dir : Vector3 = body.current_up_dir
-		# Signed pitch angle between camera forward and the horizon plane defined by current_up_dir.
-		# 0 = looking at the horizon, +PI/2 = looking straight along up_dir, -PI/2 = looking straight against it.
 		var cam_forward : Vector3 = -cam_spring.global_transform.basis.z
 		var pitch : float = asin(clampf(cam_forward.dot(current_up_dir), -1.0, 1.0))
 		
-		# Rotate around the bone's rest-pose right axis so only pitch is applied (no yaw/roll baked in).
 		var right_axis : Vector3 = get_bone_rest(head_bone_index).basis.x.normalized()
 		set_bone_pose_rotation(head_bone_index, Quaternion(right_axis, -pitch))

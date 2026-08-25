@@ -1,7 +1,8 @@
 extends Node3D
 class_name WalkIKController
 @export var body : PhysicsPlayerController
-@export var legs : ShapeCast3D
+@export var shapecast_legs : ShapeCast3D
+@export var head_root : Node3D
 @export var ik_targets : Array[SpringArm3D] = []
 @export var start_positions : Array[Vector3] = []
 @export var phase_offsets : Array[float] = [0.0, 0.5, 0.5, 0.0]
@@ -36,7 +37,7 @@ var air_blend : float = 0.0
 var last_climb_grab_tick : int = 0
 
 func _process(delta: float) -> void:
-	var t := clampf(legs.get_closest_collision_safe_fraction() * 2, 0, 1)
+	var t := clampf(shapecast_legs.get_closest_collision_safe_fraction() * 2, 0, 1)
 	global_basis = body.basis.slerp(_apply_gravity_counter_rotation(delta), t)
 
 	var is_climbing := body.climbing_ledge
@@ -70,7 +71,7 @@ func _process(delta: float) -> void:
 	var animated_stance_scale := lerpf(stance_height_bob_min.sample(sample), stance_height_bob_max.sample(sample), weight)
 	body.stance_height_scale = lerpf(1.0, animated_stance_scale, pose_blend * (1.0 - air_blend))
 
-	var time_scale := absf(legs.target_position.y)
+	var time_scale := absf(shapecast_legs.target_position.y)
 
 	var air_dir := Vector3.ZERO
 	var air_speed := local_vel_full.length()
@@ -95,12 +96,13 @@ func _process(delta: float) -> void:
 
 		var limb_air_blend := 1.0 if (is_climbing and i < 2) else air_blend
 		var target_pos := grounded_pos.lerp(airborne_pos, limb_air_blend)
-		ik_targets[i].look_at(to_global(target_pos), to_global(Vector3.UP), true)
+		var is_holding = i >= 2 and body.grabbed_col != null and not body.climbing_ledge
+		ik_targets[i].look_at(to_global(target_pos if not is_holding else start_positions[i]), to_global(Vector3.UP), true)
 		ik_targets[i].spring_length = ik_targets[i].global_position.distance_to(to_global(target_pos))
 		if body.grabbed_col != null and i >= 2:
 			var body_yaw := body.global_basis.get_euler().y
 			var yaw_right := Vector3.RIGHT
-			ik_targets[i].rotate(yaw_right, deg_to_rad(90))
+			ik_targets[i].rotate(yaw_right, -head_root.rotation.x + deg_to_rad(90))
 
 func _apply_gravity_counter_rotation(delta: float) -> Basis:
 	var parent_node := get_parent()
