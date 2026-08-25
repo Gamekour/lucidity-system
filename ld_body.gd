@@ -71,7 +71,6 @@ class_name PhysicsPlayerController
 @onready var cam_spring : SpringArm3D = $cam_spring
 @onready var shapecast_legs : ShapeCast3D = $shapecast_legs
 @onready var shapecast_arms : ShapeCast3D = $shapecast_arms
-@onready var cam_transform : Node3D = $cam_spring/cam_transform
 
 var playermodel : PlayerModel
 var ik_controller : WalkIKController
@@ -344,10 +343,10 @@ func _get_horizontal_basis(up_dir: Vector3) -> Array:
 	return [forward_ref, right_ref]
 
 func _get_camera_relative_axes(up_dir: Vector3) -> Array:
-	var cam_forward := -cam_transform.global_basis.z
+	var cam_forward := -cam_spring.global_basis.z
 	var flat_forward := cam_forward - up_dir * cam_forward.dot(up_dir)
 	if flat_forward.length_squared() < 0.0001:
-		var cam_local_up := cam_transform.global_basis.y
+		var cam_local_up := cam_spring.global_basis.y
 		flat_forward = cam_local_up - up_dir * cam_local_up.dot(up_dir)
 	flat_forward = flat_forward.normalized()
 	var flat_right := flat_forward.cross(up_dir).normalized()
