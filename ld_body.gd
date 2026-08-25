@@ -1,12 +1,7 @@
 extends RigidBody3D
 class_name PhysicsPlayerController
 
-@export var camera : Camera3D
-@export var cam_spring : SpringArm3D
-@export var playermodel : PlayerModel
-@export var shapecast_legs : ShapeCast3D
-@export var shapecast_arms : ShapeCast3D
-@export var attach_controller : AttachmentController
+@export var playermodel_scene : PackedScene
 @export var roll_force : float = 100
 @export var sprint_multiplier : float = 2.0
 @export var friction_coefficient : float = 2.0
@@ -73,6 +68,15 @@ class_name PhysicsPlayerController
 @export_range(0.0, 90.0, 0.5, "radians_as_degrees") var climb_scan_max_angle : float = deg_to_rad(40.0)
 @export var climb_scan_input_deadzone : float = 0.15
 
+@onready var cam_spring : SpringArm3D = $cam_spring
+@onready var shapecast_legs : ShapeCast3D = $shapecast_legs
+@onready var shapecast_arms : ShapeCast3D = $head_root/shapecast_arms
+@onready var cam_transform : Node3D = $cam_spring/cam_transform
+
+var playermodel : PlayerModel
+var ik_controller : WalkIKController
+var attach_controller : AttachmentController
+
 var grabbed_col : Node3D
 var grab_release_pending : Array[RigidBody3D]
 var grab_offset : Vector3 = Vector3.ZERO
@@ -119,6 +123,37 @@ var floor_contact_point : Vector3 = Vector3.ZERO
 func _ready() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	allow_grab_default = allow_grab
+	rig_setup()
+
+func rig_setup() -> void:
+	for child in find_children("*"):
+		if (child is WalkIKController):
+			ik_controller = child
+		if (child is AttachmentController):
+			attach_controller = child
+	
+	if (ik_controller != null):
+		ik_controller.body = self
+		ik_controller.shapecast_legs = shapecast_legs
+		ik_controller.initialized = true
+		if (playermodel_scene != null):
+			playermodel = PlayerModelFactory.spawn_player_model(playermodel_scene, self)
+			playermodel.body = self
+			playermodel.cam_spring = cam_spring
+			var i = 0
+			for ik_node in ik_controller.ik_targets:
+				var two_bone := TwoBoneIK3D.new()
+				two_bone.setting_count = 1
+				two_bone.set_target_node(0, ik_controller.ik_targets[i].get_path())
+				two_bone.set_pole_node(0, ik_controller.ik_poles[i].get_path())
+				two_bone.set_root_bone_name(0, ik_controller.ik_bone_roots[i])
+				two_bone.set_middle_bone_name(0, ik_controller.ik_bone_mids[i])
+				two_bone.set_end_bone_name(0, ik_controller.ik_bone_ends[i])
+				two_bone.set_pole_direction(0, SkeletonModifier3D.SECONDARY_DIRECTION_MINUS_Z)
+				playermodel.add_child(two_bone)
+				i += 1
+			for bone_root : BoneRoot in find_children("*", "BoneRoot"):
+				bone_root.skeleton = playermodel
 
 func _physics_process(delta: float) -> void:
 	var gravity_vec : Vector3 = get_gravity()
@@ -304,10 +339,10 @@ func _get_horizontal_basis(up_dir: Vector3) -> Array:
 	return [forward_ref, right_ref]
 
 func _get_camera_relative_axes(up_dir: Vector3) -> Array:
-	var cam_forward := -camera.global_basis.z
+	var cam_forward := -cam_transform.global_basis.z
 	var flat_forward := cam_forward - up_dir * cam_forward.dot(up_dir)
 	if flat_forward.length_squared() < 0.0001:
-		var cam_local_up := camera.global_basis.y
+		var cam_local_up := cam_transform.global_basis.y
 		flat_forward = cam_local_up - up_dir * cam_local_up.dot(up_dir)
 	flat_forward = flat_forward.normalized()
 	var flat_right := flat_forward.cross(up_dir).normalized()
