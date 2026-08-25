@@ -70,7 +70,7 @@ class_name PhysicsPlayerController
 
 @onready var cam_spring : SpringArm3D = $cam_spring
 @onready var shapecast_legs : ShapeCast3D = $shapecast_legs
-@onready var shapecast_arms : ShapeCast3D = $head_root/shapecast_arms
+@onready var shapecast_arms : ShapeCast3D = $shapecast_arms
 @onready var cam_transform : Node3D = $cam_spring/cam_transform
 
 var playermodel : PlayerModel
@@ -150,10 +150,15 @@ func rig_setup() -> void:
 				two_bone.set_middle_bone_name(0, ik_controller.ik_bone_mids[i])
 				two_bone.set_end_bone_name(0, ik_controller.ik_bone_ends[i])
 				two_bone.set_pole_direction(0, SkeletonModifier3D.SECONDARY_DIRECTION_MINUS_Z)
+				two_bone.name = ik_controller.ik_targets[i].name
 				playermodel.add_child(two_bone)
+				playermodel.owner = self
 				i += 1
 			for bone_root : BoneRoot in find_children("*", "BoneRoot"):
 				bone_root.skeleton = playermodel
+			if (attach_controller != null):
+				attach_controller.body = self
+				attach_controller._connect_skeleton(playermodel)
 
 func _physics_process(delta: float) -> void:
 	var gravity_vec : Vector3 = get_gravity()

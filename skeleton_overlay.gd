@@ -5,8 +5,8 @@ class_name SkeletonOverlay
 @export var body : PhysicsPlayerController
 @export var source_scene: PackedScene
 @export var cam_ref : Node3D
-@export var IK_mods_disable : Array[IKModifier3D]
-@export var IK_mods_disable_LH : Array[IKModifier3D]
+@export var IK_mods_disable : Array[String]
+@export var IK_mods_disable_LH : Array[String]
 @export var bone_mask: PackedStringArray
 @export_range(0.0, 1.0, 0.01) var weight: float = 1.0
 @export_range(0.0, 1.0, 0.01) var hip_lean_scale: float = 0.5
@@ -117,8 +117,11 @@ func _apply_overlay() -> void:
 
 func toggle_ik():
 	var active_disable_list = IK_mods_disable_LH if playermodel.left_handed else IK_mods_disable
-	for ikmod in active_disable_list:
-		ikmod.influence = 0 if active else 1
+	for ikname : String in active_disable_list:
+		var ikmod = playermodel.find_child(ikname, false, false)
+		if (ikmod != null):
+			if (ikmod is IKModifier3D):
+				ikmod.influence = 0 if active else 1
 
 func _apply_camera_aim() -> void:
 	if not camera_aim_active or camera_aim_weight <= 0.0:

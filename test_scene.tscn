@@ -19,6 +19,9 @@ height = 0.71154785
 [sub_resource type="SphereShape3D" id="SphereShape3D_wb0og"]
 radius = 0.07
 
+[sub_resource type="SphereShape3D" id="SphereShape3D_njel3"]
+radius = 0.1
+
 [sub_resource type="SphereShape3D" id="SphereShape3D_ia1lp"]
 radius = 0.25
 
@@ -54,9 +57,6 @@ point_count = 5
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_buypi"]
 radius = 0.02
-
-[sub_resource type="SphereShape3D" id="SphereShape3D_njel3"]
-radius = 0.1
 
 [sub_resource type="Resource" id="Resource_vr1i5"]
 script = ExtResource("7_rpuu0")
@@ -197,6 +197,11 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.06878233, 0)
 shape = SubResource("SphereShape3D_wb0og")
 target_position = Vector3(0, -1.1, 0)
 
+[node name="shapecast_arms" type="ShapeCast3D" parent="PhysicsPlayerController" unique_id=2006578723]
+transform = Transform3D(-0.9999993, 0.0011594346, 8.293265e-05, 0.0011594346, 0.99999934, -9.625626e-08, -8.29327e-05, -1.01474676e-10, -1, -8.4877014e-05, 0.3287406, 6.532669e-05)
+shape = SubResource("SphereShape3D_njel3")
+target_position = Vector3(0, 0, 2)
+
 [node name="cam_spring" type="SpringArm3D" parent="PhysicsPlayerController" unique_id=674244444]
 transform = Transform3D(-0.9999993, 0.0011594346, 8.293265e-05, 0.0011594346, 0.99999934, -9.625626e-08, -8.29327e-05, -1.0149302e-10, -1, -8.4877014e-05, 0.40759754, 6.532669e-05)
 shape = SubResource("SphereShape3D_ia1lp")
@@ -277,15 +282,11 @@ remote_path = NodePath("../../cam_spring")
 update_rotation = false
 update_scale = false
 
-[node name="shapecast_arms" type="ShapeCast3D" parent="PhysicsPlayerController/head_root" unique_id=2006578723]
-transform = Transform3D(1.0000001, 8.149157e-10, -3.4197e-10, -3.4923758e-10, 1.0000001, 6.3948846e-13, 1.09139364e-10, 5.3290705e-13, 1, 0.0001296997, 0.11216545, 0)
-shape = SubResource("SphereShape3D_njel3")
-target_position = Vector3(0, 0, 2)
+[node name="armcast_origin" type="RemoteTransform3D" parent="PhysicsPlayerController/head_root" unique_id=94836530]
+remote_path = NodePath("../../shapecast_arms")
 
-[node name="AttachmentController" type="Node3D" parent="PhysicsPlayerController" unique_id=799874758 node_paths=PackedStringArray("body", "shapecast")]
+[node name="AttachmentController" type="Node3D" parent="PhysicsPlayerController" unique_id=799874758]
 script = ExtResource("6_vr1i5")
-body = NodePath("..")
-shapecast = NodePath("../shapecast_legs")
 slot_definitions = Array[ExtResource("7_rpuu0")]([SubResource("Resource_vr1i5"), SubResource("Resource_rpuu0")])
 
 [node name="hitboxes" type="Node3D" parent="PhysicsPlayerController" unique_id=1940404361]
@@ -614,6 +615,8 @@ surface_material_override/0 = ExtResource("9_njel3")
 script = ExtResource("7_8pr8v")
 source_scene = ExtResource("11_oo8pe")
 cam_ref = NodePath("../../PhysicsPlayerController/cam_spring")
+IK_mods_disable = Array[String](["IK_RH"])
+IK_mods_disable_LH = Array[String](["IK_LH"])
 bone_mask = PackedStringArray("RightUpperArm", "RightLowerArm", "RightHand")
 active = false
 camera_aim_yaw_enabled = true
