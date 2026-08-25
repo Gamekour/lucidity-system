@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://1q405i8mu7nw"]
 
-[ext_resource type="PackedScene" uid="uid://3uugth6hv6fs" path="res://Silly Dancing.fbx" id="1_iudp1"]
+[ext_resource type="PackedScene" uid="uid://3uugth6hv6fs" path="res://addons/lucidity_system/Silly Dancing.fbx" id="1_iudp1"]
 
 [node name="Silly Dancing" unique_id=1329213701 instance=ExtResource("1_iudp1")]
 

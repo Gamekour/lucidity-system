@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://nm8i5u2bqdiv"]
 
-[ext_resource type="PackedScene" uid="uid://6l6j14vr886s" path="res://luciddebug.glb" id="1_05qip"]
-[ext_resource type="PhysicsMaterial" uid="uid://deg4jk60bn6hb" path="res://pm_concrete.tres" id="2_eg1a4"]
+[ext_resource type="PackedScene" uid="uid://6l6j14vr886s" path="res://addons/lucidity_system/luciddebug.glb" id="1_05qip"]
+[ext_resource type="PhysicsMaterial" uid="uid://deg4jk60bn6hb" path="res://addons/lucidity_system/pm_concrete.tres" id="2_eg1a4"]
 
 [node name="luciddebug" unique_id=1643952968 instance=ExtResource("1_05qip")]
 

@@ -4,12 +4,12 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://3uugth6hv6fs"
-path="res://.godot/imported/Silly Dancing.fbx-3f89e355c16c48cc7d287e8bf9f8d7eb.scn"
+path="res://.godot/imported/Silly Dancing.fbx-2989094768b49556b85516082def2b3f.scn"
 
 [deps]
 
-source_file="res://Silly Dancing.fbx"
-dest_files=["res://.godot/imported/Silly Dancing.fbx-3f89e355c16c48cc7d287e8bf9f8d7eb.scn"]
+source_file="res://addons/lucidity_system/Silly Dancing.fbx"
+dest_files=["res://.godot/imported/Silly Dancing.fbx-2989094768b49556b85516082def2b3f.scn"]
 
 [params]
 

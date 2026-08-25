@@ -13,12 +13,16 @@ config_version=5
 config/name="lucidity system"
 run/main_scene="uid://ifogxg85vdcp"
 config/features=PackedStringArray("4.7", "Mobile")
-config/icon="res://icon.svg"
+config/icon="res://addons/lucidity_system/icon.svg"
 
 [display]
 
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
+
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/lucidity_system/plugin.cfg")
 
 [input]
 

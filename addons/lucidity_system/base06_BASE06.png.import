@@ -2,20 +2,20 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bni71mkhvqiic"
-path.s3tc="res://.godot/imported/luciddebug_Image.png-92f10db36df8c71706b7c2dd2209dba4.s3tc.ctex"
+uid="uid://bkwvcrqmwfopw"
+path.s3tc="res://.godot/imported/base06_BASE06.png-d18b1cfa680ad9ed3d5db88336eb2f62.s3tc.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc"],
 "vram_texture": true
 }
 generator_parameters={
-"md5": "8597d4e7e65352a302b63e07bc01a7da"
+"md5": "da0b2767b6b583ac5df597642be52a06"
 }
 
 [deps]
 
-source_file="res://luciddebug_Image.png"
-dest_files=["res://.godot/imported/luciddebug_Image.png-92f10db36df8c71706b7c2dd2209dba4.s3tc.ctex"]
+source_file="res://addons/lucidity_system/base06_BASE06.png"
+dest_files=["res://.godot/imported/base06_BASE06.png-d18b1cfa680ad9ed3d5db88336eb2f62.s3tc.ctex"]
 
 [params]
 

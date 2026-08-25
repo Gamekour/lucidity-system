@@ -313,7 +313,7 @@ func _input(event: InputEvent) -> void:
 		trying_to_grab = true
 	if event.is_action_released("grab"):
 		_queue_collision_exception_release(grabbed_col)
-		if (ik_controller != null):
+		if (ik_controller != null and grabbed_col != null):
 			for spring in ik_controller.ik_springs:
 				spring.remove_excluded_object(grabbed_col.get_rid())
 		grabbed_col = null

@@ -4,12 +4,12 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://6l6j14vr886s"
-path="res://.godot/imported/luciddebug.glb-4a0d539ae6f33bb410480d5bb8d8e11a.scn"
+path="res://.godot/imported/luciddebug.glb-90cc6c1c396701607247d2d030130518.scn"
 
 [deps]
 
-source_file="res://luciddebug.glb"
-dest_files=["res://.godot/imported/luciddebug.glb-4a0d539ae6f33bb410480d5bb8d8e11a.scn"]
+source_file="res://addons/lucidity_system/luciddebug.glb"
+dest_files=["res://.godot/imported/luciddebug.glb-90cc6c1c396701607247d2d030130518.scn"]
 
 [params]
 
@@ -43,12 +43,12 @@ _subresources={
 "materials": {
 "gray_concrete": {
 "use_external/enabled": true,
-"use_external/fallback_path": "res://debug_mat.tres",
+"use_external/fallback_path": "res://addons/lucidity_system/debug_mat.tres",
 "use_external/path": "uid://dnm5ak0rw2pxe"
 },
 "polished_andesite": {
 "use_external/enabled": true,
-"use_external/fallback_path": "res://debug_mat.tres",
+"use_external/fallback_path": "res://addons/lucidity_system/debug_mat.tres",
 "use_external/path": "uid://dnm5ak0rw2pxe"
 }
 }

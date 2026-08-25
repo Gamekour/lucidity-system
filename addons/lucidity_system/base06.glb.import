@@ -4,12 +4,12 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://kg8tko51k72u"
-path="res://.godot/imported/base06.glb-075b82fee0fcf83ecd59fb50c70dc3c4.scn"
+path="res://.godot/imported/base06.glb-2900064b80cf33aacd00d1a531b3e89b.scn"
 
 [deps]
 
-source_file="res://base06.glb"
-dest_files=["res://.godot/imported/base06.glb-075b82fee0fcf83ecd59fb50c70dc3c4.scn"]
+source_file="res://addons/lucidity_system/base06.glb"
+dest_files=["res://.godot/imported/base06.glb-2900064b80cf33aacd00d1a531b3e89b.scn"]
 
 [params]
 

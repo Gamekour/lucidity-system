@@ -4,12 +4,12 @@ importer="scene"
 importer_version=1
 type="PackedScene"
 uid="uid://b0krsjxwwhf65"
-path="res://.godot/imported/Body Block.fbx-06b294d86f6f198ca4b7daad4112a98f.scn"
+path="res://.godot/imported/Body Block.fbx-66c5dcb84be1117abae413d325ee92b3.scn"
 
 [deps]
 
-source_file="res://Body Block.fbx"
-dest_files=["res://.godot/imported/Body Block.fbx-06b294d86f6f198ca4b7daad4112a98f.scn"]
+source_file="res://addons/lucidity_system/Body Block.fbx"
+dest_files=["res://.godot/imported/Body Block.fbx-66c5dcb84be1117abae413d325ee92b3.scn"]
 
 [params]
 

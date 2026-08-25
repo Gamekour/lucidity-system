@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://cgtji358yld1f"]
 
-[ext_resource type="PackedScene" uid="uid://b0krsjxwwhf65" path="res://Body Block.fbx" id="1_dg6b4"]
+[ext_resource type="PackedScene" uid="uid://b0krsjxwwhf65" path="res://addons/lucidity_system/Body Block.fbx" id="1_dg6b4"]
 
 [node name="Body Block" unique_id=525258815 instance=ExtResource("1_dg6b4")]
 
