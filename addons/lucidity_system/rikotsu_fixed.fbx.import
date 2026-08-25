@@ -1,0 +1,75 @@
+[remap]
+
+importer="scene"
+importer_version=1
+type="PackedScene"
+uid="uid://houjov5b00fv"
+path="res://.godot/imported/rikotsu_fixed.fbx-0d00eace45c605dd9d5334db06504c63.scn"
+
+[deps]
+
+source_file="res://addons/lucidity_system/rikotsu_fixed.fbx"
+dest_files=["res://.godot/imported/rikotsu_fixed.fbx-0d00eace45c605dd9d5334db06504c63.scn"]
+
+[params]
+
+nodes/root_type=""
+nodes/root_name=""
+nodes/root_script=null
+mesh_library/use_node_names_as_mesh_names=false
+array_mesh/deduplicate_surfaces=true
+nodes/apply_root_scale=true
+nodes/root_scale=1.0
+nodes/import_as_skeleton_bones=false
+nodes/use_name_suffixes=true
+nodes/use_node_type_suffixes=true
+meshes/ensure_tangents=true
+meshes/generate_lods=true
+meshes/create_shadow_meshes=true
+meshes/light_baking=1
+meshes/lightmap_texel_size=0.2
+meshes/force_disable_compression=false
+skins/use_named_skins=true
+animation/import=true
+animation/fps=30
+animation/trimming=true
+animation/remove_immutable_tracks=true
+animation/import_rest_as_RESET=false
+import_script/path=""
+materials/extract=0
+materials/extract_format=0
+materials/extract_path=""
+_subresources={
+"materials": {
+"@MATERIAL:0": {
+"use_external/enabled": true,
+"use_external/path": "uid://b7itv2rien3ef"
+},
+"ベース": {
+"use_external/enabled": true,
+"use_external/fallback_path": "res://addons/lucidity_system/rob1.tres",
+"use_external/path": "uid://b7itv2rien3ef"
+},
+"目": {
+"use_external/enabled": true,
+"use_external/fallback_path": "res://addons/lucidity_system/rob1.tres",
+"use_external/path": "uid://b7itv2rien3ef"
+},
+"装飾品": {
+"use_external/enabled": true,
+"use_external/fallback_path": "res://addons/lucidity_system/rob1.tres",
+"use_external/path": "uid://b7itv2rien3ef"
+}
+},
+"nodes": {
+"PATH:アーマチュア/Skeleton3D": {
+"retarget/bone_map": Object(BoneMap,"resource_local_to_scene":false,"resource_name":"","profile":Object(SkeletonProfileHumanoid,"resource_local_to_scene":false,"resource_name":"","root_bone":&"Root","scale_base_bone":&"Hips","group_size":4,"bone_size":56,"script":null)
+,"bonemap":null,"bone_map/Root":&"","bone_map/Hips":&"腰","bone_map/Spine":&"お腹","bone_map/Chest":&"胸","bone_map/UpperChest":&"","bone_map/Neck":&"首","bone_map/Head":&"頭","bone_map/LeftEye":&"","bone_map/RightEye":&"","bone_map/Jaw":&"","bone_map/LeftShoulder":&"肩_L","bone_map/LeftUpperArm":&"腕_L.001","bone_map/LeftLowerArm":&"腕_L.002","bone_map/LeftHand":&"手_L","bone_map/LeftThumbMetacarpal":&"","bone_map/LeftThumbProximal":&"","bone_map/LeftThumbDistal":&"","bone_map/LeftIndexProximal":&"","bone_map/LeftIndexIntermediate":&"","bone_map/LeftIndexDistal":&"","bone_map/LeftMiddleProximal":&"","bone_map/LeftMiddleIntermediate":&"","bone_map/LeftMiddleDistal":&"","bone_map/LeftRingProximal":&"","bone_map/LeftRingIntermediate":&"","bone_map/LeftRingDistal":&"","bone_map/LeftLittleProximal":&"","bone_map/LeftLittleIntermediate":&"","bone_map/LeftLittleDistal":&"","bone_map/RightShoulder":&"肩_R","bone_map/RightUpperArm":&"腕_R.001","bone_map/RightLowerArm":&"腕_R.002","bone_map/RightHand":&"手_R","bone_map/RightThumbMetacarpal":&"","bone_map/RightThumbProximal":&"","bone_map/RightThumbDistal":&"","bone_map/RightIndexProximal":&"","bone_map/RightIndexIntermediate":&"","bone_map/RightIndexDistal":&"","bone_map/RightMiddleProximal":&"","bone_map/RightMiddleIntermediate":&"","bone_map/RightMiddleDistal":&"","bone_map/RightRingProximal":&"","bone_map/RightRingIntermediate":&"","bone_map/RightRingDistal":&"","bone_map/RightLittleProximal":&"","bone_map/RightLittleIntermediate":&"","bone_map/RightLittleDistal":&"","bone_map/LeftUpperLeg":&"足_L.001","bone_map/LeftLowerLeg":&"足_L.002","bone_map/LeftFoot":&"足_L.003","bone_map/LeftToes":&"","bone_map/RightUpperLeg":&"足_R.001","bone_map/RightLowerLeg":&"足_R.002","bone_map/RightFoot":&"足_R.003","bone_map/RightToes":&"","script":null)
+
+}
+}
+}
+fbx/importer=0
+fbx/allow_geometry_helper_nodes=false
+fbx/embedded_image_handling=1
+fbx/naming_version=2

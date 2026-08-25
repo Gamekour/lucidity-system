@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://d1j4l28b3mks7" path="res://addons/lucidity_system/ld_body.gd" id="1_ia1lp"]
 [ext_resource type="PackedScene" uid="uid://6l6j14vr886s" path="res://addons/lucidity_system/luciddebug.glb" id="1_uhqqe"]
-[ext_resource type="PackedScene" uid="uid://kg8tko51k72u" path="res://addons/lucidity_system/base06.glb" id="2_4gito"]
+[ext_resource type="PackedScene" uid="uid://houjov5b00fv" path="res://addons/lucidity_system/rikotsu_fixed.fbx" id="2_6kti4"]
 [ext_resource type="Script" uid="uid://drcmxxe77jx4w" path="res://addons/lucidity_system/IKController.gd" id="2_sasra"]
 [ext_resource type="Script" uid="uid://uwl2prsk3to" path="res://addons/lucidity_system/bone_root.gd" id="5_7cbxl"]
 [ext_resource type="Script" uid="uid://cqe4oym17w8sa" path="res://addons/lucidity_system/attachment_controller.gd" id="6_vr1i5"]
@@ -161,7 +161,7 @@ contact_monitor = true
 max_contacts_reported = 4
 linear_damp_mode = 1
 script = ExtResource("1_ia1lp")
-playermodel_scene = ExtResource("2_4gito")
+playermodel_scene = ExtResource("2_6kti4")
 shapecast_legs_length_scale = 1.35
 slope_correction = 0.2
 slope_correction_damping = 4.0

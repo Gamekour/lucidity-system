@@ -1,0 +1,7 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://b7itv2rien3ef"]
+
+[ext_resource type="Texture2D" uid="uid://cexfs4mdd77pb" path="res://addons/lucidity_system/bleu.png" id="1_p6ha4"]
+
+[resource]
+albedo_texture = ExtResource("1_p6ha4")
+metallic_specular = 0.0

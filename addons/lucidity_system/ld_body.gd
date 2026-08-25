@@ -22,7 +22,7 @@ class_name PhysicsPlayerController
 @export var apply_reaction_forces : bool = true
 @export var apply_reaction_torque : bool = false
 @export var friction_coefficient := 2.0
-@export var ride_height_offset := -0.1
+@export var ride_height_scale := 0.9
 @export var spring_strength := 5000.0
 @export var spring_damping := 1000.0
 @export var turn_strength := 100.0
@@ -264,7 +264,7 @@ func _physics_process(delta: float) -> void:
 	
 	if grounded:
 		var current_distance : float = shapecast_legs.get_closest_collision_safe_fraction() * abs(shapecast_legs.target_position.y)
-		var ride_height = abs(shapecast_legs.target_position.y) + ride_height_offset
+		var ride_height = abs(shapecast_legs.target_position.y) * ride_height_scale
 		var displacement : float = (stance_height * ride_height) - current_distance
 		
 		var normal_velocity : float = relative_velocity.dot(slope_normal)
