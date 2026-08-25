@@ -52,6 +52,8 @@ class_name PhysicsPlayerController
 @export var grab_force_central_scale : float = 0.0
 @export var stance_height_rot_min : float = 0.5
 @export var stance_height_rot_max : float = 0.6
+@export_range(0.0, 360.0, 0.5, "radians_as_degrees") var max_look_angle_horizontal : float = deg_to_rad(40.0)
+@export var shapecast_legs_length_scale : float = 1.5
 
 @export var allow_grab : bool = true
 
@@ -151,8 +153,16 @@ func rig_setup() -> void:
 				two_bone.set_pole_direction(0, SkeletonModifier3D.SECONDARY_DIRECTION_MINUS_Z)
 				two_bone.name = ik_controller.ik_targets[i].name
 				playermodel.add_child(two_bone)
-				playermodel.owner = self
+				var root := playermodel.get_bone_global_pose(playermodel.find_bone(ik_controller.ik_bone_roots[i])).origin
+				var mid := playermodel.get_bone_global_pose(playermodel.find_bone(ik_controller.ik_bone_mids[i])).origin
+				var end := playermodel.get_bone_global_pose(playermodel.find_bone(ik_controller.ik_bone_ends[i])).origin
+				var chain_length = root.distance_to(mid) + mid.distance_to(end)
+				ik_controller.ik_springs[i].spring_length = chain_length
+				ik_controller.ik_springs[i].position = root
+				if i == 0:
+					shapecast_legs.target_position = Vector3.DOWN * chain_length * shapecast_legs_length_scale
 				i += 1
+			playermodel.owner = self
 			for bone_root : BoneRoot in find_children("*", "BoneRoot"):
 				bone_root.skeleton = playermodel
 			if (attach_controller != null):
@@ -230,6 +240,7 @@ func _physics_process(delta: float) -> void:
 	var current_yaw := _get_current_yaw(up_dir)
 	var body_target_angle := _get_body_target_angle(input_vector)
 	var look_angle_horizontal : float = wrapf(body_target_angle - current_yaw, -PI, PI)
+	look_angle_horizontal = clamp(look_angle_horizontal, -max_look_angle_horizontal, max_look_angle_horizontal)
 	var yaw_damping_torque : float = -angular_velocity.dot(up_dir) * turn_damping
 	var yaw_torque := up_dir * (look_angle_horizontal * turn_strength + yaw_damping_torque)
 	var lean_input : Vector3 = flat_velocity / maxf(friction_budget, 0.0001)

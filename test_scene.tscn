@@ -13,7 +13,7 @@
 [ext_resource type="Script" uid="uid://b11yeup1xif5d" path="res://toggle_button.gd" id="12_oo8pe"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_ia1lp"]
-radius = 0.1
+radius = 0.15
 height = 0.71
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_wb0og"]
@@ -185,6 +185,7 @@ grab_scale_max_mass = 100.0
 grab_damp_min = 100.0
 grab_damp_max = 400.0
 grab_force_central_scale = 0.9
+shapecast_legs_length_scale = 1.35
 metadata/_custom_type_script = "uid://d1j4l28b3mks7"
 
 [node name="body_col" type="CollisionShape3D" parent="PhysicsPlayerController" unique_id=257326396]
@@ -219,7 +220,7 @@ ik_bone_roots = Array[String](["RightUpperLeg", "LeftUpperLeg", "RightUpperArm",
 ik_bone_mids = Array[String](["RightLowerLeg", "LeftLowerLeg", "RightLowerArm", "LeftLowerArm"])
 ik_bone_ends = Array[String](["RightFoot", "LeftFoot", "RightHand", "LeftHand"])
 start_positions = Array[Vector3]([Vector3(0.07, -0.852, 0), Vector3(-0.07, -0.852, 0), Vector3(0.15, -0.172, 0), Vector3(-0.15, -0.172, 0)])
-speed_min = 0.75
+speed_min = 0.65
 speed_max = 0.4
 min_speed = 3.0
 max_speed = 4.0
@@ -235,14 +236,12 @@ metadata/_custom_type_script = "uid://drcmxxe77jx4w"
 [node name="spring_RF" type="SpringArm3D" parent="PhysicsPlayerController/rig_root" unique_id=1507942179]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.069000244, -0.072874546, 0)
 shape = SubResource("SphereShape3D_buypi")
-spring_length = 2.0
 
 [node name="IK_RF" type="Marker3D" parent="PhysicsPlayerController/rig_root/spring_RF" unique_id=7072401]
 
 [node name="spring_LF" type="SpringArm3D" parent="PhysicsPlayerController/rig_root" unique_id=2050882400]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.069000244, -0.072874546, 0)
 shape = SubResource("SphereShape3D_buypi")
-spring_length = 2.0
 
 [node name="IK_LF" type="Marker3D" parent="PhysicsPlayerController/rig_root/spring_LF" unique_id=98686239]
 
