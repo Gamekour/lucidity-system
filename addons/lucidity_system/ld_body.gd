@@ -130,7 +130,6 @@ var floor_rigidbody : RigidBody3D = null
 var floor_contact_point : Vector3 = Vector3.ZERO
 
 func _ready() -> void:
-	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	allow_grab_default = allow_grab
 	rig_setup()
 
@@ -178,6 +177,7 @@ func rig_setup() -> void:
 				attach_controller._connect_skeleton(playermodel)
 
 func _physics_process(delta: float) -> void:
+	if (!is_multiplayer_authority()): return
 	var gravity_vec : Vector3 = get_gravity()
 	var up_dir : Vector3 = _get_up_direction(gravity_vec).normalized()
 	current_up_dir = up_dir
@@ -292,6 +292,7 @@ func _physics_process(delta: float) -> void:
 	_update_grab_release_pending()
 
 func _process(delta: float) -> void:
+	if (!is_multiplayer_authority()): return
 	var tilt_t : float = 1.0 - exp(-camera_tilt_smoothing * delta)
 	camera_up_dir = camera_up_dir.normalized()
 	current_up_dir = current_up_dir.normalized()

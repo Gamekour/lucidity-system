@@ -6,6 +6,7 @@ class_name PlayerModel
 @export var fp_deadzone : float = 0.05
 @export var head_bone_name : String = "Head"
 var is_fp := true
+
 func _process(delta: float) -> void:
 	var head_bone_index : int = find_bone(head_bone_name)
 	var target_basis : Basis = global_transform.basis.inverse() * cam_spring.global_transform.basis
@@ -17,7 +18,7 @@ func _process(delta: float) -> void:
 	var local_basis : Basis = parent_global_basis.inverse() * target_basis
 	local_basis = local_basis.orthonormalized()
 	
-	is_fp = (cam_spring.spring_length <= fp_deadzone)
+	is_fp = (cam_spring.spring_length <= fp_deadzone) and is_multiplayer_authority()
 	set_bone_pose_scale(head_bone_index, Vector3.ONE * (0.001 if is_fp else 1))
 	
 	if (is_fp):

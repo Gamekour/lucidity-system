@@ -1,93 +1,13 @@
 [gd_scene format=3 uid="uid://ifogxg85vdcp"]
 
-[ext_resource type="Script" uid="uid://d1j4l28b3mks7" path="res://addons/lucidity_system/ld_body.gd" id="1_ia1lp"]
+[ext_resource type="Script" uid="uid://c8ehykskc7ulc" path="res://addons/lucidity_system/network_manager.gd" id="1_skw67"]
 [ext_resource type="PackedScene" uid="uid://6l6j14vr886s" path="res://addons/lucidity_system/luciddebug.glb" id="1_uhqqe"]
-[ext_resource type="PackedScene" uid="uid://houjov5b00fv" path="res://addons/lucidity_system/rikotsu_fixed.fbx" id="2_6kti4"]
-[ext_resource type="Script" uid="uid://drcmxxe77jx4w" path="res://addons/lucidity_system/IKController.gd" id="2_sasra"]
-[ext_resource type="Script" uid="uid://uwl2prsk3to" path="res://addons/lucidity_system/bone_root.gd" id="5_7cbxl"]
-[ext_resource type="Script" uid="uid://cqe4oym17w8sa" path="res://addons/lucidity_system/attachment_controller.gd" id="6_vr1i5"]
 [ext_resource type="Script" uid="uid://c8qyp1ubjxh1u" path="res://addons/lucidity_system/skeleton_overlay.gd" id="7_8pr8v"]
-[ext_resource type="Script" uid="uid://dnryq4yanmj62" path="res://addons/lucidity_system/AttachmentSlot.gd" id="7_rpuu0"]
+[ext_resource type="PackedScene" uid="uid://cuyit38h4qs42" path="res://addons/lucidity_system/ls_human.tscn" id="7_dpywb"]
 [ext_resource type="Material" uid="uid://dnm5ak0rw2pxe" path="res://addons/lucidity_system/debug_mat.tres" id="9_njel3"]
 [ext_resource type="PackedScene" uid="uid://1q405i8mu7nw" path="res://addons/lucidity_system/silly_dancing.tscn" id="11_oo8pe"]
 [ext_resource type="Script" uid="uid://cbrrnaw18nr8" path="res://addons/lucidity_system/controller.gd" id="12_6iij7"]
 [ext_resource type="Script" uid="uid://b11yeup1xif5d" path="res://addons/lucidity_system/toggle_button.gd" id="12_oo8pe"]
-
-[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_ia1lp"]
-radius = 0.15
-height = 0.71
-
-[sub_resource type="SphereShape3D" id="SphereShape3D_wb0og"]
-radius = 0.07
-
-[sub_resource type="SphereShape3D" id="SphereShape3D_njel3"]
-radius = 0.1
-
-[sub_resource type="SphereShape3D" id="SphereShape3D_ia1lp"]
-radius = 0.25
-
-[sub_resource type="Curve" id="Curve_sasra"]
-_limits = [0.0, 0.3, 0.0, 1.0]
-_data = [Vector2(0, 0), 0.0, 0.14516616, 0, 0, Vector2(0.31989926, 0.04905662), 0.0, 0.0, 0, 0, Vector2(0.47355163, 0), 0.0, 0.0, 0, 0, Vector2(1, 0), 0.0, 0.0, 0, 0]
-point_count = 4
-
-[sub_resource type="Curve" id="Curve_coq8p"]
-_limits = [-0.2, 0.2, 0.0, 1.0]
-_data = [Vector2(0, 0.2), 0.0, -2.7273345, 0, 0, Vector2(0.32997477, -0.2), -0.074374184, -0.074374184, 0, 0, Vector2(0.37027705, -0.2), 0.69399285, 0.69399285, 0, 0, Vector2(1, 0.2), 0.0, 0.0, 0, 0]
-point_count = 4
-
-[sub_resource type="Curve" id="Curve_2nij2"]
-_limits = [0.0, 0.5, 0.0, 1.0]
-_data = [Vector2(0, 0), 0.0, 3.150794, 0, 0, Vector2(0.415534, 0.5), 0.0, 0.0, 0, 0, Vector2(1, 0), -0.033741597, 0.0, 0, 0]
-point_count = 3
-
-[sub_resource type="Curve" id="Curve_7cbxl"]
-_limits = [-0.4, 0.5, 0.0, 1.0]
-_data = [Vector2(0, -0.4), 0.0, 0.0, 0, 0, Vector2(0.50125945, 0.5), -0.06089885, -0.06089885, 0, 0, Vector2(1, -0.4), 0.0, 0.0, 0, 0]
-point_count = 3
-
-[sub_resource type="Curve" id="Curve_8pr8v"]
-_limits = [0.89937115, 1.0, 0.0, 1.0]
-_data = [Vector2(0, 1), 0.0, 0.0, 0, 0, Vector2(0.24937026, 0.89937115), 0.0, 0.0, 0, 0, Vector2(0.49874055, 1), 0.0, 0.0, 0, 0, Vector2(0.7481109, 0.89937115), 0.0, 0.0, 0, 0, Vector2(1, 1), 0.0, 0.0, 0, 0]
-point_count = 5
-
-[sub_resource type="Curve" id="Curve_buypi"]
-_limits = [0.7, 0.95, 0.0, 1.0]
-_data = [Vector2(0, 0.7), 0.0, 0.0, 0, 0, Vector2(0.25048545, 0.95), 0.0, 0.0, 0, 0, Vector2(0.5048544, 0.7), 0.0, 0.0, 0, 0, Vector2(0.75145626, 0.95), 0.0, 0.0, 0, 0, Vector2(1, 0.7), 0.0, 0.0, 0, 0]
-point_count = 5
-
-[sub_resource type="SphereShape3D" id="SphereShape3D_buypi"]
-radius = 0.02
-
-[sub_resource type="Resource" id="Resource_vr1i5"]
-script = ExtResource("7_rpuu0")
-slot_name = "Armor"
-bone_name = "Chest"
-metadata/_custom_type_script = "uid://dnryq4yanmj62"
-
-[sub_resource type="Resource" id="Resource_rpuu0"]
-script = ExtResource("7_rpuu0")
-slot_name = "RightWrist"
-bone_name = "RightLowerArm"
-pos_offset = Vector3(0, 0.125, 0)
-is_hotbar = true
-metadata/_custom_type_script = "uid://dnryq4yanmj62"
-
-[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_oo8pe"]
-radius = 0.05
-height = 0.26367188
-
-[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_4gito"]
-radius = 0.05
-height = 0.30273438
-
-[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_fbuy2"]
-radius = 0.07324219
-height = 0.3881836
-
-[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_0k8yu"]
-radius = 0.057617188
-height = 0.47973633
 
 [sub_resource type="Environment" id="Environment_ia1lp"]
 background_mode = 1
@@ -153,251 +73,42 @@ size = Vector3(0.3, 1, 0.3)
 
 [node name="Test Scene" type="Node3D" unique_id=667831700]
 
-[node name="Controller" type="Node3D" parent="." unique_id=241864859 node_paths=PackedStringArray("pawn")]
+[node name="NetworkManager" type="Node" parent="." unique_id=1970058237 node_paths=PackedStringArray("controllers")]
+script = ExtResource("1_skw67")
+controllers = [NodePath("../Controller")]
+metadata/_custom_type_script = "uid://c8ehykskc7ulc"
+
+[node name="MultiplayerSpawner" type="MultiplayerSpawner" parent="." unique_id=963253975]
+_spawnable_scenes = PackedStringArray("uid://cuyit38h4qs42")
+spawn_path = NodePath("../spawn_point")
+
+[node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=207457716]
+
+[node name="button_server" type="Button" parent="CanvasLayer" unique_id=149323115]
+offset_right = 147.0
+offset_bottom = 36.0
+text = "start server"
+
+[node name="button_client" type="Button" parent="CanvasLayer" unique_id=710434397]
+offset_top = 47.0
+offset_right = 147.0
+offset_bottom = 83.0
+text = "start client
+"
+
+[node name="spawn_point" type="Node3D" parent="." unique_id=185583409]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5607107, 0)
+
+[node name="Controller" type="Node3D" parent="." unique_id=241864859 node_paths=PackedStringArray("spawner", "camera")]
 script = ExtResource("12_6iij7")
-pawn = NodePath("../PhysicsPlayerController")
+default_pawn = ExtResource("7_dpywb")
+spawner = NodePath("../MultiplayerSpawner")
 device_indices = Array[int]([16, 32])
+camera = NodePath("Camera3D")
 metadata/_custom_type_script = "uid://cbrrnaw18nr8"
 
-[node name="PhysicsPlayerController" type="RigidBody3D" parent="." unique_id=290065418]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.8937, 3.3830867, 4.137167)
-collision_layer = 2
-mass = 69.0
-continuous_cd = true
-contact_monitor = true
-max_contacts_reported = 4
-linear_damp_mode = 1
-script = ExtResource("1_ia1lp")
-playermodel_scene = ExtResource("2_6kti4")
-shapecast_legs_length_scale = 1.35
-slope_correction = 0.2
-slope_correction_damping = 4.0
-slope_stance_height_scale = 0.75
-grab_force_central_scale = 0.9
-max_look_angle_horizontal = 1.3962634015954636
-grab_strength_min = 6000.0
-grab_strength_max = 8000.0
-grab_scale_max_mass = 100.0
-grab_damp_max = 400.0
-climb_scan_max_angle = 1.3962634015954636
-metadata/_custom_type_script = "uid://d1j4l28b3mks7"
-
-[node name="body_col" type="CollisionShape3D" parent="PhysicsPlayerController" unique_id=257326396]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.19525146, 0)
-shape = SubResource("CapsuleShape3D_ia1lp")
-
-[node name="shapecast_legs" type="ShapeCast3D" parent="PhysicsPlayerController" unique_id=1229155897]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.06878233, 0)
-shape = SubResource("SphereShape3D_wb0og")
-target_position = Vector3(0, -1.1, 0)
-
-[node name="shapecast_arms" type="ShapeCast3D" parent="PhysicsPlayerController" unique_id=2006578723]
-transform = Transform3D(-0.9999993, 0.0011594346, 8.293265e-05, 0.0011594346, 0.99999934, -9.625626e-08, -8.29327e-05, -1.01502196e-10, -1, -9.727478e-05, 0.40380883, 0.14606524)
-shape = SubResource("SphereShape3D_njel3")
-target_position = Vector3(0, 0, 2)
-
-[node name="cam_spring" type="SpringArm3D" parent="PhysicsPlayerController" unique_id=674244444]
-transform = Transform3D(-0.9999993, 0.0011594346, 8.293265e-05, 0.0011594346, 0.99999934, -9.625626e-08, -8.29327e-05, -1.0149302e-10, -1, -8.4877014e-05, 0.40759754, 6.532669e-05)
-shape = SubResource("SphereShape3D_ia1lp")
-spring_length = 0.0
-
-[node name="cam_transform" type="RemoteTransform3D" parent="PhysicsPlayerController/cam_spring" unique_id=1771365316]
-remote_path = NodePath("../../../Camera3D")
-
-[node name="rig_root" type="Node3D" parent="PhysicsPlayerController" unique_id=479230259 node_paths=PackedStringArray("head_root", "ik_springs", "ik_targets", "ik_poles")]
-script = ExtResource("2_sasra")
-head_root = NodePath("../head_root")
-ik_springs = [NodePath("spring_RF"), NodePath("spring_LF"), NodePath("spring_RH"), NodePath("spring_LH")]
-ik_targets = [NodePath("spring_RF/IK_RF"), NodePath("spring_LF/IK_LF"), NodePath("spring_RH/IK_RH"), NodePath("spring_LH/IK_LH")]
-ik_poles = [NodePath("pole_RF"), NodePath("pole_LF"), NodePath("pole_RH"), NodePath("pole_LH")]
-ik_bone_roots = Array[String](["RightUpperLeg", "LeftUpperLeg", "RightUpperArm", "LeftUpperArm"])
-ik_bone_mids = Array[String](["RightLowerLeg", "LeftLowerLeg", "RightLowerArm", "LeftLowerArm"])
-ik_bone_ends = Array[String](["RightFoot", "LeftFoot", "RightHand", "LeftHand"])
-start_positions = Array[Vector3]([Vector3(0.07, -0.852, 0), Vector3(-0.07, -0.852, 0), Vector3(0.15, -0.172, 0), Vector3(-0.15, -0.172, 0)])
-speed_min = 0.65
-speed_max = 0.4
-min_speed = 3.0
-max_speed = 4.0
-lift_min = SubResource("Curve_sasra")
-stretch_min = SubResource("Curve_coq8p")
-lift_max = SubResource("Curve_2nij2")
-stretch_max = SubResource("Curve_7cbxl")
-stance_height_bob_min = SubResource("Curve_8pr8v")
-stance_height_bob_max = SubResource("Curve_buypi")
-air_offset_max = 0.3
-metadata/_custom_type_script = "uid://drcmxxe77jx4w"
-
-[node name="spring_RF" type="SpringArm3D" parent="PhysicsPlayerController/rig_root" unique_id=1507942179]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.069000244, -0.072874546, 0)
-shape = SubResource("SphereShape3D_buypi")
-
-[node name="IK_RF" type="Marker3D" parent="PhysicsPlayerController/rig_root/spring_RF" unique_id=7072401]
-
-[node name="spring_LF" type="SpringArm3D" parent="PhysicsPlayerController/rig_root" unique_id=2050882400]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.069000244, -0.072874546, 0)
-shape = SubResource("SphereShape3D_buypi")
-
-[node name="IK_LF" type="Marker3D" parent="PhysicsPlayerController/rig_root/spring_LF" unique_id=98686239]
-
-[node name="spring_RH" type="SpringArm3D" parent="PhysicsPlayerController/rig_root" unique_id=27467257]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.072, 0.288, 0.037)
-shape = SubResource("SphereShape3D_buypi")
-
-[node name="IK_RH" type="Marker3D" parent="PhysicsPlayerController/rig_root/spring_RH" unique_id=1635535178]
-
-[node name="spring_LH" type="SpringArm3D" parent="PhysicsPlayerController/rig_root" unique_id=1341861996]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.072052956, 0.2880001, 0.0373559)
-shape = SubResource("SphereShape3D_buypi")
-
-[node name="IK_LH" type="Marker3D" parent="PhysicsPlayerController/rig_root/spring_LH" unique_id=1048049310]
-
-[node name="pole_RF" type="Node3D" parent="PhysicsPlayerController/rig_root" unique_id=1083500836]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.069999695, 0, -0.67377615)
-
-[node name="pole_LF" type="Node3D" parent="PhysicsPlayerController/rig_root" unique_id=1406561021]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.069999695, 0, -0.67377615)
-
-[node name="pole_RH" type="Node3D" parent="PhysicsPlayerController/rig_root" unique_id=296298748]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.069999695, 0.22103882, 0.38152122)
-
-[node name="pole_LH" type="Node3D" parent="PhysicsPlayerController/rig_root" unique_id=11763739]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.069999695, 0.220546, 0.3812933)
-
-[node name="head_root" type="Node3D" parent="PhysicsPlayerController" unique_id=645627365]
-transform = Transform3D(-0.9999993, 0.0011594346, 8.293265e-05, 0.0011594346, 0.99999934, -9.625626e-08, -8.29327e-05, -1.01474676e-10, -1, -8.4877014e-05, 0.3287406, 6.532669e-05)
-script = ExtResource("5_7cbxl")
-metadata/_custom_type_script = "uid://uwl2prsk3to"
-
-[node name="cam_pos" type="RemoteTransform3D" parent="PhysicsPlayerController/head_root" unique_id=772255754]
-transform = Transform3D(1, 8.420134e-15, 0, 8.393005e-15, 1, 0, 0, 6.4212524e-14, 1, 9.1552734e-05, 0.078856945, 0)
-remote_path = NodePath("../../cam_spring")
-update_rotation = false
-update_scale = false
-
-[node name="armcast_origin" type="RemoteTransform3D" parent="PhysicsPlayerController/head_root" unique_id=94836530]
-transform = Transform3D(1, 8.417092e-15, 0, 8.393005e-15, 1, 0, 0, 2.7519653e-14, 1, 8.773804e-05, 0.075068235, -0.14599991)
-remote_path = NodePath("../../shapecast_arms")
-
-[node name="AttachmentController" type="Node3D" parent="PhysicsPlayerController" unique_id=799874758]
-script = ExtResource("6_vr1i5")
-slot_definitions = Array[ExtResource("7_rpuu0")]([SubResource("Resource_vr1i5"), SubResource("Resource_rpuu0")])
-
-[node name="hitboxes" type="Node3D" parent="PhysicsPlayerController" unique_id=1940404361]
-
-[node name="LeftUpperArm" type="BoneAttachment3D" parent="PhysicsPlayerController/hitboxes" unique_id=1191023728]
-transform = Transform3D(0.39976147, -0.12379478, 0.9082212, 0.78854287, -0.4587162, -0.40960932, 0.46732327, 0.87991726, -0.08575957, -0.08622265, 0.26440215, 0)
-bone_name = "LeftUpperArm"
-bone_idx = 4
-use_external_skeleton = true
-external_skeleton = NodePath("")
-
-[node name="hitbox" type="StaticBody3D" parent="PhysicsPlayerController/hitboxes/LeftUpperArm" unique_id=1798932135]
-collision_layer = 2
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="PhysicsPlayerController/hitboxes/LeftUpperArm/hitbox" unique_id=237773180]
-transform = Transform3D(1.0000001, -2.682209e-07, -1.9744039e-07, -2.9802322e-08, 1, -5.5134296e-07, -1.4156103e-07, 7.4505806e-08, 0.9999993, 1.4305115e-06, 0.1074214, -2.861023e-06)
-shape = SubResource("CapsuleShape3D_oo8pe")
-
-[node name="LeftLowerArm" type="BoneAttachment3D" parent="PhysicsPlayerController/hitboxes" unique_id=742385330]
-transform = Transform3D(0.9082253, 0.19750796, 0.368941, -0.40960124, 0.6002125, 0.68700224, -0.08575465, -0.77507144, 0.62602764, -0.11542225, 0.15620375, 0.20754814)
-bone_name = "LeftLowerArm"
-bone_idx = 5
-use_external_skeleton = true
-external_skeleton = NodePath("")
-
-[node name="hitbox" type="StaticBody3D" parent="PhysicsPlayerController/hitboxes/LeftLowerArm" unique_id=321424764]
-collision_layer = 2
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="PhysicsPlayerController/hitboxes/LeftLowerArm/hitbox" unique_id=620348115]
-transform = Transform3D(1.0000004, -2.7567148e-07, -4.8056245e-07, -4.4703484e-08, 1, -5.066395e-07, -1.3783574e-07, 1.1920929e-07, 1, 9.536743e-07, 0.12695241, -2.861023e-06)
-shape = SubResource("CapsuleShape3D_4gito")
-
-[node name="RightUpperArm" type="BoneAttachment3D" parent="PhysicsPlayerController/hitboxes" unique_id=492222529]
-transform = Transform3D(0.40306163, 0.12284584, -0.9068903, -0.7903354, -0.4529055, -0.41260922, -0.46142295, 0.8830546, -0.08545948, 0.08622265, 0.26440215, 0)
-bone_name = "RightUpperArm"
-bone_idx = 27
-use_external_skeleton = true
-external_skeleton = NodePath("")
-
-[node name="hitbox" type="StaticBody3D" parent="PhysicsPlayerController/hitboxes/RightUpperArm" unique_id=1933459978]
-collision_layer = 2
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="PhysicsPlayerController/hitboxes/RightUpperArm/hitbox" unique_id=694327533]
-transform = Transform3D(1.0000001, -2.682209e-07, -1.9744039e-07, -2.9802322e-08, 1, -5.5134296e-07, -1.4156103e-07, 7.4505806e-08, 0.9999993, 1.4305115e-06, 0.1074214, -2.861023e-06)
-shape = SubResource("CapsuleShape3D_oo8pe")
-
-[node name="RightLowerArm" type="BoneAttachment3D" parent="PhysicsPlayerController/hitboxes" unique_id=1912755169]
-transform = Transform3D(0.906891, -0.19673148, -0.3726196, 0.4126081, 0.593971, 0.690618, 0.08545908, -0.7800612, 0.6198399, 0.115198135, 0.15757418, 0.2082882)
-bone_name = "RightLowerArm"
-bone_idx = 28
-use_external_skeleton = true
-external_skeleton = NodePath("")
-
-[node name="hitbox" type="StaticBody3D" parent="PhysicsPlayerController/hitboxes/RightLowerArm" unique_id=928886291]
-collision_layer = 2
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="PhysicsPlayerController/hitboxes/RightLowerArm/hitbox" unique_id=1950157083]
-transform = Transform3D(1.0000004, -2.7567148e-07, -4.8056245e-07, -4.4703484e-08, 1, -5.066395e-07, -1.3783574e-07, 1.1920929e-07, 1, 9.536743e-07, 0.12695241, -2.861023e-06)
-shape = SubResource("CapsuleShape3D_4gito")
-
-[node name="LeftUpperLeg" type="BoneAttachment3D" parent="PhysicsPlayerController/hitboxes" unique_id=1480869157]
-transform = Transform3D(-0.8157866, -0.0013893275, 0.5783514, 0.57278085, -0.14041984, 0.8075918, 0.08009, 0.9900911, 0.115348406, -0.068808556, -0.07487202, 0.01635313)
-bone_name = "LeftUpperLeg"
-bone_idx = 45
-use_external_skeleton = true
-external_skeleton = NodePath("")
-
-[node name="hitbox" type="StaticBody3D" parent="PhysicsPlayerController/hitboxes/LeftUpperLeg" unique_id=1584685917]
-collision_layer = 2
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="PhysicsPlayerController/hitboxes/LeftUpperLeg/hitbox" unique_id=1611382611]
-transform = Transform3D(1, 7.45099e-08, 3.6517147e-06, -7.450579e-08, 1, -1.1250468e-06, -3.6517147e-06, 1.1250465e-06, 1, 4.7683716e-06, 0.16967678, -4.2915344e-06)
-shape = SubResource("CapsuleShape3D_fbuy2")
-
-[node name="LeftLowerLeg" type="BoneAttachment3D" parent="PhysicsPlayerController/hitboxes" unique_id=233736728]
-transform = Transform3D(0.8046129, 0.025122367, -0.593268, 0.5904809, 0.0716334, 0.8038664, 0.06269285, -0.9971145, 0.042802893, -0.064852715, -0.114993095, 0.34357977)
-bone_name = "LeftLowerLeg"
-bone_idx = 46
-use_external_skeleton = true
-external_skeleton = NodePath("")
-
-[node name="hitbox" type="StaticBody3D" parent="PhysicsPlayerController/hitboxes/LeftLowerLeg" unique_id=1905413024]
-collision_layer = 2
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="PhysicsPlayerController/hitboxes/LeftLowerLeg/hitbox" unique_id=693141910]
-transform = Transform3D(1, -3.0546948e-07, 3.6230788e-06, 3.054739e-07, 1, -1.2144634e-06, -3.6230783e-06, 1.2144645e-06, 1, 4.2915344e-06, 0.21545172, -3.8146973e-06)
-shape = SubResource("CapsuleShape3D_0k8yu")
-
-[node name="RightUpperLeg" type="BoneAttachment3D" parent="PhysicsPlayerController/hitboxes" unique_id=1875569249]
-transform = Transform3D(-0.81579244, 0.0013894709, -0.57834315, -0.5727726, -0.14042056, 0.80759746, -0.08008911, 0.990091, 0.11534982, 0.068808556, -0.07487202, 0.01635313)
-bone_name = "RightUpperLeg"
-bone_idx = 48
-use_external_skeleton = true
-external_skeleton = NodePath("")
-
-[node name="hitbox" type="StaticBody3D" parent="PhysicsPlayerController/hitboxes/RightUpperLeg" unique_id=884326149]
-collision_layer = 2
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="PhysicsPlayerController/hitboxes/RightUpperLeg/hitbox" unique_id=1800766493]
-transform = Transform3D(1, 7.45099e-08, 3.6517147e-06, -7.450579e-08, 1, -1.1250468e-06, -3.6517147e-06, 1.1250465e-06, 1, 4.7683716e-06, 0.16967678, -4.2915344e-06)
-shape = SubResource("CapsuleShape3D_fbuy2")
-
-[node name="LeftLowerLeg2" type="BoneAttachment3D" parent="PhysicsPlayerController/hitboxes" unique_id=248854396]
-transform = Transform3D(0.8046209, -0.025122015, 0.5932572, -0.59047014, 0.07163325, 0.80387425, -0.06269183, -0.9971146, 0.042803783, 0.064852715, -0.114993095, 0.34357977)
-bone_name = "RightLowerLeg"
-bone_idx = 49
-use_external_skeleton = true
-external_skeleton = NodePath("")
-
-[node name="hitbox" type="StaticBody3D" parent="PhysicsPlayerController/hitboxes/LeftLowerLeg2" unique_id=483647526]
-collision_layer = 2
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="PhysicsPlayerController/hitboxes/LeftLowerLeg2/hitbox" unique_id=417574194]
-transform = Transform3D(1, -3.0546948e-07, 3.6230788e-06, 3.054739e-07, 1, -1.2144634e-06, -3.6230783e-06, 1.2144645e-06, 1, 4.2915344e-06, 0.21545172, -3.8146973e-06)
-shape = SubResource("CapsuleShape3D_0k8yu")
-
-[node name="Camera3D" type="Camera3D" parent="." unique_id=1300883146]
-transform = Transform3D(-0.9999993, 0.0011594346, 8.293265e-05, 0.0011594346, 0.99999934, -9.625626e-08, -8.29327e-05, -1.0149302e-10, -1, -8.8937845, 3.7906842, 4.1372323)
+[node name="Camera3D" type="Camera3D" parent="Controller" unique_id=1300883146]
+transform = Transform3D(-0.99999934, 0.0011594347, 8.2932645e-05, 0.0011594347, 0.99999934, -9.6256535e-08, -8.2932704e-05, -1.0148337e-10, -1, 0.26467156, 1.5413721, -2.6820033)
 near = 0.01
 
 [node name="luciddebug" parent="." unique_id=1643952968 instance=ExtResource("1_uhqqe")]
@@ -604,10 +315,9 @@ shape = SubResource("BoxShape3D_rpuu0")
 mesh = SubResource("BoxMesh_oo8pe")
 surface_material_override/0 = ExtResource("9_njel3")
 
-[node name="SkeletonOverlay" type="Node" parent="test_box3" unique_id=513702763 node_paths=PackedStringArray("cam_ref")]
+[node name="SkeletonOverlay" type="Node" parent="test_box3" unique_id=513702763]
 script = ExtResource("7_8pr8v")
 source_scene = ExtResource("11_oo8pe")
-cam_ref = NodePath("../../PhysicsPlayerController/cam_spring")
 IK_mods_disable = Array[String](["IK_RH"])
 IK_mods_disable_LH = Array[String](["IK_LH"])
 bone_mask = PackedStringArray("RightUpperArm", "RightLowerArm", "RightHand")
@@ -687,3 +397,6 @@ mesh = SubResource("BoxMesh_hiucn")
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 3.2909157, 1.3448734, 0)
 visible = false
 text = "hello"
+
+[connection signal="pressed" from="CanvasLayer/button_server" to="NetworkManager" method="create_game"]
+[connection signal="pressed" from="CanvasLayer/button_client" to="NetworkManager" method="join_game"]

@@ -1,0 +1,320 @@
+[gd_scene format=3 uid="uid://cuyit38h4qs42"]
+
+[ext_resource type="Script" uid="uid://d1j4l28b3mks7" path="res://addons/lucidity_system/ld_body.gd" id="1_1s46y"]
+[ext_resource type="PackedScene" uid="uid://kg8tko51k72u" path="res://addons/lucidity_system/base06.glb" id="2_1s46y"]
+[ext_resource type="Script" uid="uid://drcmxxe77jx4w" path="res://addons/lucidity_system/IKController.gd" id="3_oyy2h"]
+[ext_resource type="Script" uid="uid://uwl2prsk3to" path="res://addons/lucidity_system/bone_root.gd" id="4_1phxu"]
+[ext_resource type="Script" uid="uid://cqe4oym17w8sa" path="res://addons/lucidity_system/attachment_controller.gd" id="5_uqufu"]
+[ext_resource type="Script" uid="uid://dnryq4yanmj62" path="res://addons/lucidity_system/AttachmentSlot.gd" id="6_qu0rw"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_ia1lp"]
+radius = 0.15
+height = 0.71
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_wb0og"]
+radius = 0.07
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_njel3"]
+radius = 0.1
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_ia1lp"]
+radius = 0.25
+
+[sub_resource type="Curve" id="Curve_sasra"]
+_limits = [0.0, 0.3, 0.0, 1.0]
+_data = [Vector2(0, 0), 0.0, 0.14516616, 0, 0, Vector2(0.31989926, 0.04905662), 0.0, 0.0, 0, 0, Vector2(0.47355163, 0), 0.0, 0.0, 0, 0, Vector2(1, 0), 0.0, 0.0, 0, 0]
+point_count = 4
+
+[sub_resource type="Curve" id="Curve_coq8p"]
+_limits = [-0.2, 0.2, 0.0, 1.0]
+_data = [Vector2(0, 0.2), 0.0, -2.7273345, 0, 0, Vector2(0.32997477, -0.2), -0.074374184, -0.074374184, 0, 0, Vector2(0.37027705, -0.2), 0.69399285, 0.69399285, 0, 0, Vector2(1, 0.2), 0.0, 0.0, 0, 0]
+point_count = 4
+
+[sub_resource type="Curve" id="Curve_2nij2"]
+_limits = [0.0, 0.5, 0.0, 1.0]
+_data = [Vector2(0, 0), 0.0, 3.150794, 0, 0, Vector2(0.415534, 0.5), 0.0, 0.0, 0, 0, Vector2(1, 0), -0.033741597, 0.0, 0, 0]
+point_count = 3
+
+[sub_resource type="Curve" id="Curve_7cbxl"]
+_limits = [-0.4, 0.5, 0.0, 1.0]
+_data = [Vector2(0, -0.4), 0.0, 0.0, 0, 0, Vector2(0.50125945, 0.5), -0.06089885, -0.06089885, 0, 0, Vector2(1, -0.4), 0.0, 0.0, 0, 0]
+point_count = 3
+
+[sub_resource type="Curve" id="Curve_8pr8v"]
+_limits = [0.89937115, 1.0, 0.0, 1.0]
+_data = [Vector2(0, 1), 0.0, 0.0, 0, 0, Vector2(0.24937026, 0.89937115), 0.0, 0.0, 0, 0, Vector2(0.49874055, 1), 0.0, 0.0, 0, 0, Vector2(0.7481109, 0.89937115), 0.0, 0.0, 0, 0, Vector2(1, 1), 0.0, 0.0, 0, 0]
+point_count = 5
+
+[sub_resource type="Curve" id="Curve_buypi"]
+_limits = [0.7, 0.95, 0.0, 1.0]
+_data = [Vector2(0, 0.7), 0.0, 0.0, 0, 0, Vector2(0.25048545, 0.95), 0.0, 0.0, 0, 0, Vector2(0.5048544, 0.7), 0.0, 0.0, 0, 0, Vector2(0.75145626, 0.95), 0.0, 0.0, 0, 0, Vector2(1, 0.7), 0.0, 0.0, 0, 0]
+point_count = 5
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_buypi"]
+radius = 0.02
+
+[sub_resource type="Resource" id="Resource_vr1i5"]
+script = ExtResource("6_qu0rw")
+slot_name = "Armor"
+bone_name = "Chest"
+metadata/_custom_type_script = "uid://dnryq4yanmj62"
+
+[sub_resource type="Resource" id="Resource_rpuu0"]
+script = ExtResource("6_qu0rw")
+slot_name = "RightWrist"
+bone_name = "RightLowerArm"
+pos_offset = Vector3(0, 0.125, 0)
+is_hotbar = true
+metadata/_custom_type_script = "uid://dnryq4yanmj62"
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_oo8pe"]
+radius = 0.05
+height = 0.26367188
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_4gito"]
+radius = 0.05
+height = 0.30273438
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_fbuy2"]
+radius = 0.07324219
+height = 0.3881836
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_0k8yu"]
+radius = 0.057617188
+height = 0.47973633
+
+[node name="PhysicsPlayerController" type="RigidBody3D" unique_id=578935450]
+collision_layer = 2
+mass = 69.0
+continuous_cd = true
+contact_monitor = true
+max_contacts_reported = 4
+linear_damp_mode = 1
+script = ExtResource("1_1s46y")
+playermodel_scene = ExtResource("2_1s46y")
+shapecast_legs_length_scale = 1.35
+slope_correction = 0.2
+slope_correction_damping = 4.0
+slope_stance_height_scale = 0.75
+grab_force_central_scale = 0.9
+max_look_angle_horizontal = 1.3962634015954636
+grab_strength_min = 6000.0
+grab_strength_max = 8000.0
+grab_scale_max_mass = 100.0
+grab_damp_max = 400.0
+climb_scan_max_angle = 1.3962634015954636
+metadata/_custom_type_script = "uid://d1j4l28b3mks7"
+
+[node name="body_col" type="CollisionShape3D" parent="." unique_id=1768808407]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.19525146, 0)
+shape = SubResource("CapsuleShape3D_ia1lp")
+
+[node name="shapecast_legs" type="ShapeCast3D" parent="." unique_id=2119432746]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.06878233, 0)
+shape = SubResource("SphereShape3D_wb0og")
+target_position = Vector3(0, -1.1, 0)
+
+[node name="shapecast_arms" type="ShapeCast3D" parent="." unique_id=649445051]
+transform = Transform3D(-0.9999993, 0.0011594346, 8.293265e-05, 0.0011594346, 0.99999934, -9.625626e-08, -8.29327e-05, -1.01502196e-10, -1, -9.768644e-05, 0.4038089, 0.14606524)
+shape = SubResource("SphereShape3D_njel3")
+target_position = Vector3(0, 0, 2)
+
+[node name="cam_spring" type="SpringArm3D" parent="." unique_id=2116901749]
+transform = Transform3D(-0.9999993, 0.0011594346, 8.293265e-05, 0.0011594346, 0.99999934, -9.625626e-08, -8.29327e-05, -1.0149302e-10, -1, -8.500022e-05, 0.4075976, 6.531909e-05)
+shape = SubResource("SphereShape3D_ia1lp")
+spring_length = 0.0
+
+[node name="cam_transform" type="RemoteTransform3D" parent="cam_spring" unique_id=2004115398]
+remote_path = NodePath("../../../Camera3D")
+
+[node name="rig_root" type="Node3D" parent="." unique_id=551157550 node_paths=PackedStringArray("head_root", "ik_springs", "ik_targets", "ik_poles")]
+script = ExtResource("3_oyy2h")
+head_root = NodePath("../head_root")
+ik_springs = [NodePath("spring_RF"), NodePath("spring_LF"), NodePath("spring_RH"), NodePath("spring_LH")]
+ik_targets = [NodePath("spring_RF/IK_RF"), NodePath("spring_LF/IK_LF"), NodePath("spring_RH/IK_RH"), NodePath("spring_LH/IK_LH")]
+ik_poles = [NodePath("pole_RF"), NodePath("pole_LF"), NodePath("pole_RH"), NodePath("pole_LH")]
+ik_bone_roots = Array[String](["RightUpperLeg", "LeftUpperLeg", "RightUpperArm", "LeftUpperArm"])
+ik_bone_mids = Array[String](["RightLowerLeg", "LeftLowerLeg", "RightLowerArm", "LeftLowerArm"])
+ik_bone_ends = Array[String](["RightFoot", "LeftFoot", "RightHand", "LeftHand"])
+start_positions = Array[Vector3]([Vector3(0.07, -0.852, 0), Vector3(-0.07, -0.852, 0), Vector3(0.15, -0.172, 0), Vector3(-0.15, -0.172, 0)])
+speed_min = 0.65
+speed_max = 0.4
+min_speed = 3.0
+max_speed = 4.0
+lift_min = SubResource("Curve_sasra")
+stretch_min = SubResource("Curve_coq8p")
+lift_max = SubResource("Curve_2nij2")
+stretch_max = SubResource("Curve_7cbxl")
+stance_height_bob_min = SubResource("Curve_8pr8v")
+stance_height_bob_max = SubResource("Curve_buypi")
+air_offset_max = 0.3
+metadata/_custom_type_script = "uid://drcmxxe77jx4w"
+
+[node name="spring_RF" type="SpringArm3D" parent="rig_root" unique_id=1634917747]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.069000244, -0.072874546, 0)
+shape = SubResource("SphereShape3D_buypi")
+
+[node name="IK_RF" type="Marker3D" parent="rig_root/spring_RF" unique_id=1216464375]
+
+[node name="spring_LF" type="SpringArm3D" parent="rig_root" unique_id=140384686]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.069000244, -0.072874546, 0)
+shape = SubResource("SphereShape3D_buypi")
+
+[node name="IK_LF" type="Marker3D" parent="rig_root/spring_LF" unique_id=1235807303]
+
+[node name="spring_RH" type="SpringArm3D" parent="rig_root" unique_id=2059289534]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.072, 0.288, 0.037)
+shape = SubResource("SphereShape3D_buypi")
+
+[node name="IK_RH" type="Marker3D" parent="rig_root/spring_RH" unique_id=1240559730]
+
+[node name="spring_LH" type="SpringArm3D" parent="rig_root" unique_id=584466057]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.072052956, 0.2880001, 0.0373559)
+shape = SubResource("SphereShape3D_buypi")
+
+[node name="IK_LH" type="Marker3D" parent="rig_root/spring_LH" unique_id=1449108092]
+
+[node name="pole_RF" type="Node3D" parent="rig_root" unique_id=2032389328]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.069999695, 0, -0.67377615)
+
+[node name="pole_LF" type="Node3D" parent="rig_root" unique_id=1991189279]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.069999695, 0, -0.67377615)
+
+[node name="pole_RH" type="Node3D" parent="rig_root" unique_id=1737880438]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.069999695, 0.22103882, 0.38152122)
+
+[node name="pole_LH" type="Node3D" parent="rig_root" unique_id=1246334182]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.069999695, 0.220546, 0.3812933)
+
+[node name="head_root" type="Node3D" parent="." unique_id=2035072805]
+transform = Transform3D(-0.9999993, 0.0011594346, 8.293265e-05, 0.0011594346, 0.99999934, -9.625626e-08, -8.29327e-05, -1.01474676e-10, -1, -8.4877014e-05, 0.3287406, 6.532669e-05)
+script = ExtResource("4_1phxu")
+metadata/_custom_type_script = "uid://uwl2prsk3to"
+
+[node name="cam_pos" type="RemoteTransform3D" parent="head_root" unique_id=1834255173]
+transform = Transform3D(1, 8.420134e-15, 0, 8.393005e-15, 1, 0, 0, 6.4212524e-14, 1, 9.1552734e-05, 0.078856945, 0)
+remote_path = NodePath("../../cam_spring")
+update_rotation = false
+update_scale = false
+
+[node name="armcast_origin" type="RemoteTransform3D" parent="head_root" unique_id=2118558193]
+transform = Transform3D(1, 8.417092e-15, 0, 8.393005e-15, 1, 0, 0, 2.7519653e-14, 1, 8.773804e-05, 0.075068235, -0.14599991)
+remote_path = NodePath("../../shapecast_arms")
+
+[node name="AttachmentController" type="Node3D" parent="." unique_id=1784956247]
+script = ExtResource("5_uqufu")
+slot_definitions = Array[ExtResource("6_qu0rw")]([SubResource("Resource_vr1i5"), SubResource("Resource_rpuu0")])
+
+[node name="hitboxes" type="Node3D" parent="." unique_id=2135552858]
+
+[node name="LeftUpperArm" type="BoneAttachment3D" parent="hitboxes" unique_id=1907395403]
+transform = Transform3D(0.39976147, -0.12379478, 0.9082212, 0.78854287, -0.4587162, -0.40960932, 0.46732327, 0.87991726, -0.08575957, -0.08622265, 0.26440215, 0)
+bone_name = "LeftUpperArm"
+bone_idx = 4
+use_external_skeleton = true
+external_skeleton = NodePath("")
+
+[node name="hitbox" type="StaticBody3D" parent="hitboxes/LeftUpperArm" unique_id=591822443]
+collision_layer = 2
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="hitboxes/LeftUpperArm/hitbox" unique_id=248162785]
+transform = Transform3D(1.0000001, -2.682209e-07, -1.9744039e-07, -2.9802322e-08, 1, -5.5134296e-07, -1.4156103e-07, 7.4505806e-08, 0.9999993, 1.4305115e-06, 0.1074214, -2.861023e-06)
+shape = SubResource("CapsuleShape3D_oo8pe")
+
+[node name="LeftLowerArm" type="BoneAttachment3D" parent="hitboxes" unique_id=300585093]
+transform = Transform3D(0.9082253, 0.19750796, 0.368941, -0.40960124, 0.6002125, 0.68700224, -0.08575465, -0.77507144, 0.62602764, -0.11542225, 0.15620375, 0.20754814)
+bone_name = "LeftLowerArm"
+bone_idx = 5
+use_external_skeleton = true
+external_skeleton = NodePath("")
+
+[node name="hitbox" type="StaticBody3D" parent="hitboxes/LeftLowerArm" unique_id=1452246559]
+collision_layer = 2
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="hitboxes/LeftLowerArm/hitbox" unique_id=1708155240]
+transform = Transform3D(1.0000004, -2.7567148e-07, -4.8056245e-07, -4.4703484e-08, 1, -5.066395e-07, -1.3783574e-07, 1.1920929e-07, 1, 9.536743e-07, 0.12695241, -2.861023e-06)
+shape = SubResource("CapsuleShape3D_4gito")
+
+[node name="RightUpperArm" type="BoneAttachment3D" parent="hitboxes" unique_id=865655678]
+transform = Transform3D(0.40306163, 0.12284584, -0.9068903, -0.7903354, -0.4529055, -0.41260922, -0.46142295, 0.8830546, -0.08545948, 0.08622265, 0.26440215, 0)
+bone_name = "RightUpperArm"
+bone_idx = 27
+use_external_skeleton = true
+external_skeleton = NodePath("")
+
+[node name="hitbox" type="StaticBody3D" parent="hitboxes/RightUpperArm" unique_id=727605488]
+collision_layer = 2
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="hitboxes/RightUpperArm/hitbox" unique_id=1576669476]
+transform = Transform3D(1.0000001, -2.682209e-07, -1.9744039e-07, -2.9802322e-08, 1, -5.5134296e-07, -1.4156103e-07, 7.4505806e-08, 0.9999993, 1.4305115e-06, 0.1074214, -2.861023e-06)
+shape = SubResource("CapsuleShape3D_oo8pe")
+
+[node name="RightLowerArm" type="BoneAttachment3D" parent="hitboxes" unique_id=2042986941]
+transform = Transform3D(0.906891, -0.19673148, -0.3726196, 0.4126081, 0.593971, 0.690618, 0.08545908, -0.7800612, 0.6198399, 0.115198135, 0.15757418, 0.2082882)
+bone_name = "RightLowerArm"
+bone_idx = 28
+use_external_skeleton = true
+external_skeleton = NodePath("")
+
+[node name="hitbox" type="StaticBody3D" parent="hitboxes/RightLowerArm" unique_id=306088877]
+collision_layer = 2
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="hitboxes/RightLowerArm/hitbox" unique_id=1724434046]
+transform = Transform3D(1.0000004, -2.7567148e-07, -4.8056245e-07, -4.4703484e-08, 1, -5.066395e-07, -1.3783574e-07, 1.1920929e-07, 1, 9.536743e-07, 0.12695241, -2.861023e-06)
+shape = SubResource("CapsuleShape3D_4gito")
+
+[node name="LeftUpperLeg" type="BoneAttachment3D" parent="hitboxes" unique_id=1259580499]
+transform = Transform3D(-0.8157866, -0.0013893275, 0.5783514, 0.57278085, -0.14041984, 0.8075918, 0.08009, 0.9900911, 0.115348406, -0.068808556, -0.07487202, 0.01635313)
+bone_name = "LeftUpperLeg"
+bone_idx = 45
+use_external_skeleton = true
+external_skeleton = NodePath("")
+
+[node name="hitbox" type="StaticBody3D" parent="hitboxes/LeftUpperLeg" unique_id=1845740658]
+collision_layer = 2
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="hitboxes/LeftUpperLeg/hitbox" unique_id=765927149]
+transform = Transform3D(1, 7.45099e-08, 3.6517147e-06, -7.450579e-08, 1, -1.1250468e-06, -3.6517147e-06, 1.1250465e-06, 1, 4.7683716e-06, 0.16967678, -4.2915344e-06)
+shape = SubResource("CapsuleShape3D_fbuy2")
+
+[node name="LeftLowerLeg" type="BoneAttachment3D" parent="hitboxes" unique_id=1066043683]
+transform = Transform3D(0.8046129, 0.025122367, -0.593268, 0.5904809, 0.0716334, 0.8038664, 0.06269285, -0.9971145, 0.042802893, -0.064852715, -0.114993095, 0.34357977)
+bone_name = "LeftLowerLeg"
+bone_idx = 46
+use_external_skeleton = true
+external_skeleton = NodePath("")
+
+[node name="hitbox" type="StaticBody3D" parent="hitboxes/LeftLowerLeg" unique_id=809058089]
+collision_layer = 2
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="hitboxes/LeftLowerLeg/hitbox" unique_id=1664276436]
+transform = Transform3D(1, -3.0546948e-07, 3.6230788e-06, 3.054739e-07, 1, -1.2144634e-06, -3.6230783e-06, 1.2144645e-06, 1, 4.2915344e-06, 0.21545172, -3.8146973e-06)
+shape = SubResource("CapsuleShape3D_0k8yu")
+
+[node name="RightUpperLeg" type="BoneAttachment3D" parent="hitboxes" unique_id=132134299]
+transform = Transform3D(-0.81579244, 0.0013894709, -0.57834315, -0.5727726, -0.14042056, 0.80759746, -0.08008911, 0.990091, 0.11534982, 0.068808556, -0.07487202, 0.01635313)
+bone_name = "RightUpperLeg"
+bone_idx = 48
+use_external_skeleton = true
+external_skeleton = NodePath("")
+
+[node name="hitbox" type="StaticBody3D" parent="hitboxes/RightUpperLeg" unique_id=1969446946]
+collision_layer = 2
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="hitboxes/RightUpperLeg/hitbox" unique_id=1749672531]
+transform = Transform3D(1, 7.45099e-08, 3.6517147e-06, -7.450579e-08, 1, -1.1250468e-06, -3.6517147e-06, 1.1250465e-06, 1, 4.7683716e-06, 0.16967678, -4.2915344e-06)
+shape = SubResource("CapsuleShape3D_fbuy2")
+
+[node name="LeftLowerLeg2" type="BoneAttachment3D" parent="hitboxes" unique_id=1161284422]
+transform = Transform3D(0.8046209, -0.025122015, 0.5932572, -0.59047014, 0.07163325, 0.80387425, -0.06269183, -0.9971146, 0.042803783, 0.064852715, -0.114993095, 0.34357977)
+bone_name = "RightLowerLeg"
+bone_idx = 49
+use_external_skeleton = true
+external_skeleton = NodePath("")
+
+[node name="hitbox" type="StaticBody3D" parent="hitboxes/LeftLowerLeg2" unique_id=1275340313]
+collision_layer = 2
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="hitboxes/LeftLowerLeg2/hitbox" unique_id=754482563]
+transform = Transform3D(1, -3.0546948e-07, 3.6230788e-06, 3.054739e-07, 1, -1.2144634e-06, -3.6230783e-06, 1.2144645e-06, 1, 4.2915344e-06, 0.21545172, -3.8146973e-06)
+shape = SubResource("CapsuleShape3D_0k8yu")
