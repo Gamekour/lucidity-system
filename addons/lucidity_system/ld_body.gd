@@ -87,12 +87,16 @@ var grab_release_pending : Array[RigidBody3D]
 var grab_offset : Vector3 = Vector3.ZERO
 var relative_velocity : Vector3 = Vector3.ZERO
 var overlay_eulers : Vector3 = Vector3.ZERO
+var input_move : Vector2 = Vector2.ZERO
 var stance_height : float = 0.0
 var target_angle_horizontal : float = 0
 var camera_pitch : float = 0.0
 var sprinting := false
 var crouch_jump := false
 var grounded := false
+var crouching := false
+var crawling := false
+var jumping := false
 var trying_to_grab := false
 var allow_grab_default := true
 
@@ -182,10 +186,9 @@ func _physics_process(delta: float) -> void:
 	var shapecast_basis := Basis(base_right, up_dir, global_basis.z.normalized())
 	shapecast_legs.global_basis = shapecast_basis.orthonormalized()
 
-	var input_vector := Input.get_vector("move_left", "move_right", "move_back", "move_forward")
-	var input_3d := _get_camera_relative_input(up_dir, input_vector)
+	var input_3d := _get_camera_relative_input(up_dir, input_move)
 	var max_speed = max(lerpf(crouch_speed * roll_force, roll_force * sprint_multiplier * sprint_multiplier_scale, min(stance_height / speed_stance_stop, 1)), 0)
-	crouch_jump = Input.is_action_pressed("jump") && Input.is_action_pressed("crouch")
+	crouch_jump = jumping and crouching
 	
 	var slope_normal := up_dir
 	var floor_velocity := Vector3.ZERO
@@ -242,7 +245,7 @@ func _physics_process(delta: float) -> void:
 	var force = accel.limit_length(friction_budget)
 
 	var current_yaw := _get_current_yaw(up_dir)
-	var body_target_angle := _get_body_target_angle(input_vector)
+	var body_target_angle := _get_body_target_angle(input_move)
 	var look_angle_horizontal : float = wrapf(body_target_angle - current_yaw, -PI, PI)
 	look_angle_horizontal = clamp(look_angle_horizontal, -max_look_angle_horizontal, max_look_angle_horizontal)
 	var yaw_damping_torque : float = -angular_velocity.dot(up_dir) * turn_damping
@@ -258,7 +261,7 @@ func _physics_process(delta: float) -> void:
 	var total_torque := yaw_torque + upright_torque
 	apply_torque(total_torque)
 	
-	stance_height = jump_height * jump_height_scale if Input.is_action_pressed("jump") else crawl_height if Input.is_action_pressed("crawl") else crouch_height if Input.is_action_pressed("crouch") else 1.0
+	stance_height = jump_height * jump_height_scale if jumping else crawl_height if crawling else crouch_height if crouching else 1.0
 	stance_height *= stance_height_scale
 	stance_height -= (1 - current_dot) * slope_stance_height_scale
 	
@@ -285,11 +288,10 @@ func _physics_process(delta: float) -> void:
 	if (grabbed_col == null && trying_to_grab && allow_grab):
 		arm_cast()
 	arm_logic()
-	_process_climb_scan(delta, input_vector)
+	_process_climb_scan(delta, input_move)
 	_update_grab_release_pending()
 
 func _process(delta: float) -> void:
-	sprinting = Input.is_action_pressed("sprint")
 	var tilt_t : float = 1.0 - exp(-camera_tilt_smoothing * delta)
 	camera_up_dir = camera_up_dir.normalized()
 	current_up_dir = current_up_dir.normalized()
@@ -299,7 +301,7 @@ func _process(delta: float) -> void:
 	var pitch_basis := Basis(Vector3.RIGHT, camera_pitch)
 	cam_spring.global_basis = tilt_basis * yaw_basis * pitch_basis
 
-func _input(event: InputEvent) -> void:
+func _supply_input(event: InputEvent) -> void:
 	if event is InputEventMouseMotion:
 		target_angle_horizontal = wrapf(target_angle_horizontal - event.relative.x * get_process_delta_time() * sens.x, -PI, PI)
 		camera_pitch = clampf(camera_pitch - event.relative.y * get_process_delta_time() * sens.y, min_camera_pitch, max_camera_pitch)
@@ -309,6 +311,8 @@ func _input(event: InputEvent) -> void:
 				cam_spring.spring_length = clampf(cam_spring.spring_length - cam_distance_max / 10, cam_distance_min, cam_distance_max)
 			if (event.button_index == MOUSE_BUTTON_WHEEL_DOWN):
 				cam_spring.spring_length = clampf(cam_spring.spring_length + cam_distance_max / 10, cam_distance_min, cam_distance_max)
+	if event.is_action("move_forward") or event.is_action("move_back") or event.is_action("move_left") or event.is_action("move_right"):
+		input_move = Input.get_vector("move_left", "move_right", "move_back", "move_forward")
 	if event.is_action_pressed("grab"):
 		trying_to_grab = true
 	if event.is_action_released("grab"):
@@ -337,6 +341,14 @@ func _input(event: InputEvent) -> void:
 			var col = shapecast_arms.get_collider(0)
 			if (col.has_method("_interact")):
 				col.call("_interact")
+	if (event.is_action("sprint")):
+		sprinting = event.is_pressed()
+	if (event.is_action("jump")):
+		jumping = event.is_pressed()
+	if (event.is_action("crouch")):
+		crouching = event.is_pressed()
+	if (event.is_action("crawl")):
+		crawling = event.is_pressed()
 
 func _safe_slerp_up(from: Vector3, to: Vector3, weight: float) -> Vector3:
 	from = from.normalized()

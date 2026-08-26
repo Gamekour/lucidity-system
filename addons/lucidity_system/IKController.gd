@@ -25,11 +25,10 @@ class_name WalkIKController
 @export var level_speed : float = 10.0
 @export var horizontal_scale : float = 0.5
 @export var lift_slope_boost : float = 1.0
-
+@export var crouch_lift_scale : float = 0.25
 @export var idle_speed_threshold : float = 0.05
 @export var pose_blend_in_speed : float = 3.0
 @export var pose_blend_out_speed : float = 2.0
-
 @export var air_offset_scale : float = 0.15
 @export var air_offset_max : float = 0.6
 @export var air_blend_in_speed : float = 4.0
@@ -96,7 +95,7 @@ func _process(delta: float) -> void:
 		var aniso = abs(Vector3.FORWARD.dot(local_vel.normalized()))
 		if (i >= 2):
 			aniso = 1
-		var crouch_lift = (0.25 if Input.is_action_pressed("crouch") && !body.grounded else 0)
+		var crouch_lift = (crouch_lift_scale if body.crouching && !body.grounded else 0)
 		var animated_offset := Vector3(stretch * time_scale * (1 - aniso) * horizontal_scale, lift * time_scale + crouch_lift, stretch * time_scale * aniso)
 		var grounded_pos := start_positions[i] + animated_offset * pose_blend
 

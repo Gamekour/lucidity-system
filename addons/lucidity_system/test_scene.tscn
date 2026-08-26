@@ -10,6 +10,7 @@
 [ext_resource type="Script" uid="uid://dnryq4yanmj62" path="res://addons/lucidity_system/AttachmentSlot.gd" id="7_rpuu0"]
 [ext_resource type="Material" uid="uid://dnm5ak0rw2pxe" path="res://addons/lucidity_system/debug_mat.tres" id="9_njel3"]
 [ext_resource type="PackedScene" uid="uid://1q405i8mu7nw" path="res://addons/lucidity_system/silly_dancing.tscn" id="11_oo8pe"]
+[ext_resource type="Script" uid="uid://cbrrnaw18nr8" path="res://addons/lucidity_system/controller.gd" id="12_6iij7"]
 [ext_resource type="Script" uid="uid://b11yeup1xif5d" path="res://addons/lucidity_system/toggle_button.gd" id="12_oo8pe"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_ia1lp"]
@@ -151,6 +152,12 @@ size = Vector3(0.3, 1, 0.3)
 size = Vector3(0.3, 1, 0.3)
 
 [node name="Test Scene" type="Node3D" unique_id=667831700]
+
+[node name="Controller" type="Node3D" parent="." unique_id=241864859 node_paths=PackedStringArray("pawn")]
+script = ExtResource("12_6iij7")
+pawn = NodePath("../PhysicsPlayerController")
+device_indices = Array[int]([16, 32])
+metadata/_custom_type_script = "uid://cbrrnaw18nr8"
 
 [node name="PhysicsPlayerController" type="RigidBody3D" parent="." unique_id=290065418]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.8937, 3.3830867, 4.137167)
