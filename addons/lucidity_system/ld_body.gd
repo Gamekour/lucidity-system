@@ -1,5 +1,22 @@
-extends RigidBody3D
+extends NetworkRigidbody3D
 class_name PhysicsPlayerController
+
+## --- Multiplayer ownership ------------------------------------------------
+## NetworkRigidbody3D's multiplayer authority is always the SERVER: that's
+## who runs the real physics simulation. But the player who is *controlling*
+## this character (mouse look, WASD, grab/jump/etc.) is usually a different
+## peer. We track that separately so input capture and camera control can
+## be driven by the controlling client, while movement/force application
+## still only ever happens on the server.
+@export var owner_peer_id : int = 1
+
+func is_local_owner() -> bool:
+	return multiplayer.get_unique_id() == owner_peer_id
+
+## Call this from your player-spawning code right after instancing, e.g.
+## `player.set_owner_peer_id(peer_id)` on both server and all clients.
+func set_owner_peer_id(peer_id: int) -> void:
+	owner_peer_id = peer_id
 
 @export_category("Player Model")
 @export var playermodel_scene : PackedScene
@@ -87,6 +104,30 @@ var grab_release_pending : Array[RigidBody3D]
 var grab_offset : Vector3 = Vector3.ZERO
 var relative_velocity : Vector3 = Vector3.ZERO
 var overlay_eulers : Vector3 = Vector3.ZERO
+
+## --- Animation state replication -------------------------------------------
+## grounded, current_up_dir, current_dot, relative_velocity, climbing_ledge,
+## climb_grab_tick, crouching, and crawling are only ever written inside the
+## server-authority movement block below (or by _apply_input_state(), which
+## only the server calls on itself). On every non-authority peer -- which
+## includes the *owning* client, since NetworkRigidbody3D's authority is
+## always the server -- that code never runs, so those raw fields stay at
+## whatever they were initialized to.
+##
+## WalkIKController needs correct values on every peer (everyone needs to see
+## everyone else's walk/climb/crouch animation), so the server also pushes a
+## small snapshot of this state down alongside the regular position/velocity
+## sync. Read these synced_* fields from outside this script -- never the
+## raw fields above, which are only meaningful on the server.
+var synced_grounded : bool = false
+var synced_current_up_dir : Vector3 = Vector3.UP
+var synced_current_dot : float = 0.0
+var synced_relative_velocity : Vector3 = Vector3.ZERO
+var synced_climbing_ledge : bool = false
+var synced_climb_grab_tick : int = 0
+var synced_crouching : bool = false
+var synced_crawling : bool = false
+var synced_is_grabbing : bool = false
 var input_move : Vector2 = Vector2.ZERO
 var stance_height : float = 0.0
 var target_angle_horizontal : float = 0
@@ -131,6 +172,12 @@ var floor_contact_point : Vector3 = Vector3.ZERO
 
 func _ready() -> void:
 	allow_grab_default = allow_grab
+	# NetworkRigidbody3D's server/client split (and the input-forwarding
+	# below) only works if multiplayer authority for this body is the
+	# server. Pin it explicitly rather than trusting whatever a spawner
+	# may have set (e.g. MultiplayerSpawner defaults authority to the
+	# spawning peer, which is often the owning client, not the server).
+	set_multiplayer_authority(1)
 	rig_setup()
 
 func rig_setup() -> void:
@@ -176,8 +223,63 @@ func rig_setup() -> void:
 				attach_controller.body = self
 				attach_controller._connect_skeleton(playermodel)
 
+# Piggyback the anim-state snapshot on NetworkRigidbody3D's existing sync
+# cadence (called from _server_tick() at sync_rate, server-side only).
+func _broadcast_state() -> void:
+	super._broadcast_state()
+	var is_grabbing := grabbed_col != null
+	# The server doesn't receive its own RPC broadcast, so apply locally too
+	# -- the host needs correct synced_* values to render its own view.
+	_apply_anim_state(grounded, current_up_dir, current_dot, relative_velocity,
+		climbing_ledge, climb_grab_tick, crouching, crawling, is_grabbing)
+	_receive_anim_state.rpc(grounded, current_up_dir, current_dot, relative_velocity,
+		climbing_ledge, climb_grab_tick, crouching, crawling, is_grabbing)
+
+@rpc("authority", "call_remote", "unreliable_ordered")
+func _receive_anim_state(p_grounded: bool, p_up_dir: Vector3, p_dot: float,
+		p_relative_velocity: Vector3, p_climbing: bool, p_climb_tick: int,
+		p_crouching: bool, p_crawling: bool, p_is_grabbing: bool) -> void:
+	_apply_anim_state(p_grounded, p_up_dir, p_dot, p_relative_velocity,
+		p_climbing, p_climb_tick, p_crouching, p_crawling, p_is_grabbing)
+
+func _apply_anim_state(p_grounded: bool, p_up_dir: Vector3, p_dot: float,
+		p_relative_velocity: Vector3, p_climbing: bool, p_climb_tick: int,
+		p_crouching: bool, p_crawling: bool, p_is_grabbing: bool) -> void:
+	synced_grounded = p_grounded
+	synced_current_up_dir = p_up_dir
+	synced_current_dot = p_dot
+	synced_relative_velocity = p_relative_velocity
+	synced_climbing_ledge = p_climbing
+	synced_climb_grab_tick = p_climb_tick
+	synced_crouching = p_crouching
+	synced_crawling = p_crawling
+	synced_is_grabbing = p_is_grabbing
+
 func _physics_process(delta: float) -> void:
-	if (!is_multiplayer_authority()): return
+	# Let NetworkRigidbody3D do its job first: broadcast state if we're the
+	# server, or interpolate toward the last snapshot if we're not.
+	super._physics_process(delta)
+
+	if is_local_owner() and not is_multiplayer_authority():
+		# We're the controlling client, but the server is the one who
+		# actually simulates this body. Forward our latest input every
+		# tick so the server's simulation below has fresh data to run on.
+		if multiplayer.get_unique_id() == 1:
+			# We ARE the server (a host controlling their own character) --
+			# rpc_id(1, ...) would be "call yourself", which Godot disallows
+			# for a call_remote-only RPC. Apply directly instead.
+			_apply_input_state(input_move, target_angle_horizontal, camera_pitch,
+				sprinting, jumping, crouching, crawling, trying_to_grab)
+		else:
+			_send_input_to_server.rpc_id(1, input_move, target_angle_horizontal,
+				camera_pitch, sprinting, jumping, crouching, crawling, trying_to_grab)
+
+	if not is_multiplayer_authority():
+		# Only the server runs the actual force/torque simulation.
+		# Everyone else just displays the interpolated snapshot handled
+		# by NetworkRigidbody3D.super._physics_process() above.
+		return
+
 	var gravity_vec : Vector3 = get_gravity()
 	var up_dir : Vector3 = _get_up_direction(gravity_vec).normalized()
 	current_up_dir = up_dir
@@ -291,8 +393,39 @@ func _physics_process(delta: float) -> void:
 	_process_climb_scan(delta, input_move)
 	_update_grab_release_pending()
 
+## Received on the server from whichever peer owns this character. Mirrors
+## the request_apply_* pattern in NetworkRigidbody3D: the client asks,
+## the server is the only one that actually mutates simulation state.
+@rpc("any_peer", "call_remote", "unreliable_ordered")
+func _send_input_to_server(move: Vector2, yaw: float, pitch: float,
+		is_sprinting: bool, is_jumping: bool, is_crouching: bool,
+		is_crawling: bool, is_grabbing: bool) -> void:
+	if not is_multiplayer_authority():
+		return
+	if multiplayer.get_remote_sender_id() != owner_peer_id:
+		return # ignore input from anyone but the peer that owns this body
+	_apply_input_state(move, yaw, pitch, is_sprinting, is_jumping, is_crouching, is_crawling, is_grabbing)
+
+## Shared by both the RPC receiver above and the same-machine shortcut in
+## _physics_process (used when the server itself is the owning peer, i.e.
+## a listen-server host controlling their own character).
+func _apply_input_state(move: Vector2, yaw: float, pitch: float,
+		is_sprinting: bool, is_jumping: bool, is_crouching: bool,
+		is_crawling: bool, is_grabbing: bool) -> void:
+	input_move = move
+	target_angle_horizontal = yaw
+	camera_pitch = pitch
+	sprinting = is_sprinting
+	jumping = is_jumping
+	crouching = is_crouching
+	crawling = is_crawling
+	trying_to_grab = is_grabbing
+
 func _process(delta: float) -> void:
-	if (!is_multiplayer_authority()): return
+	# Camera control belongs to whoever owns this character, not
+	# necessarily the server -- this is a different authority than the
+	# physics simulation above.
+	if not is_local_owner(): return
 	var tilt_t : float = 1.0 - exp(-camera_tilt_smoothing * delta)
 	camera_up_dir = camera_up_dir.normalized()
 	current_up_dir = current_up_dir.normalized()
@@ -303,6 +436,7 @@ func _process(delta: float) -> void:
 	cam_spring.global_basis = tilt_basis * yaw_basis * pitch_basis
 
 func _supply_input(event: InputEvent) -> void:
+	if not is_local_owner(): return
 	if event is InputEventMouseMotion:
 		target_angle_horizontal = wrapf(target_angle_horizontal - event.relative.x * get_process_delta_time() * sens.x, -PI, PI)
 		camera_pitch = clampf(camera_pitch - event.relative.y * get_process_delta_time() * sens.y, min_camera_pitch, max_camera_pitch)
@@ -314,6 +448,17 @@ func _supply_input(event: InputEvent) -> void:
 				cam_spring.spring_length = clampf(cam_spring.spring_length + cam_distance_max / 10, cam_distance_min, cam_distance_max)
 	if event.is_action("move_forward") or event.is_action("move_back") or event.is_action("move_left") or event.is_action("move_right"):
 		input_move = Input.get_vector("move_left", "move_right", "move_back", "move_forward")
+	# NOTE ON NETWORKING: trying_to_grab is streamed to the server via
+	# _send_input_to_server() each physics tick, so grab *initiation*
+	# (arm_cast(), which only runs server-side inside _physics_process) is
+	# already authoritative. grabbed_col itself -- and the release/attach
+	# branches below that touch it directly -- are only meaningful on the
+	# server, since that's the only peer whose _physics_process actually
+	# runs the grab simulation. On a non-server owning client these
+	# branches currently just mutate a local, unsynced copy. If remote
+	# players need to *see* grab/attach state (e.g. for animation),
+	# replicate grabbed_col's identity from the server (e.g. a synced
+	# NodePath) rather than relying on this client-local state.
 	if event.is_action_pressed("grab"):
 		trying_to_grab = true
 	if event.is_action_released("grab"):

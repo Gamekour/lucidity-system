@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://c8ehykskc7ulc" path="res://addons/lucidity_system/network_manager.gd" id="1_skw67"]
 [ext_resource type="PackedScene" uid="uid://6l6j14vr886s" path="res://addons/lucidity_system/luciddebug.glb" id="1_uhqqe"]
+[ext_resource type="Script" uid="uid://cdtw10mdyvmie" path="res://addons/lucidity_system/network_rigidbody_3d.gd" id="5_l63t3"]
 [ext_resource type="Script" uid="uid://c8qyp1ubjxh1u" path="res://addons/lucidity_system/skeleton_overlay.gd" id="7_8pr8v"]
 [ext_resource type="PackedScene" uid="uid://cuyit38h4qs42" path="res://addons/lucidity_system/ls_human.tscn" id="7_dpywb"]
 [ext_resource type="Material" uid="uid://dnm5ak0rw2pxe" path="res://addons/lucidity_system/debug_mat.tres" id="9_njel3"]
@@ -276,9 +277,11 @@ shape = SubResource("BoxShape3D_4gito")
 [node name="MeshInstance3D" type="MeshInstance3D" parent="Ladder/StaticBody3D14" unique_id=103880097]
 mesh = SubResource("BoxMesh_fbuy2")
 
-[node name="test_box" type="RigidBody3D" parent="." unique_id=1938987854]
+[node name="test_box" type="RigidBody3D" parent="." unique_id=153513725]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.2648554, 0.6091262, -3.2850118)
 mass = 69.0
+script = ExtResource("5_l63t3")
+metadata/_custom_type_script = "uid://cdtw10mdyvmie"
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="test_box" unique_id=1091314629]
 shape = SubResource("BoxShape3D_njel3")
@@ -287,9 +290,11 @@ shape = SubResource("BoxShape3D_njel3")
 mesh = SubResource("BoxMesh_vr1i5")
 surface_material_override/0 = ExtResource("9_njel3")
 
-[node name="test_box4" type="RigidBody3D" parent="." unique_id=355081333]
+[node name="test_box4" type="RigidBody3D" parent="." unique_id=1184987636]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.721491, 0.6091262, -3.2850118)
 mass = 10.0
+script = ExtResource("5_l63t3")
+metadata/_custom_type_script = "uid://cdtw10mdyvmie"
 metadata/attachment_slot = "Armor"
 metadata/allow_grab = false
 
@@ -303,9 +308,11 @@ surface_material_override/0 = ExtResource("9_njel3")
 [node name="attachment_origin" type="Marker3D" parent="test_box4" unique_id=71543890]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.2737589)
 
-[node name="test_box3" type="RigidBody3D" parent="." unique_id=1300065229]
+[node name="test_box3" type="RigidBody3D" parent="." unique_id=398126366]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.1113625, 1.239833, -2.8224356)
 mass = 10.0
+script = ExtResource("5_l63t3")
+metadata/_custom_type_script = "uid://cdtw10mdyvmie"
 metadata/attachment_slot = "RightWrist"
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="test_box3" unique_id=850090962]
@@ -326,7 +333,7 @@ camera_aim_yaw_enabled = true
 camera_aim_roll_enabled = true
 metadata/_custom_type_script = "uid://c8qyp1ubjxh1u"
 
-[node name="test_box2" type="RigidBody3D" parent="." unique_id=1164293210]
+[node name="test_box2" type="RigidBody3D" parent="." unique_id=542812591]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18.874273, -0.65916336, -62.872963)
 axis_lock_linear_x = true
 axis_lock_linear_y = true
@@ -336,6 +343,8 @@ axis_lock_angular_z = true
 mass = 69.0
 linear_damp = 100.0
 constant_force = Vector3(0, 0, 10000)
+script = ExtResource("5_l63t3")
+metadata/_custom_type_script = "uid://cdtw10mdyvmie"
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="test_box2" unique_id=1285482729]
 shape = SubResource("BoxShape3D_ie5li")

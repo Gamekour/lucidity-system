@@ -49,23 +49,23 @@ func _process(delta: float) -> void:
 	var t := clampf(shapecast_legs.get_closest_collision_safe_fraction() * 2, 0, 1)
 	global_basis = body.basis.slerp(_apply_gravity_counter_rotation(delta), t)
 
-	var is_climbing := body.climbing_ledge
+	var is_climbing := body.synced_climbing_ledge
 
-	var local_vel_full := body.global_basis.inverse() * body.relative_velocity
+	var local_vel_full := body.global_basis.inverse() * body.synced_relative_velocity
 	var local_vel := local_vel_full
 	local_vel.y = 0
 	var vel_length := local_vel.length()
-	var current_angle : float = (-body.global_basis.z).signed_angle_to(body.relative_velocity, body.current_up_dir)
+	var current_angle : float = (-body.global_basis.z).signed_angle_to(body.synced_relative_velocity, body.synced_current_up_dir)
 	var polarity : float = 1 if current_angle > deg_to_rad(-80) && current_angle < deg_to_rad(100) else -1
 	var weight = clampf(remap(vel_length, min_speed, max_speed, 0, 1), 0, 1)
 	var speed = lerpf(speed_min, speed_max, weight)
 
 	if is_climbing:
-		if body.climb_grab_tick != last_climb_grab_tick:
-			last_climb_grab_tick = body.climb_grab_tick
+		if body.synced_climb_grab_tick != last_climb_grab_tick:
+			last_climb_grab_tick = body.synced_climb_grab_tick
 			sample = wrapf(sample + 0.5, 0, 1)
 	else:
-		last_climb_grab_tick = body.climb_grab_tick
+		last_climb_grab_tick = body.synced_climb_grab_tick
 		sample = wrapf(sample + delta * polarity * -vel_length * speed, 0, 1)
 
 	var is_moving := vel_length > idle_speed_threshold
@@ -73,8 +73,8 @@ func _process(delta: float) -> void:
 	var blend_rate := pose_blend_in_speed if is_moving else pose_blend_out_speed
 	pose_blend = move_toward(pose_blend, target_blend, delta * blend_rate)
 
-	var target_air_blend := 0.0 if body.grounded else 1.0
-	var air_blend_rate := air_blend_in_speed if !body.grounded else air_blend_out_speed
+	var target_air_blend := 0.0 if body.synced_grounded else 1.0
+	var air_blend_rate := air_blend_in_speed if !body.synced_grounded else air_blend_out_speed
 	air_blend = move_toward(air_blend, target_air_blend, delta * air_blend_rate)
 
 	var animated_stance_scale := lerpf(stance_height_bob_min.sample(sample), stance_height_bob_max.sample(sample), weight)
@@ -88,14 +88,14 @@ func _process(delta: float) -> void:
 		air_dir = -local_vel_full / air_speed
 
 	for i in ik_springs.size():
-		var s := wrapf(sample + phase_offsets[i], 0, 1) if body.grabbed_col == null or body.climbing_ledge or i < 2 else 0.0
-		var lift_slope_scale := (2 - body.current_dot) * lift_slope_boost
+		var s := wrapf(sample + phase_offsets[i], 0, 1) if not body.synced_is_grabbing or body.synced_climbing_ledge or i < 2 else 0.0
+		var lift_slope_scale := (2 - body.synced_current_dot) * lift_slope_boost
 		var lift = lerpf(lift_min.sample(s), lift_max.sample(s), weight) * lift_slope_scale * (arm_lift_scale if i >= 2 else 1)
 		var stretch = lerpf(stretch_min.sample(s), stretch_max.sample(s), weight) * (arm_stretch_scale if i >= 2 else 1) - ((1 - t) * 2 if i >= 2 else 0)
 		var aniso = abs(Vector3.FORWARD.dot(local_vel.normalized()))
 		if (i >= 2):
 			aniso = 1
-		var crouch_lift = (crouch_lift_scale if body.crouching && !body.grounded else 0)
+		var crouch_lift = (crouch_lift_scale if body.synced_crouching && !body.synced_grounded else 0)
 		var animated_offset := Vector3(stretch * time_scale * (1 - aniso) * horizontal_scale, lift * time_scale + crouch_lift, stretch * time_scale * aniso)
 		var grounded_pos := start_positions[i] + animated_offset * pose_blend
 
@@ -105,10 +105,10 @@ func _process(delta: float) -> void:
 
 		var limb_air_blend := 1.0 if (is_climbing and i < 2) else air_blend
 		var target_pos := grounded_pos.lerp(airborne_pos, limb_air_blend)
-		var is_holding = i >= 2 and body.grabbed_col != null and not body.climbing_ledge
+		var is_holding = i >= 2 and body.synced_is_grabbing and not body.synced_climbing_ledge
 		ik_springs[i].look_at(to_global(target_pos if not is_holding else start_positions[i]), to_global(Vector3.UP), true)
 		ik_springs[i].spring_length = ik_springs[i].global_position.distance_to(to_global(target_pos))
-		if body.grabbed_col != null and i >= 2:
+		if body.synced_is_grabbing and i >= 2:
 			var body_yaw := body.global_basis.get_euler().y
 			var yaw_right := Vector3.RIGHT
 			ik_springs[i].rotate(yaw_right, -head_root.rotation.x + deg_to_rad(60))

@@ -24,8 +24,12 @@ func _on_player_connected(id: int):
 func _pawn_delivered(pawn_node : Node):
 	if not (pawn_node.is_inside_tree()): await pawn_node.tree_entered
 	
-	pawn_node.set_multiplayer_authority(int(pawn_node.name))
-	if (!pawn_node.is_multiplayer_authority()): return
+	var target_owner := int(pawn_node.name)
+	if (pawn_node is PhysicsPlayerController):
+		pawn_node.set_owner_peer_id(target_owner)
+	
+	pawn_node.set_multiplayer_authority(target_owner)
+	if (target_owner != multiplayer.get_unique_id()): return
 	pawn = pawn_node
 	var cam_origin = pawn.find_child("cam_transform")
 	if (cam_origin != null):
