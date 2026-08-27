@@ -382,10 +382,10 @@ func _physics_process(delta: float) -> void:
 	if grounded and apply_reaction_forces and floor_rigidbody != null and is_instance_valid(floor_rigidbody):
 		var offset := floor_contact_point - floor_rigidbody.global_position
 		var floor_force = force.limit_length(floor_rigidbody.mass * max_floor_force_scale)
-		floor_rigidbody.apply_force(-floor_force, offset)
+		_apply_force_networked(floor_rigidbody, -floor_force, offset)
 		if apply_reaction_torque:
 			var floor_torque = total_torque.limit_length(floor_rigidbody.mass * max_floor_torque_scale)
-			floor_rigidbody.apply_torque(-floor_torque)
+			_apply_torque_networked(floor_rigidbody, -floor_torque)
 	
 	if (grabbed_col == null && trying_to_grab && allow_grab):
 		arm_cast()
@@ -817,6 +817,47 @@ func _process_climb_scan(delta: float, input_vector: Vector2) -> void:
 		else:
 			_reset_climb_scan()
 
+## --- Force application on external rigidbodies -----------------------------
+## Walking on top of, and grabbing, arbitrary RigidBody3D props works fine
+## with direct apply_force/apply_torque since those are simulated locally
+## wherever they're standing. But floor_rigidbody / grabbed_col may just as
+## easily be a NetworkRigidbody3D belonging to someone else's world --
+## e.g. an object another peer is currently authoritative over. Poking its
+## `apply_force`/`apply_torque` directly only works if we happen to be
+## sitting on the peer that's simulating it; anywhere else the body is
+## frozen (FREEZE_MODE_KINEMATIC) and silently eats the call. Route through
+## NetworkRigidbody3D's request_apply_* RPCs instead so the force actually
+## reaches whichever peer owns the simulation, while still short-circuiting
+## to a direct local call when we happen to already be that peer (avoids a
+## pointless network round-trip, and mirrors the rpc_id(1, ...) vs.
+## apply-directly pattern already used for input forwarding above).
+func _apply_force_networked(target: RigidBody3D, force: Vector3, position: Vector3 = Vector3.ZERO) -> void:
+	if target is NetworkRigidbody3D and not target.is_multiplayer_authority():
+		target.request_apply_force.rpc_id(target.get_multiplayer_authority(), force, position)
+	else:
+		target.apply_force(force, position)
+
+func _apply_torque_networked(target: RigidBody3D, torque: Vector3) -> void:
+	if target is NetworkRigidbody3D and not target.is_multiplayer_authority():
+		target.request_apply_torque.rpc_id(target.get_multiplayer_authority(), torque)
+	else:
+		target.apply_torque(torque)
+
+## Same story for reading velocity back off the target: a NetworkRigidbody3D
+## we're not authoritative over is frozen kinematic locally, so its raw
+## linear_velocity/angular_velocity can be stale garbage (see the comment on
+## synced_linear_velocity in network_rigidbody_3d.gd). Prefer the synced_*
+## fields whenever we're not the one simulating it.
+func _get_linear_velocity_networked(target: RigidBody3D) -> Vector3:
+	if target is NetworkRigidbody3D and not target.is_multiplayer_authority():
+		return target.synced_linear_velocity
+	return target.linear_velocity
+
+func _get_angular_velocity_networked(target: RigidBody3D) -> Vector3:
+	if target is NetworkRigidbody3D and not target.is_multiplayer_authority():
+		return target.synced_angular_velocity
+	return target.angular_velocity
+
 func arm_logic() -> void:
 	if (grabbed_col != null):
 		var is_rb = grabbed_col is RigidBody3D
@@ -839,8 +880,9 @@ func arm_logic() -> void:
 		
 		var grabbed_point_velocity := Vector3.ZERO
 		if (is_rb):
-			grabbed_point_velocity = grabbed_col.linear_velocity \
-				+ grabbed_col.angular_velocity.cross(grab_position - grabbed_col.global_position)
+			var grabbed_rb := grabbed_col as RigidBody3D
+			grabbed_point_velocity = _get_linear_velocity_networked(grabbed_rb) \
+				+ _get_angular_velocity_networked(grabbed_rb).cross(grab_position - grabbed_col.global_position)
 		var arm_point_velocity := linear_velocity \
 			+ angular_velocity.cross(grab_position_target - global_position)
 		var grab_relative_velocity := grabbed_point_velocity - arm_point_velocity
@@ -860,11 +902,13 @@ func arm_logic() -> void:
 		var force = force_vert + force_horiz
 
 		if (is_rb):
+			var grabbed_rb := grabbed_col as RigidBody3D
 			var grabbed_lever_arm = grab_position - grabbed_col.global_position
-			grabbed_col.apply_force(force * 0.5 * (1.0 - grab_force_central_scale), grabbed_lever_arm)
-			grabbed_col.apply_force(force * 0.5 * (grab_force_central_scale))
-			if grabbed_col.angular_velocity.length() > grab_max_angular_velocity:
-				grabbed_col.apply_torque(-grabbed_col.angular_velocity * grab_angular_damp)
+			_apply_force_networked(grabbed_rb, force * 0.5 * (1.0 - grab_force_central_scale), grabbed_lever_arm)
+			_apply_force_networked(grabbed_rb, force * 0.5 * (grab_force_central_scale))
+			var grabbed_angular_velocity := _get_angular_velocity_networked(grabbed_rb)
+			if grabbed_angular_velocity.length() > grab_max_angular_velocity:
+				_apply_torque_networked(grabbed_rb, -grabbed_angular_velocity * grab_angular_damp)
 
 		if (linear_velocity.length() > grab_strength_max / mass / 20):
 			var force_scale = (force.normalized().dot(linear_velocity.normalized()) + 1) / 2

@@ -353,9 +353,11 @@ shape = SubResource("BoxShape3D_ie5li")
 mesh = SubResource("BoxMesh_wb0og")
 surface_material_override/0 = ExtResource("9_njel3")
 
-[node name="trampoline" type="RigidBody3D" parent="." unique_id=1113585117]
+[node name="trampoline" type="RigidBody3D" parent="." unique_id=1625223802]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.5707397, 1.3844526, -6.788962)
 mass = 69.0
+script = ExtResource("5_l63t3")
+metadata/_custom_type_script = "uid://cdtw10mdyvmie"
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="trampoline" unique_id=1746727096]
 shape = SubResource("BoxShape3D_vr1i5")
