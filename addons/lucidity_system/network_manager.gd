@@ -2,14 +2,15 @@ extends Node
 
 class_name NetworkManager
 
+@export var ip_setting : TextEdit
 @export var controllers : Array[Controller]
 
 signal player_connected(peer_id, player_info)
 signal player_disconnected(peer_id)
 signal server_disconnected
 
-const PORT = 7000
-const DEFAULT_SERVER_IP = "127.0.0.1" # IPv4 localhost
+const PORT = 6677
+var server_ip = "127.0.0.1" # IPv4 localhost
 const MAX_CONNECTIONS = 20
 
 # This will contain player info for every player,
@@ -30,14 +31,17 @@ func _ready():
 	multiplayer.connected_to_server.connect(_on_connected_ok)
 	multiplayer.connection_failed.connect(_on_connected_fail)
 	multiplayer.server_disconnected.connect(_on_server_disconnected)
+	
+	if (OS.has_feature("dedicated_server")):
+		create_game()
 
 func join_game(address = ""):
 	if address.is_empty():
-		address = DEFAULT_SERVER_IP
+		address = server_ip
 	var peer = ENetMultiplayerPeer.new()
 	var error = peer.create_client(address, PORT)
 	if error:
-		print(error)
+		print(error_string(error))
 		return error
 	multiplayer.multiplayer_peer = peer
 
@@ -46,6 +50,7 @@ func create_game():
 	var peer = ENetMultiplayerPeer.new()
 	var error = peer.create_server(PORT, MAX_CONNECTIONS)
 	if error:
+		print(error_string(error))
 		return error
 	multiplayer.multiplayer_peer = peer
 
@@ -110,3 +115,7 @@ func _on_server_disconnected():
 	remove_multiplayer_peer()
 	players.clear()
 	server_disconnected.emit()
+
+
+func _on_ip_setting_text_changed() -> void:
+	server_ip = ip_setting.text

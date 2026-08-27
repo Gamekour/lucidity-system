@@ -74,8 +74,9 @@ size = Vector3(0.3, 1, 0.3)
 
 [node name="Test Scene" type="Node3D" unique_id=667831700]
 
-[node name="NetworkManager" type="Node" parent="." unique_id=1970058237 node_paths=PackedStringArray("controllers")]
+[node name="NetworkManager" type="Node" parent="." unique_id=1970058237 node_paths=PackedStringArray("ip_setting", "controllers")]
 script = ExtResource("1_skw67")
+ip_setting = NodePath("../CanvasLayer/ip_setting")
 controllers = [NodePath("../Controller")]
 metadata/_custom_type_script = "uid://c8ehykskc7ulc"
 
@@ -96,6 +97,14 @@ offset_right = 147.0
 offset_bottom = 83.0
 text = "start client
 "
+
+[node name="ip_setting" type="TextEdit" parent="CanvasLayer" unique_id=1000864481]
+offset_left = 160.0
+offset_top = 25.0
+offset_right = 467.0
+offset_bottom = 65.0
+text = "127.0.0.1"
+placeholder_text = "enter ip"
 
 [node name="spawn_point" type="Node3D" parent="." unique_id=185583409]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5607107, 0)
@@ -411,3 +420,4 @@ text = "hello"
 
 [connection signal="pressed" from="CanvasLayer/button_server" to="NetworkManager" method="create_game"]
 [connection signal="pressed" from="CanvasLayer/button_client" to="NetworkManager" method="join_game"]
+[connection signal="text_changed" from="CanvasLayer/ip_setting" to="NetworkManager" method="_on_ip_setting_text_changed"]
