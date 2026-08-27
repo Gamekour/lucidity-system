@@ -29,7 +29,11 @@ func _pawn_delivered(pawn_node : Node):
 		pawn_node.set_owner_peer_id(target_owner)
 	
 	pawn_node.set_multiplayer_authority(target_owner)
-	if (target_owner != multiplayer.get_unique_id()): return
+	if (target_owner != multiplayer.get_unique_id()):
+		if (pawn_node is PhysicsPlayerController):
+			pawn_node.set_collision_layer_value(1, false)
+			pawn_node.set_collision_layer_value(3, true)
+		return
 	pawn = pawn_node
 	var cam_origin = pawn.find_child("cam_transform")
 	if (cam_origin != null):
