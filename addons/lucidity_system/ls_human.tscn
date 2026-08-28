@@ -101,7 +101,8 @@ max_look_angle_horizontal = 1.3962634015954636
 grab_strength_min = 1.0
 grab_strength_max = 4000.0
 grab_damp_min = 1.0
-grab_damp_max = 1.0
+grab_damp_max = 0.5
+grab_damp_static = 1.0
 climb_scan_max_angle = 1.3962634015954636
 metadata/_custom_type_script = "uid://d1j4l28b3mks7"
 
