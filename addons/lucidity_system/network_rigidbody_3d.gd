@@ -109,7 +109,7 @@ func request_apply_central_force(force: Vector3) -> void:
 	apply_central_force(force)
 
 
-@rpc("any_peer", "call_remote", "reliable")
+@rpc("any_peer", "call_remote", "unreliable_ordered")
 func request_apply_force(force: Vector3, position: Vector3) -> void:
 	if not is_multiplayer_authority():
 		return
@@ -130,7 +130,7 @@ func request_apply_impulse(impulse: Vector3, position: Vector3) -> void:
 	apply_impulse(impulse, position)
 
 
-@rpc("any_peer", "call_remote", "reliable")
+@rpc("any_peer", "call_remote", "unreliable_ordered")
 func request_apply_torque(torque: Vector3) -> void:
 	if not is_multiplayer_authority():
 		return
