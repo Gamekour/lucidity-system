@@ -319,7 +319,6 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.2737589)
 
 [node name="test_box3" type="RigidBody3D" parent="." unique_id=398126366]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6.1113625, 1.239833, -2.8224356)
-mass = 10.0
 script = ExtResource("5_l63t3")
 metadata/_custom_type_script = "uid://cdtw10mdyvmie"
 metadata/attachment_slot = "RightWrist"
