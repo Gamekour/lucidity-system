@@ -391,7 +391,7 @@ func _physics_process(delta: float) -> void:
 	
 	if (grabbed_col == null && trying_to_grab && allow_grab):
 		arm_cast()
-	arm_logic()
+	arm_logic(delta)
 	_process_climb_scan(delta, input_move)
 	_update_grab_release_pending()
 
@@ -856,7 +856,7 @@ func _get_angular_velocity_networked(target: RigidBody3D) -> Vector3:
 		return target.synced_angular_velocity
 	return target.angular_velocity
 
-func arm_logic() -> void:
+func arm_logic(delta : float) -> void:
 	if (grabbed_col != null):
 		var is_rb = grabbed_col is RigidBody3D
 		var grab_position = grabbed_col.to_global(grab_offset)
@@ -886,6 +886,11 @@ func arm_logic() -> void:
 		var grab_relative_velocity := grabbed_point_velocity - arm_point_velocity
 
 		var damp := lerpf(grab_damp_min, grab_damp_max, weight)
+		var raw_damp_vert := damp if grabbed_col is RigidBody3D else grab_damp_static
+		var safe_mass := maxf(mass, 0.0001)
+		var safe_delta := maxf(delta, 0.0001)
+		var damp_vert := raw_damp_vert / (1.0 + raw_damp_vert * safe_delta / safe_mass)
+		var damp_horiz := damp / (1.0 + damp * safe_delta / safe_mass)
 
 		var body_up := global_basis.y
 		var offset_vert := offset.project(body_up)
@@ -894,8 +899,8 @@ func arm_logic() -> void:
 		var vel_horiz := grab_relative_velocity - vel_vert
 
 		var force_vert := offset_vert * spring_k * grab_vertical_strength_multiplier \
-			- vel_vert * (damp if grabbed_col is RigidBody3D else grab_damp_static)
-		var force_horiz = offset_horiz * spring_k - vel_horiz * damp
+			- vel_vert * damp_vert
+		var force_horiz = offset_horiz * spring_k - vel_horiz * damp_horiz
 		
 		var antigrav := lerpf(grab_antigravity_min, grab_antigravity_max, weight)
 		var force = force_vert + force_horiz
