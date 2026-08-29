@@ -3,7 +3,7 @@ extends Node
 class_name NetworkManager
 
 @export var ip_setting : TextEdit
-@export var controllers : Array[Controller]
+@export var controller_manager : ControllerManager
 
 signal player_connected(peer_id, player_info)
 signal player_disconnected(peer_id)
@@ -84,9 +84,7 @@ func player_loaded():
 # This allows transfer of all desired data for each player, not only the unique ID.
 func _on_player_connected(id):
 	_register_player.rpc_id(id, player_info)
-	for controller in controllers:
-		if (controller.is_multiplayer_authority()):
-			controller._on_player_connected(id)
+	controller_manager.spawn_controller(id)
 
 
 @rpc("any_peer", "reliable")

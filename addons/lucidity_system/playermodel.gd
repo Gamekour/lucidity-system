@@ -8,7 +8,7 @@ class_name PlayerModel
 var is_fp := true
 
 func _process(delta: float) -> void:
-	if !is_inside_tree(): return
+	if !is_inside_tree() or multiplayer.is_server(): return
 	
 	var head_bone_index : int = find_bone(head_bone_name)
 	if cam_spring == null:
@@ -24,7 +24,7 @@ func _process(delta: float) -> void:
 	var local_basis : Basis = parent_global_basis.inverse() * target_basis
 	local_basis = local_basis.orthonormalized()
 	
-	is_fp = (cam_spring.spring_length <= fp_deadzone) and is_multiplayer_authority()
+	is_fp = (cam_spring.spring_length <= fp_deadzone) and body.is_local_owner()
 	set_bone_pose_scale(head_bone_index, Vector3.ONE * (0.001 if is_fp else 1))
 	
 	if (is_fp):

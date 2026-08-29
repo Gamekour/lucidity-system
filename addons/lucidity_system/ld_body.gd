@@ -226,13 +226,12 @@ func _physics_process(delta: float) -> void:
 		target_angle_horizontal = camera_controller.target_angle_horizontal
 		camera_pitch = camera_controller.camera_pitch
 
-	if is_local_owner() and not is_multiplayer_authority():
-		if multiplayer.get_unique_id() == 1:
-			_apply_input_state(input_move, target_angle_horizontal, camera_pitch,
-				sprinting, jumping, crouching, crawling, trying_to_grab)
-		else:
-			_send_input_to_server.rpc_id(1, input_move, target_angle_horizontal,
-				camera_pitch, sprinting, jumping, crouching, crawling, trying_to_grab)
+	if multiplayer.is_server():
+		_apply_input_state(input_move, target_angle_horizontal, camera_pitch,
+			sprinting, jumping, crouching, crawling, trying_to_grab)
+	elif is_local_owner():
+		_send_input_to_server.rpc_id(1, input_move, target_angle_horizontal,
+			camera_pitch, sprinting, jumping, crouching, crawling, trying_to_grab)
 
 	if not is_multiplayer_authority():
 		return
@@ -346,6 +345,8 @@ func _physics_process(delta: float) -> void:
 	
 	if (grabbed_col == null && trying_to_grab && allow_grab):
 		arm_cast()
+	elif (grabbed_col != null and (!trying_to_grab or !allow_grab)):
+		_ungrab()
 	arm_logic()
 	_process_climb_scan(delta, input_move)
 	_update_grab_release_pending()
@@ -354,10 +355,9 @@ func _physics_process(delta: float) -> void:
 func _send_input_to_server(move: Vector2, yaw: float, pitch: float,
 		is_sprinting: bool, is_jumping: bool, is_crouching: bool,
 		is_crawling: bool, is_grabbing: bool) -> void:
-	if not is_multiplayer_authority():
-		return
-	if multiplayer.get_remote_sender_id() != owner_peer_id:
-		return
+	if !is_inside_tree(): return
+	if not multiplayer.is_server(): return
+	if multiplayer.get_remote_sender_id() != owner_peer_id: return
 	_apply_input_state(move, yaw, pitch, is_sprinting, is_jumping, is_crouching, is_crawling, is_grabbing)
 
 func _apply_input_state(move: Vector2, yaw: float, pitch: float,
@@ -376,17 +376,8 @@ func _supply_input(event: InputEvent) -> void:
 	if not is_local_owner(): return
 	if event.is_action("move_forward") or event.is_action("move_back") or event.is_action("move_left") or event.is_action("move_right"):
 		input_move = Input.get_vector("move_left", "move_right", "move_back", "move_forward")
-	if event.is_action_pressed("grab"):
-		trying_to_grab = true
-	if event.is_action_released("grab"):
-		_queue_collision_exception_release(grabbed_col)
-		if (ik_controller != null and grabbed_col != null):
-			for spring in ik_controller.ik_springs:
-				spring.remove_excluded_object(grabbed_col.get_rid())
-		grabbed_col = null
-		trying_to_grab = false
-		climbing_ledge = false
-		_reset_climb_scan()
+	if event.is_action("grab"):
+		trying_to_grab = event.is_pressed()
 	if event.is_action_pressed("attach"):
 		if (grabbed_col is RigidBody3D):
 			var success := attach_controller.attach(grabbed_col)
@@ -845,3 +836,12 @@ func _update_grab_release_pending() -> void:
 		if not still_overlapping:
 			body.remove_collision_exception_with(self)
 			grab_release_pending.remove_at(i)
+
+func _ungrab() -> void:
+	_queue_collision_exception_release(grabbed_col)
+	if (ik_controller != null and grabbed_col != null):
+		for spring in ik_controller.ik_springs:
+			spring.remove_excluded_object(grabbed_col.get_rid())
+	grabbed_col = null
+	climbing_ledge = false
+	_reset_climb_scan()

@@ -1,0 +1,10 @@
+[gd_scene format=3 uid="uid://cfcn5ugcgh3y3"]
+
+[ext_resource type="Script" uid="uid://cbrrnaw18nr8" path="res://addons/lucidity_system/controller.gd" id="1_4rr8f"]
+[ext_resource type="PackedScene" uid="uid://cuyit38h4qs42" path="res://addons/lucidity_system/ls_human.tscn" id="2_a7js7"]
+
+[node name="Controller" type="Node3D" unique_id=1792416992 node_paths=PackedStringArray("camera_controller")]
+script = ExtResource("1_4rr8f")
+default_pawn = ExtResource("2_a7js7")
+camera_controller = NodePath("")
+metadata/_custom_type_script = "uid://cbrrnaw18nr8"
