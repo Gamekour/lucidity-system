@@ -61,8 +61,6 @@ func set_owner_peer_id(peer_id: int) -> void:
 @export var slope_stance_height_scale : float = 0.5
 @export var max_floor_force_scale : float = 100.0
 @export var max_floor_torque_scale : float = 100.0
-@export var grab_vertical_strength_multiplier : float = 2.5
-@export var grab_force_central_scale : float = 0.0
 @export var stance_height_rot_min : float = 0.5
 @export var stance_height_rot_max : float = 0.6
 @export_range(0.0, 360.0, 0.5, "radians_as_degrees") var max_look_angle_horizontal : float = deg_to_rad(40.0)
@@ -78,6 +76,10 @@ func set_owner_peer_id(peer_id: int) -> void:
 @export var grab_max_angular_velocity : float = 10.0
 @export var grab_angular_damp : float = 5.0
 @export var grab_lift_offset := 0.25
+@export var grab_antigravity_min : float = 1.0
+@export var grab_antigravity_max : float = 0.5
+@export var grab_vertical_strength_multiplier : float = 2.5
+@export var grab_force_central_scale : float = 0.0
 @export_group("Ledge Detection")
 @export var ledge_probe_steps : int = 6
 @export var ledge_step_height : float = 0.15
@@ -894,11 +896,13 @@ func arm_logic() -> void:
 		var force_vert := offset_vert * spring_k * grab_vertical_strength_multiplier \
 			- vel_vert * (damp if grabbed_col is RigidBody3D else grab_damp_static)
 		var force_horiz = offset_horiz * spring_k - vel_horiz * damp
-
+		
+		var antigrav := lerpf(grab_antigravity_min, grab_antigravity_max, weight)
 		var force = force_vert + force_horiz
 
 		if (is_rb):
 			var grabbed_rb := grabbed_col as RigidBody3D
+			force -= (grabbed_rb.get_gravity() * grabbed_rb.mass * antigrav)
 			var grabbed_lever_arm = grab_position - grabbed_col.global_position
 			_apply_force_networked(grabbed_rb, force * 0.5 * (1.0 - grab_force_central_scale), grabbed_lever_arm)
 			_apply_force_networked(grabbed_rb, force * 0.5 * (grab_force_central_scale))
