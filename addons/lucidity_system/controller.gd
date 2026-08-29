@@ -4,7 +4,7 @@ class_name Controller
 @export var default_pawn : PackedScene
 @export var spawner : MultiplayerSpawner
 @export var device_indices : Array[int]
-@export var camera : Camera3D
+@export var camera_controller : CameraController
 var pawn : Node3D
 
 func _ready() -> void:
@@ -35,14 +35,16 @@ func _pawn_delivered(pawn_node : Node):
 			pawn_node.set_collision_layer_value(3, true)
 		return
 	pawn = pawn_node
-	var cam_origin = pawn.find_child("cam_transform")
-	if (cam_origin != null):
-		(cam_origin as RemoteTransform3D).remote_path = camera.get_path()
-		print("camera attached")
-		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
-		get_viewport().gui_release_focus()
+	if (pawn_node is PhysicsPlayerController) and is_instance_valid(camera_controller):
+		pawn_node.set_camera_controller(camera_controller)
+	if is_instance_valid(camera_controller):
+		camera_controller.set_target(pawn_node)
+	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	get_viewport().gui_release_focus()
 
 func _input(event: InputEvent) -> void:
 	if pawn == null: return
 	if (device_indices.has(event.device)):
 		pawn._supply_input(event)
+		if is_instance_valid(camera_controller):
+			camera_controller.handle_input(event)

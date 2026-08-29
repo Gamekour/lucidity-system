@@ -9,6 +9,10 @@ var is_fp := true
 
 func _process(delta: float) -> void:
 	var head_bone_index : int = find_bone(head_bone_name)
+	if cam_spring == null:
+		is_fp = false
+		set_bone_pose_scale(head_bone_index, Vector3.ONE)
+		return
 	var target_basis : Basis = global_transform.basis.inverse() * cam_spring.global_transform.basis
 	target_basis.y = -target_basis.y
 	var parent_index : int = get_bone_parent(head_bone_index)

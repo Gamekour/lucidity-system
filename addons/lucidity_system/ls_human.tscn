@@ -17,9 +17,6 @@ radius = 0.07
 [sub_resource type="SphereShape3D" id="SphereShape3D_njel3"]
 radius = 0.1
 
-[sub_resource type="SphereShape3D" id="SphereShape3D_ia1lp"]
-radius = 0.25
-
 [sub_resource type="Curve" id="Curve_sasra"]
 _limits = [0.0, 0.3, 0.0, 1.0]
 _data = [Vector2(0, 0), 0.0, 0.14516616, 0, 0, Vector2(0.31989926, 0.04905662), 0.0, 0.0, 0, 0, Vector2(0.47355163, 0), 0.0, 0.0, 0, 0, Vector2(1, 0), 0.0, 0.0, 0, 0]
@@ -96,6 +93,8 @@ shapecast_legs_length_scale = 1.35
 slope_correction = 0.2
 slope_correction_damping = 4.0
 slope_stance_height_scale = 0.75
+grab_vertical_strength_multiplier = 1.0
+grab_force_central_scale = 1.0
 max_look_angle_horizontal = 1.3962634015954636
 grab_strength_min = 10.0
 grab_strength_max = 4000.0
@@ -103,8 +102,6 @@ grab_damp_min = 20.0
 grab_damp_max = 400.0
 grab_damp_static = 200.0
 grab_lift_offset = 0.15
-grab_vertical_strength_multiplier = 1.0
-grab_force_central_scale = 1.0
 climb_scan_max_angle = 1.3962634015954636
 metadata/_custom_type_script = "uid://d1j4l28b3mks7"
 
@@ -123,14 +120,6 @@ transform = Transform3D(-0.9999993, 0.0011594346, 8.293265e-05, 0.0011594346, 0.
 shape = SubResource("SphereShape3D_njel3")
 target_position = Vector3(0, 0, 2)
 collision_mask = 5
-
-[node name="cam_spring" type="SpringArm3D" parent="." unique_id=2116901749]
-transform = Transform3D(-0.9999993, 0.0011594346, 8.293265e-05, 0.0011594346, 0.99999934, -9.625626e-08, -8.29327e-05, -1.0149302e-10, -1, -8.500022e-05, 0.4075976, 6.531909e-05)
-shape = SubResource("SphereShape3D_ia1lp")
-spring_length = 0.0
-
-[node name="cam_transform" type="RemoteTransform3D" parent="cam_spring" unique_id=2004115398]
-remote_path = NodePath("../../../Camera3D")
 
 [node name="rig_root" type="Node3D" parent="." unique_id=551157550 node_paths=PackedStringArray("head_root", "ik_springs", "ik_targets", "ik_poles")]
 script = ExtResource("3_oyy2h")
@@ -196,11 +185,8 @@ transform = Transform3D(-0.9999993, 0.0011594346, 8.293265e-05, 0.0011594346, 0.
 script = ExtResource("4_1phxu")
 metadata/_custom_type_script = "uid://uwl2prsk3to"
 
-[node name="cam_pos" type="RemoteTransform3D" parent="head_root" unique_id=1834255173]
+[node name="focus_origin" type="Node3D" parent="head_root" unique_id=993189323]
 transform = Transform3D(1, 8.420134e-15, 0, 8.393005e-15, 1, 0, 0, 6.4212524e-14, 1, 9.1552734e-05, 0.078856945, 0)
-remote_path = NodePath("../../cam_spring")
-update_rotation = false
-update_scale = false
 
 [node name="armcast_origin" type="RemoteTransform3D" parent="head_root" unique_id=2118558193]
 transform = Transform3D(1, 8.417092e-15, 0, 8.393005e-15, 1, 0, 0, 2.7519653e-14, 1, 8.773804e-05, 0.075068235, -0.14599991)

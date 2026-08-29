@@ -6,9 +6,13 @@
 [ext_resource type="Script" uid="uid://c8qyp1ubjxh1u" path="res://addons/lucidity_system/skeleton_overlay.gd" id="7_8pr8v"]
 [ext_resource type="PackedScene" uid="uid://cuyit38h4qs42" path="res://addons/lucidity_system/ls_human.tscn" id="7_dpywb"]
 [ext_resource type="Material" uid="uid://dnm5ak0rw2pxe" path="res://addons/lucidity_system/debug_mat.tres" id="9_njel3"]
+[ext_resource type="Script" uid="uid://co2vbeigmv0bs" path="res://addons/lucidity_system/camera_controller.gd" id="10_1s05b"]
 [ext_resource type="PackedScene" uid="uid://1q405i8mu7nw" path="res://addons/lucidity_system/silly_dancing.tscn" id="11_oo8pe"]
 [ext_resource type="Script" uid="uid://cbrrnaw18nr8" path="res://addons/lucidity_system/controller.gd" id="12_6iij7"]
 [ext_resource type="Script" uid="uid://b11yeup1xif5d" path="res://addons/lucidity_system/toggle_button.gd" id="12_oo8pe"]
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_1s05b"]
+radius = 0.25
 
 [sub_resource type="Environment" id="Environment_ia1lp"]
 background_mode = 1
@@ -109,16 +113,26 @@ placeholder_text = "enter ip"
 [node name="spawn_point" type="Node3D" parent="." unique_id=185583409]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5607107, 0)
 
-[node name="Controller" type="Node3D" parent="." unique_id=241864859 node_paths=PackedStringArray("spawner", "camera")]
+[node name="Controller" type="Node3D" parent="." unique_id=241864859 node_paths=PackedStringArray("spawner", "camera_controller")]
 script = ExtResource("12_6iij7")
 default_pawn = ExtResource("7_dpywb")
 spawner = NodePath("../MultiplayerSpawner")
 device_indices = Array[int]([16, 32])
-camera = NodePath("Camera3D")
+camera_controller = NodePath("CameraController")
 metadata/_custom_type_script = "uid://cbrrnaw18nr8"
 
-[node name="Camera3D" type="Camera3D" parent="Controller" unique_id=1300883146]
-transform = Transform3D(-0.99999934, 0.0011594347, 8.2932645e-05, 0.0011594347, 0.99999934, -9.6256535e-08, -8.2932704e-05, -1.0148337e-10, -1, 0.26467156, 1.5413721, -2.6820033)
+[node name="CameraController" type="Node3D" parent="Controller" unique_id=1478046014 node_paths=PackedStringArray("cam_spring")]
+script = ExtResource("10_1s05b")
+cam_spring = NodePath("cam_spring")
+metadata/_custom_type_script = "uid://co2vbeigmv0bs"
+
+[node name="cam_spring" type="SpringArm3D" parent="Controller/CameraController" unique_id=1818346731]
+transform = Transform3D(0.99999994, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+shape = SubResource("SphereShape3D_1s05b")
+spring_length = 0.0
+
+[node name="Camera3D" type="Camera3D" parent="Controller/CameraController/cam_spring" unique_id=1300883146]
+transform = Transform3D(1, -1.16406905e-10, 7.275958e-12, 1.1642372e-10, 1, -2.842171e-13, 0, 3.656797e-15, 1, 0, 0, 0)
 near = 0.01
 
 [node name="luciddebug" parent="." unique_id=1643952968 instance=ExtResource("1_uhqqe")]

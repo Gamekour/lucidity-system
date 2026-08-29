@@ -1,22 +1,18 @@
 extends NetworkRigidbody3D
 class_name PhysicsPlayerController
 
-## --- Multiplayer ownership ------------------------------------------------
-## NetworkRigidbody3D's multiplayer authority is always the SERVER: that's
-## who runs the real physics simulation. But the player who is *controlling*
-## this character (mouse look, WASD, grab/jump/etc.) is usually a different
-## peer. We track that separately so input capture and camera control can
-## be driven by the controlling client, while movement/force application
-## still only ever happens on the server.
 @export var owner_peer_id : int = 1
 
 func is_local_owner() -> bool:
 	return multiplayer.get_unique_id() == owner_peer_id
 
-## Call this from your player-spawning code right after instancing, e.g.
-## `player.set_owner_peer_id(peer_id)` on both server and all clients.
 func set_owner_peer_id(peer_id: int) -> void:
 	owner_peer_id = peer_id
+
+func set_camera_controller(cc: CameraController) -> void:
+	camera_controller = cc
+	if playermodel != null and is_instance_valid(cc):
+		playermodel.cam_spring = cc.cam_spring
 
 @export_category("Player Model")
 @export var playermodel_scene : PackedScene
@@ -26,15 +22,11 @@ func set_owner_peer_id(peer_id: int) -> void:
 @export var sprint_multiplier := 3.0
 @export var acceleration := 5.0
 @export var air_acceleration := 1.0
-@export var sens := Vector2(0.5,0.5)
 @export var crouch_speed := 0.5
 @export var speed_stance_stop : float = 0.6
 @export var crouch_height := 0.5
 @export var crawl_height := 0.3
 @export var jump_height := 2.0
-@export_category("Camera")
-@export_range(-90.0, 90.0, 0.5, "radians_as_degrees") var min_camera_pitch : float = deg_to_rad(-80.0)
-@export_range(-90.0, 90.0, 0.5, "radians_as_degrees") var max_camera_pitch : float = deg_to_rad(80.0)
 @export_category("Physics Tuning")
 @export var apply_reaction_forces : bool = true
 @export var apply_reaction_torque : bool = false
@@ -46,21 +38,20 @@ func set_owner_peer_id(peer_id: int) -> void:
 @export var turn_damping := 10.0
 @export var upright_strength := 1000.0
 @export var upright_damping := 100.0
-@export var cam_distance_max := 4.0
-@export var cam_distance_min := 0.0
 @export var lean_strength := 1000.0
 @export var max_lean_angle := 50.0
 @export var crouch_lean_angle := 0.5
 @export var air_upright_assist_strength := 1000.0
 @export var air_upright_assist_damping := 100.0
 @export var body_turn_input_deadzone : float = 0.15
-@export var camera_tilt_smoothing : float = 10.0
 @export var body_turn_sideways_deadzone: float = deg_to_rad(15.0)
 @export var slope_correction : float = 1.0
 @export var slope_correction_damping : float = 0.0
 @export var slope_stance_height_scale : float = 0.5
 @export var max_floor_force_scale : float = 100.0
 @export var max_floor_torque_scale : float = 100.0
+@export var grab_vertical_strength_multiplier : float = 2.5
+@export var grab_force_central_scale : float = 0.0
 @export var stance_height_rot_min : float = 0.5
 @export var stance_height_rot_max : float = 0.6
 @export_range(0.0, 360.0, 0.5, "radians_as_degrees") var max_look_angle_horizontal : float = deg_to_rad(40.0)
@@ -76,10 +67,6 @@ func set_owner_peer_id(peer_id: int) -> void:
 @export var grab_max_angular_velocity : float = 10.0
 @export var grab_angular_damp : float = 5.0
 @export var grab_lift_offset := 0.25
-@export var grab_antigravity_min : float = 1.0
-@export var grab_antigravity_max : float = 0.5
-@export var grab_vertical_strength_multiplier : float = 2.5
-@export var grab_force_central_scale : float = 0.0
 @export_group("Ledge Detection")
 @export var ledge_probe_steps : int = 6
 @export var ledge_step_height : float = 0.15
@@ -93,13 +80,13 @@ func set_owner_peer_id(peer_id: int) -> void:
 @export_range(0.0, 90.0, 0.5, "radians_as_degrees") var climb_scan_max_angle : float = deg_to_rad(40.0)
 @export var climb_scan_input_deadzone : float = 0.15
 
-@onready var cam_spring : SpringArm3D = $cam_spring
 @onready var shapecast_legs : ShapeCast3D = $shapecast_legs
 @onready var shapecast_arms : ShapeCast3D = $shapecast_arms
 
 var playermodel : PlayerModel
 var ik_controller : WalkIKController
 var attach_controller : AttachmentController
+var camera_controller : CameraController
 
 var grabbed_col : Node3D
 var grab_release_pending : Array[RigidBody3D]
@@ -107,20 +94,6 @@ var grab_offset : Vector3 = Vector3.ZERO
 var relative_velocity : Vector3 = Vector3.ZERO
 var overlay_eulers : Vector3 = Vector3.ZERO
 
-## --- Animation state replication -------------------------------------------
-## grounded, current_up_dir, current_dot, relative_velocity, climbing_ledge,
-## climb_grab_tick, crouching, and crawling are only ever written inside the
-## server-authority movement block below (or by _apply_input_state(), which
-## only the server calls on itself). On every non-authority peer -- which
-## includes the *owning* client, since NetworkRigidbody3D's authority is
-## always the server -- that code never runs, so those raw fields stay at
-## whatever they were initialized to.
-##
-## WalkIKController needs correct values on every peer (everyone needs to see
-## everyone else's walk/climb/crouch animation), so the server also pushes a
-## small snapshot of this state down alongside the regular position/velocity
-## sync. Read these synced_* fields from outside this script -- never the
-## raw fields above, which are only meaningful on the server.
 var synced_grounded : bool = false
 var synced_current_up_dir : Vector3 = Vector3.UP
 var synced_current_dot : float = 0.0
@@ -162,7 +135,6 @@ var jump_height_scale : float = 1.0
 var stance_height_scale : float = 1.0
 
 var current_up_dir : Vector3 = Vector3.UP
-var camera_up_dir : Vector3 = Vector3.UP
 var current_dot : float = 0.0
 
 var last_floor_offset := Vector3.ZERO
@@ -174,11 +146,6 @@ var floor_contact_point : Vector3 = Vector3.ZERO
 
 func _ready() -> void:
 	allow_grab_default = allow_grab
-	# NetworkRigidbody3D's server/client split (and the input-forwarding
-	# below) only works if multiplayer authority for this body is the
-	# server. Pin it explicitly rather than trusting whatever a spawner
-	# may have set (e.g. MultiplayerSpawner defaults authority to the
-	# spawning peer, which is often the owning client, not the server).
 	set_multiplayer_authority(1)
 	rig_setup()
 
@@ -196,7 +163,6 @@ func rig_setup() -> void:
 		if (playermodel_scene != null):
 			playermodel = PlayerModelFactory.spawn_player_model(playermodel_scene, self)
 			playermodel.body = self
-			playermodel.cam_spring = cam_spring
 			var i = 0
 			for ik_node in ik_controller.ik_targets:
 				var two_bone := TwoBoneIK3D.new()
@@ -225,13 +191,9 @@ func rig_setup() -> void:
 				attach_controller.body = self
 				attach_controller._connect_skeleton(playermodel)
 
-# Piggyback the anim-state snapshot on NetworkRigidbody3D's existing sync
-# cadence (called from _server_tick() at sync_rate, server-side only).
 func _broadcast_state() -> void:
 	super._broadcast_state()
 	var is_grabbing := grabbed_col != null
-	# The server doesn't receive its own RPC broadcast, so apply locally too
-	# -- the host needs correct synced_* values to render its own view.
 	_apply_anim_state(grounded, current_up_dir, current_dot, relative_velocity,
 		climbing_ledge, climb_grab_tick, crouching, crawling, is_grabbing)
 	_receive_anim_state.rpc(grounded, current_up_dir, current_dot, relative_velocity,
@@ -258,18 +220,14 @@ func _apply_anim_state(p_grounded: bool, p_up_dir: Vector3, p_dot: float,
 	synced_is_grabbing = p_is_grabbing
 
 func _physics_process(delta: float) -> void:
-	# Let NetworkRigidbody3D do its job first: broadcast state if we're the
-	# server, or interpolate toward the last snapshot if we're not.
 	super._physics_process(delta)
 
+	if is_local_owner() and is_instance_valid(camera_controller):
+		target_angle_horizontal = camera_controller.target_angle_horizontal
+		camera_pitch = camera_controller.camera_pitch
+
 	if is_local_owner() and not is_multiplayer_authority():
-		# We're the controlling client, but the server is the one who
-		# actually simulates this body. Forward our latest input every
-		# tick so the server's simulation below has fresh data to run on.
 		if multiplayer.get_unique_id() == 1:
-			# We ARE the server (a host controlling their own character) --
-			# rpc_id(1, ...) would be "call yourself", which Godot disallows
-			# for a call_remote-only RPC. Apply directly instead.
 			_apply_input_state(input_move, target_angle_horizontal, camera_pitch,
 				sprinting, jumping, crouching, crawling, trying_to_grab)
 		else:
@@ -277,9 +235,6 @@ func _physics_process(delta: float) -> void:
 				camera_pitch, sprinting, jumping, crouching, crawling, trying_to_grab)
 
 	if not is_multiplayer_authority():
-		# Only the server runs the actual force/torque simulation.
-		# Everyone else just displays the interpolated snapshot handled
-		# by NetworkRigidbody3D.super._physics_process() above.
 		return
 
 	var gravity_vec : Vector3 = get_gravity()
@@ -391,13 +346,10 @@ func _physics_process(delta: float) -> void:
 	
 	if (grabbed_col == null && trying_to_grab && allow_grab):
 		arm_cast()
-	arm_logic(delta)
+	arm_logic()
 	_process_climb_scan(delta, input_move)
 	_update_grab_release_pending()
 
-## Received on the server from whichever peer owns this character. Mirrors
-## the request_apply_* pattern in NetworkRigidbody3D: the client asks,
-## the server is the only one that actually mutates simulation state.
 @rpc("any_peer", "call_remote", "unreliable_ordered")
 func _send_input_to_server(move: Vector2, yaw: float, pitch: float,
 		is_sprinting: bool, is_jumping: bool, is_crouching: bool,
@@ -405,12 +357,9 @@ func _send_input_to_server(move: Vector2, yaw: float, pitch: float,
 	if not is_multiplayer_authority():
 		return
 	if multiplayer.get_remote_sender_id() != owner_peer_id:
-		return # ignore input from anyone but the peer that owns this body
+		return
 	_apply_input_state(move, yaw, pitch, is_sprinting, is_jumping, is_crouching, is_crawling, is_grabbing)
 
-## Shared by both the RPC receiver above and the same-machine shortcut in
-## _physics_process (used when the server itself is the owning peer, i.e.
-## a listen-server host controlling their own character).
 func _apply_input_state(move: Vector2, yaw: float, pitch: float,
 		is_sprinting: bool, is_jumping: bool, is_crouching: bool,
 		is_crawling: bool, is_grabbing: bool) -> void:
@@ -423,41 +372,10 @@ func _apply_input_state(move: Vector2, yaw: float, pitch: float,
 	crawling = is_crawling
 	trying_to_grab = is_grabbing
 
-func _process(delta: float) -> void:
-	if not is_local_owner(): return
-	var tilt_t : float = 1.0 - exp(-camera_tilt_smoothing * delta)
-	camera_up_dir = camera_up_dir.normalized()
-	current_up_dir = current_up_dir.normalized()
-	camera_up_dir = _safe_slerp_up(camera_up_dir, current_up_dir, tilt_t)
-	var tilt_basis := _get_tilt_basis(camera_up_dir)
-	var yaw_basis := Basis(Vector3.UP, target_angle_horizontal)
-	var pitch_basis := Basis(Vector3.RIGHT, camera_pitch)
-	cam_spring.global_basis = tilt_basis * yaw_basis * pitch_basis
-
 func _supply_input(event: InputEvent) -> void:
 	if not is_local_owner(): return
-	if event is InputEventMouseMotion:
-		target_angle_horizontal = wrapf(target_angle_horizontal - event.relative.x * get_process_delta_time() * sens.x, -PI, PI)
-		camera_pitch = clampf(camera_pitch - event.relative.y * get_process_delta_time() * sens.y, min_camera_pitch, max_camera_pitch)
-	if event is InputEventMouseButton:
-		if (event.is_pressed()):
-			if (event.button_index == MOUSE_BUTTON_WHEEL_UP):
-				cam_spring.spring_length = clampf(cam_spring.spring_length - cam_distance_max / 10, cam_distance_min, cam_distance_max)
-			if (event.button_index == MOUSE_BUTTON_WHEEL_DOWN):
-				cam_spring.spring_length = clampf(cam_spring.spring_length + cam_distance_max / 10, cam_distance_min, cam_distance_max)
 	if event.is_action("move_forward") or event.is_action("move_back") or event.is_action("move_left") or event.is_action("move_right"):
 		input_move = Input.get_vector("move_left", "move_right", "move_back", "move_forward")
-	# NOTE ON NETWORKING: trying_to_grab is streamed to the server via
-	# _send_input_to_server() each physics tick, so grab *initiation*
-	# (arm_cast(), which only runs server-side inside _physics_process) is
-	# already authoritative. grabbed_col itself -- and the release/attach
-	# branches below that touch it directly -- are only meaningful on the
-	# server, since that's the only peer whose _physics_process actually
-	# runs the grab simulation. On a non-server owning client these
-	# branches currently just mutate a local, unsynced copy. If remote
-	# players need to *see* grab/attach state (e.g. for animation),
-	# replicate grabbed_col's identity from the server (e.g. a synced
-	# NodePath) rather than relying on this client-local state.
 	if event.is_action_pressed("grab"):
 		trying_to_grab = true
 	if event.is_action_released("grab"):
@@ -471,15 +389,16 @@ func _supply_input(event: InputEvent) -> void:
 		_reset_climb_scan()
 	if event.is_action_pressed("attach"):
 		if (grabbed_col is RigidBody3D):
-			attach_controller.request_attach.rpc(grabbed_col.get_path())
-			(grabbed_col as RigidBody3D).remove_collision_exception_with(self)
-			grab_release_pending.erase(grabbed_col)
-			if (ik_controller != null):
-				for spring in ik_controller.ik_springs:
-					spring.remove_excluded_object(grabbed_col.get_rid())
-			grabbed_col = null
-			climbing_ledge = false
-			_reset_climb_scan()
+			var success := attach_controller.attach(grabbed_col)
+			if (success):
+				(grabbed_col as RigidBody3D).remove_collision_exception_with(self)
+				grab_release_pending.erase(grabbed_col)
+				if (ik_controller != null):
+					for spring in ik_controller.ik_springs:
+						spring.remove_excluded_object(grabbed_col.get_rid())
+				grabbed_col = null
+				climbing_ledge = false
+				_reset_climb_scan()
 	if (event.is_action_pressed("interact")):
 		if (shapecast_arms.is_colliding()):
 			var col = shapecast_arms.get_collider(0)
@@ -494,20 +413,6 @@ func _supply_input(event: InputEvent) -> void:
 	if (event.is_action("crawl")):
 		crawling = event.is_pressed()
 
-func _safe_slerp_up(from: Vector3, to: Vector3, weight: float) -> Vector3:
-	from = from.normalized()
-	to = to.normalized()
-	var dot := clampf(from.dot(to), -1.0, 1.0)
-	if dot > 0.9995:
-		return from.lerp(to, weight).normalized()
-	if dot < -0.9995:
-		var arbitrary := Vector3.RIGHT if abs(from.x) < 0.9 else Vector3.UP
-		var axis := from.cross(arbitrary).normalized()
-		return from.rotated(axis, PI * weight).normalized()
-	var theta := acos(dot) * weight
-	var relative := (to - from * dot).normalized()
-	return (from * cos(theta) + relative * sin(theta)).normalized()
-
 func _get_up_direction(gravity_vec: Vector3) -> Vector3:
 	if gravity_vec.length_squared() < 0.0001:
 		return Vector3.UP
@@ -520,10 +425,14 @@ func _get_horizontal_basis(up_dir: Vector3) -> Array:
 	return [forward_ref, right_ref]
 
 func _get_camera_relative_axes(up_dir: Vector3) -> Array:
-	var cam_forward := -cam_spring.global_basis.z
+	var tilt_basis := _get_tilt_basis(up_dir)
+	var yaw_basis := Basis(Vector3.UP, target_angle_horizontal)
+	var pitch_basis := Basis(Vector3.RIGHT, camera_pitch)
+	var cam_basis := tilt_basis * yaw_basis * pitch_basis
+	var cam_forward := -cam_basis.z
 	var flat_forward := cam_forward - up_dir * cam_forward.dot(up_dir)
 	if flat_forward.length_squared() < 0.0001:
-		var cam_local_up := cam_spring.global_basis.y
+		var cam_local_up := cam_basis.y
 		flat_forward = cam_local_up - up_dir * cam_local_up.dot(up_dir)
 	flat_forward = flat_forward.normalized()
 	var flat_right := flat_forward.cross(up_dir).normalized()
@@ -815,20 +724,6 @@ func _process_climb_scan(delta: float, input_vector: Vector2) -> void:
 		else:
 			_reset_climb_scan()
 
-## --- Force application on external rigidbodies -----------------------------
-## Walking on top of, and grabbing, arbitrary RigidBody3D props works fine
-## with direct apply_force/apply_torque since those are simulated locally
-## wherever they're standing. But floor_rigidbody / grabbed_col may just as
-## easily be a NetworkRigidbody3D belonging to someone else's world --
-## e.g. an object another peer is currently authoritative over. Poking its
-## `apply_force`/`apply_torque` directly only works if we happen to be
-## sitting on the peer that's simulating it; anywhere else the body is
-## frozen (FREEZE_MODE_KINEMATIC) and silently eats the call. Route through
-## NetworkRigidbody3D's request_apply_* RPCs instead so the force actually
-## reaches whichever peer owns the simulation, while still short-circuiting
-## to a direct local call when we happen to already be that peer (avoids a
-## pointless network round-trip, and mirrors the rpc_id(1, ...) vs.
-## apply-directly pattern already used for input forwarding above).
 func _apply_force_networked(target: RigidBody3D, force: Vector3, position: Vector3 = Vector3.ZERO) -> void:
 	if target is NetworkRigidbody3D and not target.is_multiplayer_authority():
 		target.request_apply_force.rpc_id(target.get_multiplayer_authority(), force, position)
@@ -841,11 +736,6 @@ func _apply_torque_networked(target: RigidBody3D, torque: Vector3) -> void:
 	else:
 		target.apply_torque(torque)
 
-## Same story for reading velocity back off the target: a NetworkRigidbody3D
-## we're not authoritative over is frozen kinematic locally, so its raw
-## linear_velocity/angular_velocity can be stale garbage (see the comment on
-## synced_linear_velocity in network_rigidbody_3d.gd). Prefer the synced_*
-## fields whenever we're not the one simulating it.
 func _get_linear_velocity_networked(target: RigidBody3D) -> Vector3:
 	if target is NetworkRigidbody3D and not target.is_multiplayer_authority():
 		return target.synced_linear_velocity
@@ -856,7 +746,7 @@ func _get_angular_velocity_networked(target: RigidBody3D) -> Vector3:
 		return target.synced_angular_velocity
 	return target.angular_velocity
 
-func arm_logic(delta : float) -> void:
+func arm_logic() -> void:
 	if (grabbed_col != null):
 		var is_rb = grabbed_col is RigidBody3D
 		var grab_position = grabbed_col.to_global(grab_offset)
@@ -886,11 +776,6 @@ func arm_logic(delta : float) -> void:
 		var grab_relative_velocity := grabbed_point_velocity - arm_point_velocity
 
 		var damp := lerpf(grab_damp_min, grab_damp_max, weight)
-		var raw_damp_vert := damp if grabbed_col is RigidBody3D else grab_damp_static
-		var safe_mass := maxf(mass, 0.0001)
-		var safe_delta := maxf(delta, 0.0001)
-		var damp_vert := raw_damp_vert / (1.0 + raw_damp_vert * safe_delta / safe_mass)
-		var damp_horiz := damp / (1.0 + damp * safe_delta / safe_mass)
 
 		var body_up := global_basis.y
 		var offset_vert := offset.project(body_up)
@@ -899,15 +784,13 @@ func arm_logic(delta : float) -> void:
 		var vel_horiz := grab_relative_velocity - vel_vert
 
 		var force_vert := offset_vert * spring_k * grab_vertical_strength_multiplier \
-			- vel_vert * damp_vert
-		var force_horiz = offset_horiz * spring_k - vel_horiz * damp_horiz
-		
-		var antigrav := lerpf(grab_antigravity_min, grab_antigravity_max, weight)
+			- vel_vert * (damp if grabbed_col is RigidBody3D else grab_damp_static)
+		var force_horiz = offset_horiz * spring_k - vel_horiz * damp
+
 		var force = force_vert + force_horiz
 
 		if (is_rb):
 			var grabbed_rb := grabbed_col as RigidBody3D
-			force -= (grabbed_rb.get_gravity() * grabbed_rb.mass * antigrav)
 			var grabbed_lever_arm = grab_position - grabbed_col.global_position
 			_apply_force_networked(grabbed_rb, force * 0.5 * (1.0 - grab_force_central_scale), grabbed_lever_arm)
 			_apply_force_networked(grabbed_rb, force * 0.5 * (grab_force_central_scale))
