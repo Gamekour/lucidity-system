@@ -333,12 +333,16 @@ func detach(child_body: RigidBody3D) -> void:
 	child_body.reparent(get_tree().root)
 
 func _on_skeleton_updated() -> void:
+	
 	for slot_name in attachment_slots.keys():
 		var slot: Dictionary = attachment_slots[slot_name]
 		var child: RigidBody3D = slot["occupant"]
 		if child == null or not is_instance_valid(child):
 			continue
 		var parent: Node3D = get_parent()
+		
+		if (parent == null or !parent.is_inside_tree()):
+			return
 
 		var target_xform: Transform3D
 		var is_equipped = false
@@ -365,7 +369,7 @@ func _on_skeleton_updated() -> void:
 			bone_idx = playermodel.find_bone(hand_bone_name) if is_instance_valid(playermodel) else -1
 		else:
 			bone_idx = _resolve_bone_idx(slot)
-		if bone_idx != -1 and is_instance_valid(playermodel):
+		if bone_idx != -1 and is_instance_valid(playermodel) and playermodel.is_inside_tree():
 			var bone_global_pose: Transform3D = playermodel.get_bone_global_pose(bone_idx)
 			target_xform = playermodel.global_transform * bone_global_pose * slot["local_xform"]
 		else:

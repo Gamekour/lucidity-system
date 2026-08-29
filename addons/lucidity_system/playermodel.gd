@@ -8,6 +8,8 @@ class_name PlayerModel
 var is_fp := true
 
 func _process(delta: float) -> void:
+	if !is_inside_tree(): return
+	
 	var head_bone_index : int = find_bone(head_bone_name)
 	if cam_spring == null:
 		is_fp = false

@@ -44,7 +44,7 @@ func handle_input(event: InputEvent) -> void:
 				cam_spring.spring_length = clampf(cam_spring.spring_length + cam_distance_max / 10, cam_distance_min, cam_distance_max)
 
 func _process(delta: float) -> void:
-	if not is_instance_valid(target):
+	if not (is_instance_valid(target) and is_inside_tree()):
 		return
 	if has_focus_origin:
 		camera_pitch = clampf(camera_pitch, min_camera_pitch, max_camera_pitch)
