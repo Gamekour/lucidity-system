@@ -21,9 +21,10 @@ func _ready() -> void:
 			hotbar.append(slot)
 
 func _input(event: InputEvent) -> void:
+	if body == null or not body.is_local_owner():
+		return
 	if (event.is_action_pressed("hotbar_direct")):
-		current_hotbar_slot = int(event.as_text()) - 1
-		_on_hotbar_change()
+		request_hotbar_change(int(event.as_text()) - 1)
 	if (event.is_action_pressed("drop")):
 		detach_hotbar_slot(current_hotbar_slot)
 
@@ -42,7 +43,84 @@ func detach_hotbar_slot(hotbar_index: int) -> void:
 	if occupant == null or not is_instance_valid(occupant):
 		return
 
-	detach(occupant)
+	request_detach(occupant)
+
+@rpc("any_peer")
+func request_attach(child_body_path: String) -> void:
+	var child_body = get_node(child_body_path) #will throw an error if already attached, can be ignored
+	if body == null or not is_instance_valid(child_body):
+		return
+	if multiplayer.is_server():
+		_do_attach.rpc(child_body.get_path())
+	else:
+		print("f")
+		_request_attach.rpc_id(1, child_body.get_path())
+
+func request_detach(child_body: RigidBody3D) -> void:
+	if body == null or not is_instance_valid(child_body):
+		return
+	if multiplayer.is_server():
+		_do_detach.rpc(child_body.get_path())
+	else:
+		_request_detach.rpc_id(1, child_body.get_path())
+
+func request_hotbar_change(slot_index: int) -> void:
+	if body == null:
+		return
+	if multiplayer.is_server():
+		_do_hotbar_change.rpc(slot_index)
+	else:
+		_request_hotbar_change.rpc_id(1, slot_index)
+
+@rpc("any_peer", "call_remote", "reliable")
+func _request_attach(child_path: NodePath) -> void:
+	if not multiplayer.is_server():
+		return
+	if multiplayer.get_remote_sender_id() != body.owner_peer_id:
+		return
+	_do_attach.rpc(child_path)
+
+@rpc("any_peer", "call_remote", "reliable")
+func _request_detach(child_path: NodePath) -> void:
+	if not multiplayer.is_server():
+		return
+	if multiplayer.get_remote_sender_id() != body.owner_peer_id:
+		return
+	_do_detach.rpc(child_path)
+
+@rpc("any_peer", "call_remote", "reliable")
+func _request_hotbar_change(slot_index: int) -> void:
+	if not multiplayer.is_server():
+		return
+	if multiplayer.get_remote_sender_id() != body.owner_peer_id:
+		return
+	_do_hotbar_change.rpc(slot_index)
+
+@rpc("any_peer", "call_local", "reliable")
+func _do_attach(child_path: NodePath) -> void:
+	var sender := multiplayer.get_remote_sender_id()
+	if sender != 0 and sender != 1:
+		return
+	var child_body := get_node_or_null(child_path)
+	if child_body is RigidBody3D:
+		attach(child_body)
+
+@rpc("any_peer", "call_local", "reliable")
+func _do_detach(child_path: NodePath) -> void:
+	var sender := multiplayer.get_remote_sender_id()
+	if sender != 0 and sender != 1:
+		return
+	var child_body := get_node_or_null(child_path)
+	if child_body is RigidBody3D:
+		detach(child_body)
+
+@rpc("any_peer", "call_local", "reliable")
+func _do_hotbar_change(slot_index: int) -> void:
+	var sender := multiplayer.get_remote_sender_id()
+	if sender != 0 and sender != 1:
+		return
+	current_hotbar_slot = slot_index
+	_on_hotbar_change()
 
 func _connect_skeleton(s: Skeleton3D) -> void:
 	if (s is PlayerModel):
