@@ -19,6 +19,8 @@ func _ready() -> void:
 	for slot in slot_definitions:
 		if (slot["is_hotbar"]):
 			hotbar.append(slot)
+	if not multiplayer.is_server():
+		_request_sync_state.rpc_id(1)
 
 func _input(event: InputEvent) -> void:
 	if body == null or not body.is_local_owner():
@@ -121,6 +123,29 @@ func _do_hotbar_change(slot_index: int) -> void:
 		return
 	current_hotbar_slot = slot_index
 	_on_hotbar_change()
+
+func attach_and_sync(child_body: RigidBody3D) -> bool:
+	var success := attach(child_body)
+	if success:
+		_sync_attach.rpc(child_body.get_path())
+	return success
+
+@rpc("authority", "call_remote", "reliable")
+func _sync_attach(child_path: NodePath) -> void:
+	var child_body := get_node_or_null(child_path)
+	if child_body is RigidBody3D:
+		attach(child_body)
+
+@rpc("any_peer", "call_remote", "reliable")
+func _request_sync_state() -> void:
+	if not multiplayer.is_server():
+		return
+	var requester := multiplayer.get_remote_sender_id()
+	for slot_name in attachment_slots.keys():
+		var slot: Dictionary = attachment_slots[slot_name]
+		var occupant : RigidBody3D = slot["occupant"]
+		if occupant != null and is_instance_valid(occupant):
+			_sync_attach.rpc_id(requester, occupant.get_path())
 
 func _connect_skeleton(s: Skeleton3D) -> void:
 	if (s is PlayerModel):
@@ -280,13 +305,12 @@ func attach(child_body: RigidBody3D) -> bool:
 			skeleton_overlay.set_deferred("active", true)
 	slot["origin_xform_inv"] = origin_xform.affine_inverse()
 
-	child_body.get_parent().remove_child(child_body)
-	parent_body.add_child(child_body)
-	child_body.transform = Transform3D.IDENTITY
 	child_body.freeze = true
 	child_body.freeze_mode = RigidBody3D.FREEZE_MODE_KINEMATIC
 	child_body.linear_velocity = Vector3.ZERO
 	child_body.angular_velocity = Vector3.ZERO
+	if child_body is NetworkRigidbody3D:
+		child_body.set_physics_process(false)
 	
 	body.add_collision_exception_with(child_body)
 	for i in body.find_children("*", "SpringArm3D", true, false):
@@ -305,7 +329,6 @@ func attach(child_body: RigidBody3D) -> bool:
 	return true
 
 func detach(child_body: RigidBody3D) -> void:
-	var former_parent : Node3D = child_body.get_parent_node_3d()
 	for slot_name in attachment_slots.keys():
 		var slot: Dictionary = attachment_slots[slot_name]
 		if slot["occupant"] == child_body:
@@ -316,6 +339,8 @@ func detach(child_body: RigidBody3D) -> void:
 			slot["temp_shown"] = false
 			break
 	child_body.freeze = false
+	if child_body is NetworkRigidbody3D:
+		child_body.set_physics_process(true)
 	
 	body._queue_collision_exception_release(child_body)
 	for i in body.find_children("*", "SpringArm3D", true, false):
@@ -325,12 +350,11 @@ func detach(child_body: RigidBody3D) -> void:
 	var skeleton_overlay = _find_skeleton_overlay(child_body)
 	if (skeleton_overlay != null):
 		skeleton_overlay.active = false
-	if (former_parent is RigidBody3D and child_body is RigidBody3D):
-		former_parent.mass -= child_body.mass
-	if (former_parent is PhysicsPlayerController):
-		former_parent.allow_grab = former_parent.allow_grab_default
-		former_parent.overlay_eulers = Vector3.ZERO
-	child_body.reparent(get_tree().root)
+	if (body is RigidBody3D and child_body is RigidBody3D):
+		body.mass -= child_body.mass
+	if (is_instance_valid(body)):
+		body.allow_grab = body.allow_grab_default
+		body.overlay_eulers = Vector3.ZERO
 
 func _on_skeleton_updated() -> void:
 	

@@ -379,17 +379,7 @@ func _supply_input(event: InputEvent) -> void:
 	if event.is_action("grab"):
 		trying_to_grab = event.is_pressed()
 	if event.is_action_pressed("attach"):
-		if (grabbed_col is RigidBody3D):
-			var success := attach_controller.attach(grabbed_col)
-			if (success):
-				(grabbed_col as RigidBody3D).remove_collision_exception_with(self)
-				grab_release_pending.erase(grabbed_col)
-				if (ik_controller != null):
-					for spring in ik_controller.ik_springs:
-						spring.remove_excluded_object(grabbed_col.get_rid())
-				grabbed_col = null
-				climbing_ledge = false
-				_reset_climb_scan()
+		request_attach()
 	if (event.is_action_pressed("interact")):
 		if (shapecast_arms.is_colliding()):
 			var col = shapecast_arms.get_collider(0)
@@ -403,6 +393,34 @@ func _supply_input(event: InputEvent) -> void:
 		crouching = event.is_pressed()
 	if (event.is_action("crawl")):
 		crawling = event.is_pressed()
+
+func request_attach() -> void:
+	if multiplayer.is_server():
+		_do_attach_grabbed()
+	else:
+		_request_attach_grabbed.rpc_id(1)
+
+@rpc("any_peer", "call_remote", "reliable")
+func _request_attach_grabbed() -> void:
+	if not multiplayer.is_server():
+		return
+	if multiplayer.get_remote_sender_id() != owner_peer_id:
+		return
+	_do_attach_grabbed()
+
+func _do_attach_grabbed() -> void:
+	if not (grabbed_col is RigidBody3D):
+		return
+	var success := attach_controller.attach_and_sync(grabbed_col)
+	if (success):
+		(grabbed_col as RigidBody3D).remove_collision_exception_with(self)
+		grab_release_pending.erase(grabbed_col)
+		if (ik_controller != null):
+			for spring in ik_controller.ik_springs:
+				spring.remove_excluded_object(grabbed_col.get_rid())
+		grabbed_col = null
+		climbing_ledge = false
+		_reset_climb_scan()
 
 func _get_up_direction(gravity_vec: Vector3) -> Vector3:
 	if gravity_vec.length_squared() < 0.0001:
