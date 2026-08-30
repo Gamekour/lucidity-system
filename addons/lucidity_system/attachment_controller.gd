@@ -1,10 +1,17 @@
 extends Node
 class_name AttachmentController
 
-var body : PhysicsPlayerController
+var body : PhysicsPlayerController:
+	set(new_body):
+		if is_instance_valid(body) and body.tree_exiting.is_connected(_on_body_tree_exiting):
+			body.tree_exiting.disconnect(_on_body_tree_exiting)
+		body = new_body
+		if is_instance_valid(body) and not body.tree_exiting.is_connected(_on_body_tree_exiting):
+			body.tree_exiting.connect(_on_body_tree_exiting)
 var playermodel: PlayerModel
 
 const SLOT_META_KEY: String = "attachment_slot"
+const ATTACHED_META_KEY: String = "_attachment_controller"
 
 const ATTACHMENT_ORIGIN_NAME: String = "attachment_origin"
 
@@ -266,6 +273,13 @@ func attach(child_body: RigidBody3D) -> bool:
 		push_warning("AttachmentController: '%s' has no '%s' metadata set." % [child_body.name, SLOT_META_KEY])
 		return false
 
+	if child_body.has_meta(ATTACHED_META_KEY):
+		var existing_controller = child_body.get_meta(ATTACHED_META_KEY)
+		if is_instance_valid(existing_controller):
+			push_warning("AttachmentController: '%s' is already attached elsewhere." % child_body.name)
+			return false
+		child_body.remove_meta(ATTACHED_META_KEY)
+
 	var slot_name: String = str(child_body.get_meta(SLOT_META_KEY))
 	if not attachment_slots.has(slot_name):
 		push_warning("AttachmentController: no slot named '%s' exists." % slot_name)
@@ -323,6 +337,7 @@ func attach(child_body: RigidBody3D) -> bool:
 		slot["temp_shown"] = false
 
 	slot["occupant"] = child_body
+	child_body.set_meta(ATTACHED_META_KEY, self)
 	
 	if (parent_body is RigidBody3D and child_body is RigidBody3D):
 		parent_body.mass += child_body.mass
@@ -338,15 +353,18 @@ func detach(child_body: RigidBody3D) -> void:
 				_set_meshes_and_collisions_enabled(child_body, true)
 			slot["temp_shown"] = false
 			break
+	if child_body.has_meta(ATTACHED_META_KEY) and child_body.get_meta(ATTACHED_META_KEY) == self:
+		child_body.remove_meta(ATTACHED_META_KEY)
 	child_body.freeze = false
 	if child_body is NetworkRigidbody3D:
 		child_body.set_physics_process(true)
 	
-	body._queue_collision_exception_release(child_body)
-	for i in body.find_children("*", "SpringArm3D", true, false):
-		i.remove_excluded_object(child_body.get_rid())
-	for i in body.find_children("*", "ShapeCast3D", true, false):
-		i.remove_exception(child_body)
+	if is_instance_valid(body):
+		body._queue_collision_exception_release(child_body)
+		for i in body.find_children("*", "SpringArm3D", true, false):
+			i.remove_excluded_object(child_body.get_rid())
+		for i in body.find_children("*", "ShapeCast3D", true, false):
+			i.remove_exception(child_body)
 	var skeleton_overlay = _find_skeleton_overlay(child_body)
 	if (skeleton_overlay != null):
 		skeleton_overlay.active = false
@@ -355,6 +373,13 @@ func detach(child_body: RigidBody3D) -> void:
 	if (is_instance_valid(body)):
 		body.allow_grab = body.allow_grab_default
 		body.overlay_eulers = Vector3.ZERO
+
+func _on_body_tree_exiting() -> void:
+	for slot_name in attachment_slots.keys():
+		var slot: Dictionary = attachment_slots[slot_name]
+		var occupant: RigidBody3D = slot["occupant"]
+		if occupant != null and is_instance_valid(occupant):
+			detach(occupant)
 
 func _on_skeleton_updated() -> void:
 	
