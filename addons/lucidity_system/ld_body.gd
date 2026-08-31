@@ -82,6 +82,7 @@ func set_camera_controller(cc: CameraController) -> void:
 
 @onready var shapecast_legs : ShapeCast3D = $shapecast_legs
 @onready var shapecast_arms : ShapeCast3D = $shapecast_arms
+@onready var shapecast_arms_base_basis : Basis = shapecast_arms.transform.basis
 
 var playermodel : PlayerModel
 var ik_controller : WalkIKController
@@ -147,7 +148,8 @@ var floor_contact_point : Vector3 = Vector3.ZERO
 func _ready() -> void:
 	allow_grab_default = allow_grab
 	set_multiplayer_authority(1)
-	rig_setup()
+	if (!multiplayer.is_server()):
+		rig_setup()
 
 func rig_setup() -> void:
 	for child in find_children("*"):
@@ -243,6 +245,8 @@ func _physics_process(delta: float) -> void:
 	var base_right := up_dir.cross(global_basis.z).normalized()
 	var shapecast_basis := Basis(base_right, up_dir, global_basis.z.normalized())
 	shapecast_legs.global_basis = shapecast_basis.orthonormalized()
+
+	shapecast_arms.transform.basis = shapecast_arms_base_basis * Basis(Vector3.RIGHT, -camera_pitch)
 
 	var input_3d := _get_camera_relative_input(up_dir, input_move)
 	var max_speed = max(lerpf(crouch_speed * roll_force, roll_force * sprint_multiplier * sprint_multiplier_scale, min(stance_height / speed_stance_stop, 1)), 0)
@@ -472,10 +476,10 @@ func _get_body_target_angle(input_vector: Vector2) -> float:
 	var move_yaw_offset := atan2(input_vector.x, input_vector.y)
 	var climbing = grabbed_col != null
 	climbing = climbing and not (grabbed_col is RigidBody3D)
-	if ((absf(absf(move_yaw_offset) - (PI / 2.0)) < body_turn_sideways_deadzone) and playermodel.is_fp) or climbing or stance_height < stance_height_rot_min:
+	if ((absf(absf(move_yaw_offset) - (PI / 2.0)) < body_turn_sideways_deadzone)) or climbing or stance_height < stance_height_rot_min:
 		return target_angle_horizontal + overlay_eulers.y
 	
-	if input_vector.y < 0.0 and playermodel.is_fp:
+	if input_vector.y < 0.0:
 		if (move_yaw_offset < 0.0):
 			move_yaw_offset += PI
 		else:
