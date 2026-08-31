@@ -184,7 +184,9 @@ func rig_setup() -> void:
 				ik_controller.ik_springs[i].spring_length = chain_length
 				ik_controller.ik_springs[i].position = root
 				if i == 0:
-					shapecast_legs.target_position = Vector3.DOWN * chain_length * shapecast_legs_length_scale
+					var height = chain_length * shapecast_legs_length_scale
+					shapecast_legs.target_position = Vector3.DOWN * height
+					_set_cast_height.rpc_id(1, height)
 				i += 1
 			playermodel.owner = self
 			for bone_root : BoneRoot in find_children("*", "BoneRoot"):
@@ -192,6 +194,10 @@ func rig_setup() -> void:
 			if (attach_controller != null):
 				attach_controller.body = self
 				attach_controller._connect_skeleton(playermodel)
+
+@rpc("any_peer")
+func _set_cast_height(height : float):
+	shapecast_legs.target_position = Vector3.DOWN * height
 
 func _broadcast_state() -> void:
 	super._broadcast_state()
@@ -474,9 +480,7 @@ func _get_body_target_angle(input_vector: Vector2) -> float:
 		return target_angle_horizontal + overlay_eulers.y
 	
 	var move_yaw_offset := atan2(input_vector.x, input_vector.y)
-	var climbing = grabbed_col != null
-	climbing = climbing and not (grabbed_col is RigidBody3D)
-	if ((absf(absf(move_yaw_offset) - (PI / 2.0)) < body_turn_sideways_deadzone)) or climbing or stance_height < stance_height_rot_min:
+	if ((absf(absf(move_yaw_offset) - (PI / 2.0)) < body_turn_sideways_deadzone)) or grabbed_col != null or stance_height < stance_height_rot_min:
 		return target_angle_horizontal + overlay_eulers.y
 	
 	if input_vector.y < 0.0:
