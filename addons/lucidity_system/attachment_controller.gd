@@ -16,6 +16,8 @@ const ATTACHED_META_KEY: String = "_attachment_controller"
 const ATTACHMENT_ORIGIN_NAME: String = "attachment_origin"
 
 @export var slot_definitions: Array[AttachmentSlot]
+@export var drop_distance: float = 1.0
+@export var drop_height: float = 0.2
 var hotbar : Array[AttachmentSlot]
 var current_hotbar_slot : int = 0
 
@@ -371,6 +373,11 @@ func detach(child_body: RigidBody3D) -> void:
 	if (body is RigidBody3D and child_body is RigidBody3D):
 		body.mass -= child_body.mass
 	if (is_instance_valid(body)):
+		var forward := -body.global_basis.z.normalized()
+		var up := body.global_basis.y.normalized()
+		child_body.global_position = body.global_position + forward * drop_distance + up * drop_height
+		child_body.linear_velocity = body.linear_velocity
+		child_body.angular_velocity = Vector3.ZERO
 		body.allow_grab = body.allow_grab_default
 		body.overlay_eulers = Vector3.ZERO
 

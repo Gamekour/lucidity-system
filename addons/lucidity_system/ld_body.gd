@@ -849,8 +849,6 @@ func arm_logic() -> void:
 			var force_scale = (force.normalized().dot(linear_velocity.normalized()) + 1) / 2
 			force *= force_scale
 		apply_force(-force / 2)
-		if (is_rb):
-			apply_torque(-rotation_torque / 2)
 
 func _queue_collision_exception_release(col : Node3D) -> void:
 	if col is RigidBody3D and not grab_release_pending.has(col):

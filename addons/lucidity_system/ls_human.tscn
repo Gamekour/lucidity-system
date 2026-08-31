@@ -102,6 +102,8 @@ grab_damp_min = 20.0
 grab_damp_max = 400.0
 grab_damp_static = 200.0
 grab_lift_offset = 0.15
+grab_rotation_strength_max = 100.0
+grab_rotation_damp = 1.0
 climb_scan_max_angle = 1.3962634015954636
 metadata/_custom_type_script = "uid://d1j4l28b3mks7"
 
