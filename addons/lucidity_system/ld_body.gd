@@ -67,6 +67,8 @@ func set_camera_controller(cc: CameraController) -> void:
 @export var grab_max_angular_velocity : float = 10.0
 @export var grab_angular_damp : float = 5.0
 @export var grab_lift_offset := 0.25
+@export var grab_rotation_strength_max : float = 500.0
+@export var grab_rotation_damp : float = 50.0
 @export_group("Ledge Detection")
 @export var ledge_probe_steps : int = 6
 @export var ledge_step_height : float = 0.15
@@ -92,6 +94,7 @@ var camera_controller : CameraController
 var grabbed_col : Node3D
 var grab_release_pending : Array[RigidBody3D]
 var grab_offset : Vector3 = Vector3.ZERO
+var grab_rotation_offset : Basis = Basis.IDENTITY
 var relative_velocity : Vector3 = Vector3.ZERO
 var overlay_eulers : Vector3 = Vector3.ZERO
 
@@ -589,6 +592,7 @@ func arm_cast() -> void:
 	if collider is RigidBody3D:
 		grabbed_col = collider
 		grab_offset = collider.to_local(shapecast_arms.get_collision_point(0))
+		grab_rotation_offset = global_basis.orthonormalized().inverse() * collider.global_basis.orthonormalized()
 		trying_to_grab = false
 		climbing_ledge = false
 		_reset_climb_scan()
@@ -811,11 +815,32 @@ func arm_logic() -> void:
 
 		var force = force_vert + force_horiz
 
+		var rotation_torque := Vector3.ZERO
 		if (is_rb):
 			var grabbed_rb := grabbed_col as RigidBody3D
+			var target_basis := (global_basis.orthonormalized() * grab_rotation_offset).orthonormalized()
+			var target_rot := target_basis.get_rotation_quaternion()
+			var current_rot := grabbed_rb.global_basis.orthonormalized().get_rotation_quaternion()
+			var rot_diff := target_rot * current_rot.inverse()
+			if rot_diff.w < 0.0:
+				rot_diff = -rot_diff
+			var diff_angle := 2.0 * acos(clampf(rot_diff.w, -1.0, 1.0))
+			var diff_axis := Vector3(rot_diff.x, rot_diff.y, rot_diff.z)
+			var diff_axis_len := diff_axis.length()
+			if diff_axis_len > 0.0001:
+				diff_axis /= diff_axis_len
+			else:
+				diff_axis = Vector3.ZERO
+				diff_angle = 0.0
+
+			var rot_strength := lerpf(0, grab_rotation_strength_max, weight)
+			var rel_angular_velocity := _get_angular_velocity_networked(grabbed_rb) - angular_velocity
+			rotation_torque = diff_axis * (diff_angle * rot_strength) - rel_angular_velocity * grab_rotation_damp
+
 			var grabbed_lever_arm = grab_position - grabbed_col.global_position
 			_apply_force_networked(grabbed_rb, force * 0.5 * (1.0 - grab_force_central_scale), grabbed_lever_arm)
 			_apply_force_networked(grabbed_rb, force * 0.5 * (grab_force_central_scale))
+			_apply_torque_networked(grabbed_rb, rotation_torque)
 			var grabbed_angular_velocity := _get_angular_velocity_networked(grabbed_rb)
 			if grabbed_angular_velocity.length() > grab_max_angular_velocity:
 				_apply_torque_networked(grabbed_rb, -grabbed_angular_velocity * grab_angular_damp)
@@ -824,6 +849,8 @@ func arm_logic() -> void:
 			var force_scale = (force.normalized().dot(linear_velocity.normalized()) + 1) / 2
 			force *= force_scale
 		apply_force(-force / 2)
+		if (is_rb):
+			apply_torque(-rotation_torque / 2)
 
 func _queue_collision_exception_release(col : Node3D) -> void:
 	if col is RigidBody3D and not grab_release_pending.has(col):
