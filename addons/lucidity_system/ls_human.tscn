@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://cuyit38h4qs42"]
 
 [ext_resource type="Script" uid="uid://d1j4l28b3mks7" path="res://addons/lucidity_system/ld_body.gd" id="1_1s46y"]
-[ext_resource type="PackedScene" uid="uid://kg8tko51k72u" path="res://addons/lucidity_system/base06.glb" id="2_1s46y"]
+[ext_resource type="PackedScene" uid="uid://houjov5b00fv" path="res://addons/lucidity_system/rikotsu_fixed.fbx" id="2_1s46y"]
 [ext_resource type="Script" uid="uid://drcmxxe77jx4w" path="res://addons/lucidity_system/IKController.gd" id="3_oyy2h"]
 [ext_resource type="Script" uid="uid://uwl2prsk3to" path="res://addons/lucidity_system/bone_root.gd" id="4_1phxu"]
 [ext_resource type="Script" uid="uid://cqe4oym17w8sa" path="res://addons/lucidity_system/attachment_controller.gd" id="5_uqufu"]
@@ -16,9 +16,6 @@ radius = 0.07
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_njel3"]
 radius = 0.1
-
-[sub_resource type="BoxMesh" id="BoxMesh_wb0og"]
-size = Vector3(0.1, 0.1, 1)
 
 [sub_resource type="Curve" id="Curve_sasra"]
 _limits = [0.0, 0.3, 0.0, 1.0]
@@ -123,9 +120,6 @@ transform = Transform3D(-0.9999993, 0.0011594346, 8.293265e-05, 0.0011594346, 0.
 shape = SubResource("SphereShape3D_njel3")
 target_position = Vector3(0, 0, 2)
 collision_mask = 5
-
-[node name="MeshInstance3D" type="MeshInstance3D" parent="shapecast_arms" unique_id=1339695437]
-mesh = SubResource("BoxMesh_wb0og")
 
 [node name="rig_root" type="Node3D" parent="." unique_id=551157550 node_paths=PackedStringArray("head_root", "ik_springs", "ik_targets", "ik_poles")]
 script = ExtResource("3_oyy2h")
