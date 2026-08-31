@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://cuyit38h4qs42"]
 
 [ext_resource type="Script" uid="uid://d1j4l28b3mks7" path="res://addons/lucidity_system/ld_body.gd" id="1_1s46y"]
-[ext_resource type="PackedScene" uid="uid://houjov5b00fv" path="res://addons/lucidity_system/rikotsu_fixed.fbx" id="2_1s46y"]
+[ext_resource type="PackedScene" uid="uid://cluue0mnjl1s8" path="res://addons/lucidity_system/rob.tscn" id="2_1s46y"]
 [ext_resource type="Script" uid="uid://drcmxxe77jx4w" path="res://addons/lucidity_system/IKController.gd" id="3_oyy2h"]
 [ext_resource type="Script" uid="uid://uwl2prsk3to" path="res://addons/lucidity_system/bone_root.gd" id="4_1phxu"]
 [ext_resource type="Script" uid="uid://cqe4oym17w8sa" path="res://addons/lucidity_system/attachment_controller.gd" id="5_uqufu"]

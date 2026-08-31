@@ -1,0 +1,55 @@
+[gd_scene format=3 uid="uid://cluue0mnjl1s8"]
+
+[ext_resource type="PackedScene" uid="uid://houjov5b00fv" path="res://addons/lucidity_system/rikotsu_fixed.fbx" id="1_urjpp"]
+
+[node name="rikotsu_fixed" unique_id=615724269 instance=ExtResource("1_urjpp")]
+
+[node name="SpringBoneSimulator3D" type="SpringBoneSimulator3D" parent="アーマチュア/GeneralSkeleton" parent_id_path=PackedInt32Array(2023807010) index="4" unique_id=1368730938]
+setting_count = 1
+settings/0/root_bone_name = "尾.001"
+settings/0/root_bone = 77
+settings/0/end_bone_name = "尾.014"
+settings/0/end_bone = 90
+settings/0/extend_end_bone = false
+settings/0/center_from = 0
+settings/0/individual_config = false
+settings/0/rotation_axis = 3
+settings/0/radius/value = 0.02
+settings/0/radius/damping_curve = null
+settings/0/stiffness/value = 1.0
+settings/0/stiffness/damping_curve = null
+settings/0/drag/value = 0.4
+settings/0/drag/damping_curve = null
+settings/0/gravity/value = 0.0
+settings/0/gravity/damping_curve = null
+settings/0/gravity/direction = Vector3(0, -1, 0)
+settings/0/joints/0/bone_name = "尾.001"
+settings/0/joints/0/bone = 77
+settings/0/joints/1/bone_name = "尾.002"
+settings/0/joints/1/bone = 78
+settings/0/joints/2/bone_name = "尾.003"
+settings/0/joints/2/bone = 79
+settings/0/joints/3/bone_name = "尾.004"
+settings/0/joints/3/bone = 80
+settings/0/joints/4/bone_name = "尾.005"
+settings/0/joints/4/bone = 81
+settings/0/joints/5/bone_name = "尾.006"
+settings/0/joints/5/bone = 82
+settings/0/joints/6/bone_name = "尾.007"
+settings/0/joints/6/bone = 83
+settings/0/joints/7/bone_name = "尾.008"
+settings/0/joints/7/bone = 84
+settings/0/joints/8/bone_name = "尾.009"
+settings/0/joints/8/bone = 85
+settings/0/joints/9/bone_name = "尾.010"
+settings/0/joints/9/bone = 86
+settings/0/joints/10/bone_name = "尾.011"
+settings/0/joints/10/bone = 87
+settings/0/joints/11/bone_name = "尾.012"
+settings/0/joints/11/bone = 88
+settings/0/joints/12/bone_name = "尾.013"
+settings/0/joints/12/bone = 89
+settings/0/joints/13/bone_name = "尾.014"
+settings/0/joints/13/bone = 90
+settings/0/enable_all_child_collisions = true
+settings/0/exclude_collision_count = 0

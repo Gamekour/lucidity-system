@@ -6,6 +6,7 @@ class_name ControllerManager
 @export var controller_spawner : MultiplayerSpawner
 @export var pawn_spawner : MultiplayerSpawner
 @export var camera_controller : CameraController
+@export var crosshair_grab : TextureRect
 
 var local_controller : Controller
 
@@ -36,6 +37,7 @@ func despawn_controller(id: int) -> void:
 	
 func _controller_delivered(controller_node : Node) -> void:
 	(controller_node as Controller).camera_controller = camera_controller
+	controller_node.crosshair_grab = crosshair_grab
 	var owner = int(controller_node.name.trim_suffix("_controller"))
 	if (owner == multiplayer.get_unique_id()):
 		local_controller = controller_node

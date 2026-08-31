@@ -1,0 +1,9 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://day6o2306c1fc"]
+
+[ext_resource type="Texture2D" uid="uid://uwt7q8oadsfn" path="res://addons/lucidity_system/bleu eYE.png" id="1_6uov4"]
+
+[resource]
+albedo_texture = ExtResource("1_6uov4")
+metallic_specular = 0.0
+emission_enabled = true
+emission_texture = ExtResource("1_6uov4")

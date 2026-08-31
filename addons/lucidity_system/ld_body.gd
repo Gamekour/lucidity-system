@@ -116,6 +116,7 @@ var crawling := false
 var jumping := false
 var trying_to_grab := false
 var allow_grab_default := true
+var valid_grab := false
 
 var climbing_ledge : bool = false
 var climb_scan_active : bool = false
@@ -148,8 +149,7 @@ var floor_contact_point : Vector3 = Vector3.ZERO
 func _ready() -> void:
 	allow_grab_default = allow_grab
 	set_multiplayer_authority(1)
-	if (!multiplayer.is_server()):
-		rig_setup()
+	rig_setup()
 
 func rig_setup() -> void:
 	for child in find_children("*"):
@@ -157,7 +157,9 @@ func rig_setup() -> void:
 			ik_controller = child
 		if (child is AttachmentController):
 			attach_controller = child
+			attach_controller.body = self
 	
+	if (multiplayer.is_server()): return
 	if (ik_controller != null):
 		ik_controller.body = self
 		ik_controller.shapecast_legs = shapecast_legs
@@ -192,7 +194,6 @@ func rig_setup() -> void:
 			for bone_root : BoneRoot in find_children("*", "BoneRoot"):
 				bone_root.skeleton = playermodel
 			if (attach_controller != null):
-				attach_controller.body = self
 				attach_controller._connect_skeleton(playermodel)
 
 @rpc("any_peer")
@@ -240,7 +241,11 @@ func _physics_process(delta: float) -> void:
 	elif is_local_owner():
 		_send_input_to_server.rpc_id(1, input_move, target_angle_horizontal,
 			camera_pitch, sprinting, jumping, crouching, crawling, trying_to_grab)
-
+		if (shapecast_arms.is_colliding()):
+			valid_grab = shapecast_arms.get_collider(0) is RigidBody3D
+		else:
+			valid_grab = false
+	
 	if not is_multiplayer_authority():
 		return
 

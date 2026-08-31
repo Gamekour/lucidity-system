@@ -6,12 +6,23 @@ class_name Controller
 var pawn_spawner : MultiplayerSpawner
 var pawn : Node3D
 var pawn_path : NodePath
+var crosshair_grab : TextureRect
 
 func _ready() -> void:
 	var owner_id := int(name)
 	set_multiplayer_authority(owner_id)
 	if (multiplayer.is_server()):
 		spawn_pawn(owner_id)
+
+func _physics_process(delta: float) -> void:
+	if (crosshair_grab == null): return
+	if (pawn != null):
+		if (pawn is PhysicsPlayerController):
+			crosshair_grab.visible = pawn.valid_grab
+		elif crosshair_grab.visible:
+			crosshair_grab.visible = false
+	elif crosshair_grab.visible:
+		crosshair_grab.visible = false
 
 @rpc("any_peer")
 func spawn_pawn(id: int) -> void:

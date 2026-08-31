@@ -2,8 +2,8 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://uwt7q8oadsfn"
-path.s3tc="res://.godot/imported/bleu eYE.png-40beabe9fedf8581f84c32eaaf5e6b25.s3tc.ctex"
+uid="uid://cxjw8metbv5bv"
+path.s3tc="res://.godot/imported/crosshair_grab.png-4797b376a6f952ba85f7c552ae41f1ca.s3tc.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc"],
 "vram_texture": true
@@ -11,8 +11,8 @@ metadata={
 
 [deps]
 
-source_file="res://addons/lucidity_system/bleu eYE.png"
-dest_files=["res://.godot/imported/bleu eYE.png-40beabe9fedf8581f84c32eaaf5e6b25.s3tc.ctex"]
+source_file="res://addons/lucidity_system/crosshair_grab.png"
+dest_files=["res://.godot/imported/crosshair_grab.png-4797b376a6f952ba85f7c552ae41f1ca.s3tc.ctex"]
 
 [params]
 

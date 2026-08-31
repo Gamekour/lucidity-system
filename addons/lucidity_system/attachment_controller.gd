@@ -326,10 +326,10 @@ func attach(child_body: RigidBody3D) -> bool:
 	if child_body is NetworkRigidbody3D:
 		child_body.set_physics_process(false)
 	
-	body.add_collision_exception_with(child_body)
-	for i in body.find_children("*", "SpringArm3D", true, false):
+	parent_body.add_collision_exception_with(child_body)
+	for i in parent_body.find_children("*", "SpringArm3D", true, false):
 		i.add_excluded_object(child_body.get_rid())
-	for i in body.find_children("*", "ShapeCast3D", true, false):
+	for i in parent_body.find_children("*", "ShapeCast3D", true, false):
 		i.add_exception(child_body)
 
 	if slot["is_hidden"]:
