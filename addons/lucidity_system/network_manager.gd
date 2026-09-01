@@ -33,7 +33,38 @@ func _ready():
 	multiplayer.server_disconnected.connect(_on_server_disconnected)
 	
 	if (OS.has_feature("dedicated_server")):
-		create_game()
+		_autostart_dedicated_server()
+
+
+func _autostart_dedicated_server() -> void:
+	var config_path := OS.get_executable_path().get_base_dir().path_join("server.cfg")
+	var port := PORT
+	var bind_ip := "*"
+	if FileAccess.file_exists(config_path):
+		var file := FileAccess.open(config_path, FileAccess.READ)
+		if file:
+			var text := file.get_as_text()
+			file.close()
+			var parsed = JSON.parse_string(text)
+			if typeof(parsed) == TYPE_DICTIONARY:
+				if parsed.has("port"):
+					port = int(parsed["port"])
+				if parsed.has("ip"):
+					bind_ip = str(parsed["ip"])
+	create_game(port, bind_ip)
+
+
+func create_game(port: int = PORT, bind_ip: String = "*"):
+	var peer = ENetMultiplayerPeer.new()
+	peer.set_bind_ip(bind_ip)
+	var error = peer.create_server(port, MAX_CONNECTIONS, 0, 0, 0)
+	if error:
+		print(error_string(error))
+		return error
+	multiplayer.multiplayer_peer = peer
+
+	players[1] = player_info
+	player_connected.emit(1, player_info)
 
 func join_game(address = ""):
 	if address.is_empty():
@@ -44,19 +75,6 @@ func join_game(address = ""):
 		print(error_string(error))
 		return error
 	multiplayer.multiplayer_peer = peer
-
-
-func create_game():
-	var peer = ENetMultiplayerPeer.new()
-	var error = peer.create_server(PORT, MAX_CONNECTIONS)
-	if error:
-		print(error_string(error))
-		return error
-	multiplayer.multiplayer_peer = peer
-
-	players[1] = player_info
-	player_connected.emit(1, player_info)
-
 
 func remove_multiplayer_peer():
 	multiplayer.multiplayer_peer = OfflineMultiplayerPeer.new()
