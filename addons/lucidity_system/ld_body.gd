@@ -245,7 +245,8 @@ func _physics_process(delta: float) -> void:
 		_send_input_to_server.rpc_id(1, input_move, target_angle_horizontal,
 			camera_pitch, sprinting, jumping, crouching, crawling, trying_to_grab)
 		if (shapecast_arms.is_colliding()):
-			valid_grab = shapecast_arms.get_collider(0) is RigidBody3D
+			var col = shapecast_arms.get_collider(0)
+			valid_grab = col is RigidBody3D and not col.has_meta("no_grab")
 		else:
 			valid_grab = false
 	
@@ -589,7 +590,7 @@ func arm_cast() -> void:
 
 	var collider = shapecast_arms.get_collider(0)
 
-	if collider is RigidBody3D:
+	if collider is RigidBody3D and not collider.has_meta("no_grab"):
 		grabbed_col = collider
 		grab_offset = collider.to_local(shapecast_arms.get_collision_point(0))
 		grab_rotation_offset = global_basis.orthonormalized().inverse() * collider.global_basis.orthonormalized()
