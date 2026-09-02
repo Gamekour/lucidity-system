@@ -266,7 +266,10 @@ func _physics_process(delta: float) -> void:
 	var shapecast_basis := Basis(base_right, up_dir, global_basis.z.normalized())
 	shapecast_legs.global_basis = shapecast_basis.orthonormalized()
 
-	var input_3d := _get_camera_relative_input(up_dir, input_move)
+	var current_yaw := _get_current_yaw(up_dir)
+	var camera_world_yaw := current_yaw + target_angle_horizontal
+
+	var input_3d := _get_camera_relative_input(up_dir, camera_world_yaw, input_move)
 	var max_speed = max(lerpf(crouch_speed * roll_force, roll_force * sprint_multiplier * sprint_multiplier_scale, min(stance_height / speed_stance_stop, 1)), 0)
 	crouch_jump = jumping and crouching
 	
@@ -324,8 +327,7 @@ func _physics_process(delta: float) -> void:
 		accel = _get_air_accel(target_force, flat_velocity, air_acceleration * air_acceleration_scale)
 	var force = accel.limit_length(friction_budget)
 
-	var current_yaw := _get_current_yaw(up_dir)
-	var body_target_angle := _get_body_target_angle(input_move)
+	var body_target_angle := _get_body_target_angle(camera_world_yaw, input_move)
 	var look_angle_horizontal : float = wrapf(body_target_angle - current_yaw, -PI, PI)
 	look_angle_horizontal = clamp(look_angle_horizontal, -max_look_angle_horizontal, max_look_angle_horizontal)
 	var yaw_damping_torque : float = -angular_velocity.dot(up_dir) * turn_damping
@@ -449,15 +451,9 @@ func _get_up_direction(gravity_vec: Vector3) -> Vector3:
 		return Vector3.UP
 	return -gravity_vec.normalized()
 
-func _get_horizontal_basis(up_dir: Vector3) -> Array:
+func _get_camera_relative_axes(up_dir: Vector3, camera_world_yaw: float) -> Array:
 	var tilt_basis := _get_tilt_basis(up_dir)
-	var forward_ref := tilt_basis.z
-	var right_ref := tilt_basis.x
-	return [forward_ref, right_ref]
-
-func _get_camera_relative_axes(up_dir: Vector3) -> Array:
-	var tilt_basis := _get_tilt_basis(up_dir)
-	var yaw_basis := Basis(Vector3.UP, target_angle_horizontal)
+	var yaw_basis := Basis(Vector3.UP, camera_world_yaw)
 	var pitch_basis := Basis(Vector3.RIGHT, camera_pitch)
 	var cam_basis := tilt_basis * yaw_basis * pitch_basis
 	var cam_forward := -cam_basis.z
@@ -469,31 +465,25 @@ func _get_camera_relative_axes(up_dir: Vector3) -> Array:
 	var flat_right := flat_forward.cross(up_dir).normalized()
 	return [flat_forward, flat_right]
 
-func _get_camera_relative_input(up_dir: Vector3, input_vector: Vector2) -> Vector3:
-	var axes := _get_camera_relative_axes(up_dir)
+func _get_camera_relative_input(up_dir: Vector3, camera_world_yaw: float, input_vector: Vector2) -> Vector3:
+	var axes := _get_camera_relative_axes(up_dir, camera_world_yaw)
 	var flat_forward : Vector3 = axes[0]
 	var flat_right : Vector3 = axes[1]
 	return flat_right * input_vector.y - flat_forward * input_vector.x
 
 func _get_current_yaw(up_dir: Vector3) -> float:
-	var refs := _get_horizontal_basis(up_dir)
-	var forward_ref : Vector3 = refs[0]
-	var right_ref : Vector3 = refs[1]
-	var forward := global_basis.z
-	if abs(forward.dot(up_dir)) < 0.98:
-		var projected := (forward - up_dir * forward.dot(up_dir)).normalized()
-		return atan2(projected.dot(right_ref), projected.dot(forward_ref))
-	var right := global_basis.x
-	var projected_right := (right - up_dir * right.dot(up_dir)).normalized()
-	return atan2(projected_right.dot(right_ref), projected_right.dot(forward_ref)) - PI / 2.0
+	var q := global_basis.orthonormalized().get_rotation_quaternion()
+	var qv := Vector3(q.x, q.y, q.z)
+	var proj := qv.dot(up_dir)
+	return wrapf(2.0 * atan2(proj, q.w), -PI, PI)
 
-func _get_body_target_angle(input_vector: Vector2) -> float:
+func _get_body_target_angle(camera_world_yaw: float, input_vector: Vector2) -> float:
 	if input_vector.length() < body_turn_input_deadzone:
-		return target_angle_horizontal + overlay_eulers.y
+		return camera_world_yaw + overlay_eulers.y
 	
 	var move_yaw_offset := atan2(input_vector.x, input_vector.y)
 	if ((absf(absf(move_yaw_offset) - (PI / 2.0)) < body_turn_sideways_deadzone)) or grabbed_col != null or stance_height < stance_height_rot_min:
-		return target_angle_horizontal + overlay_eulers.y
+		return camera_world_yaw + overlay_eulers.y
 	
 	if input_vector.y < 0.0:
 		if (move_yaw_offset < 0.0):
@@ -502,7 +492,7 @@ func _get_body_target_angle(input_vector: Vector2) -> float:
 			move_yaw_offset -= PI
 	
 	var yaw_scale = clamp((stance_height - stance_height_rot_min) / (stance_height_rot_max - stance_height_rot_min), 0, 1)
-	var yaw_angle = lerp(target_angle_horizontal, target_angle_horizontal - move_yaw_offset, yaw_scale) + overlay_eulers.y
+	var yaw_angle = lerp(camera_world_yaw, camera_world_yaw - move_yaw_offset, yaw_scale) + overlay_eulers.y
 	
 	return wrapf(yaw_angle, -PI, PI)
 

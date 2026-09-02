@@ -87,6 +87,7 @@ linear_damp_mode = 1
 script = ExtResource("1_1s46y")
 playermodel_scene = ExtResource("2_1s46y")
 shapecast_legs_length_scale = 1.35
+turn_damping = 20.0
 slope_correction = 0.2
 slope_correction_damping = 4.0
 slope_stance_height_scale = 0.75
