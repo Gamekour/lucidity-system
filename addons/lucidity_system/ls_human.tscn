@@ -61,6 +61,14 @@ script = ExtResource("6_qu0rw")
 slot_name = "RightWrist"
 bone_name = "RightLowerArm"
 pos_offset = Vector3(0, 0.125, 0)
+metadata/_custom_type_script = "uid://dnryq4yanmj62"
+
+[sub_resource type="Resource" id="Resource_p48gw"]
+script = ExtResource("6_qu0rw")
+slot_name = "RightHolster"
+bone_name = "Hips"
+pos_offset = Vector3(-0.175, 0, 0)
+rot_offset = Vector3(180, -90, 0)
 is_hotbar = true
 metadata/_custom_type_script = "uid://dnryq4yanmj62"
 
@@ -196,14 +204,13 @@ remote_path = NodePath("../../shapecast_arms")
 
 [node name="AttachmentController" type="Node3D" parent="." unique_id=1784956247]
 script = ExtResource("5_uqufu")
-slot_definitions = Array[ExtResource("6_qu0rw")]([SubResource("Resource_vr1i5"), SubResource("Resource_rpuu0")])
+slot_definitions = Array[ExtResource("6_qu0rw")]([SubResource("Resource_vr1i5"), SubResource("Resource_rpuu0"), SubResource("Resource_p48gw")])
 
 [node name="hitboxes" type="Node3D" parent="." unique_id=2135552858]
 
 [node name="LeftUpperArm" type="BoneAttachment3D" parent="hitboxes" unique_id=1907395403]
 transform = Transform3D(0.39976147, -0.12379478, 0.9082212, 0.78854287, -0.4587162, -0.40960932, 0.46732327, 0.87991726, -0.08575957, -0.08622265, 0.26440215, 0)
 bone_name = "LeftUpperArm"
-bone_idx = 4
 use_external_skeleton = true
 external_skeleton = NodePath("")
 
@@ -217,7 +224,6 @@ shape = SubResource("CapsuleShape3D_oo8pe")
 [node name="LeftLowerArm" type="BoneAttachment3D" parent="hitboxes" unique_id=300585093]
 transform = Transform3D(0.9082253, 0.19750796, 0.368941, -0.40960124, 0.6002125, 0.68700224, -0.08575465, -0.77507144, 0.62602764, -0.11542225, 0.15620375, 0.20754814)
 bone_name = "LeftLowerArm"
-bone_idx = 5
 use_external_skeleton = true
 external_skeleton = NodePath("")
 
@@ -231,7 +237,6 @@ shape = SubResource("CapsuleShape3D_4gito")
 [node name="RightUpperArm" type="BoneAttachment3D" parent="hitboxes" unique_id=865655678]
 transform = Transform3D(0.40306163, 0.12284584, -0.9068903, -0.7903354, -0.4529055, -0.41260922, -0.46142295, 0.8830546, -0.08545948, 0.08622265, 0.26440215, 0)
 bone_name = "RightUpperArm"
-bone_idx = 27
 use_external_skeleton = true
 external_skeleton = NodePath("")
 
@@ -245,7 +250,6 @@ shape = SubResource("CapsuleShape3D_oo8pe")
 [node name="RightLowerArm" type="BoneAttachment3D" parent="hitboxes" unique_id=2042986941]
 transform = Transform3D(0.906891, -0.19673148, -0.3726196, 0.4126081, 0.593971, 0.690618, 0.08545908, -0.7800612, 0.6198399, 0.115198135, 0.15757418, 0.2082882)
 bone_name = "RightLowerArm"
-bone_idx = 28
 use_external_skeleton = true
 external_skeleton = NodePath("")
 
@@ -259,7 +263,6 @@ shape = SubResource("CapsuleShape3D_4gito")
 [node name="LeftUpperLeg" type="BoneAttachment3D" parent="hitboxes" unique_id=1259580499]
 transform = Transform3D(-0.8157866, -0.0013893275, 0.5783514, 0.57278085, -0.14041984, 0.8075918, 0.08009, 0.9900911, 0.115348406, -0.068808556, -0.07487202, 0.01635313)
 bone_name = "LeftUpperLeg"
-bone_idx = 45
 use_external_skeleton = true
 external_skeleton = NodePath("")
 
@@ -273,7 +276,6 @@ shape = SubResource("CapsuleShape3D_fbuy2")
 [node name="LeftLowerLeg" type="BoneAttachment3D" parent="hitboxes" unique_id=1066043683]
 transform = Transform3D(0.8046129, 0.025122367, -0.593268, 0.5904809, 0.0716334, 0.8038664, 0.06269285, -0.9971145, 0.042802893, -0.064852715, -0.114993095, 0.34357977)
 bone_name = "LeftLowerLeg"
-bone_idx = 46
 use_external_skeleton = true
 external_skeleton = NodePath("")
 
@@ -287,7 +289,6 @@ shape = SubResource("CapsuleShape3D_0k8yu")
 [node name="RightUpperLeg" type="BoneAttachment3D" parent="hitboxes" unique_id=132134299]
 transform = Transform3D(-0.81579244, 0.0013894709, -0.57834315, -0.5727726, -0.14042056, 0.80759746, -0.08008911, 0.990091, 0.11534982, 0.068808556, -0.07487202, 0.01635313)
 bone_name = "RightUpperLeg"
-bone_idx = 48
 use_external_skeleton = true
 external_skeleton = NodePath("")
 
@@ -301,7 +302,6 @@ shape = SubResource("CapsuleShape3D_fbuy2")
 [node name="LeftLowerLeg2" type="BoneAttachment3D" parent="hitboxes" unique_id=1161284422]
 transform = Transform3D(0.8046209, -0.025122015, 0.5932572, -0.59047014, 0.07163325, 0.80387425, -0.06269183, -0.9971146, 0.042803783, 0.064852715, -0.114993095, 0.34357977)
 bone_name = "RightLowerLeg"
-bone_idx = 49
 use_external_skeleton = true
 external_skeleton = NodePath("")
 

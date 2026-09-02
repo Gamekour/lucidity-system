@@ -13,6 +13,7 @@
 [ext_resource type="PackedScene" uid="uid://1q405i8mu7nw" path="res://addons/lucidity_system/silly_dancing.tscn" id="11_oo8pe"]
 [ext_resource type="Script" uid="uid://b11yeup1xif5d" path="res://addons/lucidity_system/toggle_button.gd" id="12_oo8pe"]
 [ext_resource type="Script" uid="uid://da7t3xbiyxsvd" path="res://addons/lucidity_system/nav_agent_rigidbody.gd" id="13_xqn1g"]
+[ext_resource type="PackedScene" uid="uid://cf26g3lcevbfm" path="res://addons/lucidity_system/toygun.glb" id="14_p48gw"]
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_1s05b"]
 radius = 0.25
@@ -501,6 +502,10 @@ shape = SubResource("BoxShape3D_4gito")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="NavigationRegion3D/Ladder/StaticBody3D14" unique_id=103880097]
 mesh = SubResource("BoxMesh_fbuy2")
+
+[node name="ToyGun" parent="." unique_id=1458075073 instance=ExtResource("14_p48gw")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.6967921, 0.090282746, -2.4653006)
+metadata/attachment_slot = "RightHolster"
 
 [connection signal="pressed" from="CanvasLayer/button_server" to="NetworkManager" method="create_game"]
 [connection signal="pressed" from="CanvasLayer/button_client" to="NetworkManager" method="join_game"]

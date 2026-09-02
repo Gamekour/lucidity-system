@@ -1,5 +1,4 @@
-extends RigidBody3D
-class_name NetworkRigidbody3D
+class_name NetworkRigidbody3D extends RigidBody3D
 
 ## Server-authoritative RigidBody3D.
 ##

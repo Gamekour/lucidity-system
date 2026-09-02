@@ -235,6 +235,12 @@ func _find_skeleton_overlay(body : Node3D) -> SkeletonOverlay:
 	if origin_node == null or not (origin_node is SkeletonOverlay):
 		return null
 	return origin_node
+	
+func _find_ik_overlay(body : Node3D) -> IKOverlay:
+	var origin_node := body.get_node_or_null("IKOverlay")
+	if origin_node == null or not (origin_node is IKOverlay):
+		return null
+	return origin_node
 
 func _on_hotbar_change() -> void:
 	for i in range(hotbar.size()):
@@ -300,6 +306,7 @@ func attach(child_body: RigidBody3D) -> bool:
 
 	var origin_xform: Transform3D = _find_attachment_origin(child_body)
 	var skeleton_overlay = _find_skeleton_overlay(child_body)
+	var ik_overlay = _find_ik_overlay(child_body)
 	var is_equipped := false
 	var is_hotbar = slot["is_hotbar"]
 	if (is_hotbar):
@@ -319,6 +326,9 @@ func attach(child_body: RigidBody3D) -> bool:
 			skeleton_overlay.body = parent_body
 		if (not slot["is_hidden"] and not holstered):
 			skeleton_overlay.set_deferred("active", true)
+	if (ik_overlay != null and body.ik_controller != null):
+		ik_overlay.ik_controller = body.ik_controller
+		ik_overlay.active = true
 	slot["origin_xform_inv"] = origin_xform.affine_inverse()
 
 	child_body.freeze = true
@@ -368,8 +378,12 @@ func detach(child_body: RigidBody3D) -> void:
 		for i in body.find_children("*", "ShapeCast3D", true, false):
 			i.remove_exception(child_body)
 	var skeleton_overlay = _find_skeleton_overlay(child_body)
+	var ik_overlay = _find_ik_overlay(child_body)
 	if (skeleton_overlay != null):
 		skeleton_overlay.active = false
+	if (ik_overlay != null):
+		ik_overlay.ik_controller = body.ik_controller
+		ik_overlay.active = true
 	if (body is RigidBody3D and child_body is RigidBody3D):
 		body.mass -= child_body.mass
 	if (is_instance_valid(body)):
@@ -420,6 +434,7 @@ func _on_skeleton_updated() -> void:
 				slot["temp_shown"] = should_show
 
 		var bone_idx: int
+		var offset = Transform3D.IDENTITY if is_equipped else slot["local_xform"]
 		if is_equipped:
 			var hand_bone_name: String = _mirror_bone_name("RightHand") if _is_left_handed() else "RightHand"
 			bone_idx = playermodel.find_bone(hand_bone_name) if is_instance_valid(playermodel) else -1
@@ -427,8 +442,8 @@ func _on_skeleton_updated() -> void:
 			bone_idx = _resolve_bone_idx(slot)
 		if bone_idx != -1 and is_instance_valid(playermodel) and playermodel.is_inside_tree():
 			var bone_global_pose: Transform3D = playermodel.get_bone_global_pose(bone_idx)
-			target_xform = playermodel.global_transform * bone_global_pose * slot["local_xform"]
+			target_xform = playermodel.global_transform * bone_global_pose * offset
 		else:
-			target_xform = parent.global_transform * slot["local_xform"]
+			target_xform = parent.global_transform * offset
 
 		child.global_transform = target_xform * slot["origin_xform_inv"]
