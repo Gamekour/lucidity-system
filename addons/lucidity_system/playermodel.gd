@@ -30,9 +30,12 @@ func _process(delta: float) -> void:
 	if (is_fp):
 		set_bone_pose_rotation(head_bone_index, local_basis.get_rotation_quaternion())
 	else:
-		var current_up_dir : Vector3 = body.current_up_dir
+		var current_up_dir : Vector3 = body.global_basis.y
 		var cam_forward : Vector3 = -cam_spring.global_transform.basis.z
 		var pitch : float = asin(clampf(cam_forward.dot(current_up_dir), -1.0, 1.0))
 		
+		var base_forward : Vector3 = -(global_transform.basis * parent_global_basis).z
+		var base_pitch : float = asin(clampf(base_forward.dot(current_up_dir), -1.0, 1.0))
+		
 		var right_axis : Vector3 = get_bone_rest(head_bone_index).basis.x.normalized()
-		set_bone_pose_rotation(head_bone_index, Quaternion(right_axis, -pitch))
+		set_bone_pose_rotation(head_bone_index, Quaternion(right_axis, base_pitch - pitch))

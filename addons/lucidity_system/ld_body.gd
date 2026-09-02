@@ -499,8 +499,9 @@ func _get_body_target_angle(input_vector: Vector2) -> float:
 			move_yaw_offset -= PI
 	
 	var yaw_scale = clamp((stance_height - stance_height_rot_min) / (stance_height_rot_max - stance_height_rot_min), 0, 1)
+	var yaw_angle = lerp(target_angle_horizontal, target_angle_horizontal - move_yaw_offset, yaw_scale) + overlay_eulers.y
 	
-	return wrapf(((target_angle_horizontal - move_yaw_offset) * yaw_scale) + overlay_eulers.y, -PI, PI)
+	return wrapf(yaw_angle, -PI, PI)
 
 func _get_air_accel(target_force: Vector3, flat_velocity: Vector3, accel_strength: float) -> Vector3:
 	var wish_velocity := target_force / mass
