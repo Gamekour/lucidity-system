@@ -242,7 +242,7 @@ func _physics_process(delta: float) -> void:
 	if multiplayer.is_server():
 		_apply_input_state(input_move, target_angle_horizontal, camera_pitch,
 			sprinting, jumping, crouching, crawling, trying_to_grab)
-		shapecast_arms.transform.basis = shapecast_arms_base_basis * Basis(Vector3.RIGHT, -camera_pitch)
+		shapecast_arms.transform.basis = shapecast_arms_base_basis * Basis(Vector3.RIGHT, -camera_pitch) #incorrect if up_dir != Vector3.UP
 	else:
 		shapecast_arms.global_basis = camera_controller.cam_spring.global_basis
 		shapecast_arms.global_basis.z = -shapecast_arms.global_basis.z
