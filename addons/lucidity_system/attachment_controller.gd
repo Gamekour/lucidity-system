@@ -192,13 +192,20 @@ func _build_slots() -> void:
 			deg_to_rad(def.rot_offset.y),
 			deg_to_rad(def.rot_offset.z)
 		))
+		var offset_basis_equipped: Basis = Basis.from_euler(Vector3(
+			deg_to_rad(def.rot_offset_equipped.x),
+			deg_to_rad(def.rot_offset_equipped.y),
+			deg_to_rad(def.rot_offset_equipped.z)
+		))
 		var offset_xform: Transform3D = Transform3D(offset_basis, def.pos_offset)
-
+		var offset_xform_equipped : Transform3D = Transform3D(offset_basis_equipped, def.pos_offset_equipped)
+		
 		attachment_slots[def.slot_name] = {
 			"parent": parent_node,
 			"bone_name": def.bone_name,
 			"bone_idx": bone_idx,
 			"local_xform": offset_xform,
+			"local_xform_equipped" : offset_xform_equipped,
 			"occupant": null,
 			"origin_xform_inv": Transform3D.IDENTITY,
 			"is_hotbar" : def.is_hotbar,
@@ -338,11 +345,7 @@ func attach(child_body: RigidBody3D) -> bool:
 	if child_body is NetworkRigidbody3D:
 		child_body.set_physics_process(false)
 	
-	parent_body.add_collision_exception_with(child_body)
-	for i in parent_body.find_children("*", "SpringArm3D", true, false):
-		i.add_excluded_object(child_body.get_rid())
-	for i in parent_body.find_children("*", "ShapeCast3D", true, false):
-		i.add_exception(child_body)
+	add_exceptions(parent_body, child_body)
 
 	if slot["is_hidden"]:
 		_set_meshes_and_collisions_enabled(child_body, false)
@@ -354,6 +357,13 @@ func attach(child_body: RigidBody3D) -> bool:
 	if (parent_body is RigidBody3D and child_body is RigidBody3D):
 		parent_body.mass += child_body.mass
 	return true
+
+func add_exceptions(parent_body : RigidBody3D, child_body : Node3D):
+	parent_body.add_collision_exception_with(child_body)
+	for i in parent_body.find_children("*", "SpringArm3D", true, false):
+		i.add_excluded_object(child_body.get_rid())
+	for i in parent_body.find_children("*", "ShapeCast3D", true, false):
+		i.add_exception(child_body)
 
 func detach(child_body: RigidBody3D) -> void:
 	for slot_name in attachment_slots.keys():
@@ -434,15 +444,16 @@ func _on_skeleton_updated() -> void:
 				slot["temp_shown"] = should_show
 
 		var bone_idx: int
-		var offset = Transform3D.IDENTITY if is_equipped else slot["local_xform"]
+		var offset = slot["local_xform_equipped"] if is_equipped else slot["local_xform"]
 		if is_equipped:
-			var hand_bone_name: String = _mirror_bone_name("RightHand") if _is_left_handed() else "RightHand"
-			bone_idx = playermodel.find_bone(hand_bone_name) if is_instance_valid(playermodel) else -1
+			bone_idx = -1
 		else:
 			bone_idx = _resolve_bone_idx(slot)
 		if bone_idx != -1 and is_instance_valid(playermodel) and playermodel.is_inside_tree():
 			var bone_global_pose: Transform3D = playermodel.get_bone_global_pose(bone_idx)
 			target_xform = playermodel.global_transform * bone_global_pose * offset
+		elif is_equipped and body != null:
+			target_xform = body.shapecast_arms.global_transform * offset
 		else:
 			target_xform = parent.global_transform * offset
 

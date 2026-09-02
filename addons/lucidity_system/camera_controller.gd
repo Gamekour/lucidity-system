@@ -14,8 +14,8 @@ var target : Node3D
 var focus_origin : Node3D
 var has_focus_origin : bool = false
 
-var target_angle_horizontal : float = 0.0
 var camera_pitch : float = 0.0
+var target_angle_horizontal : float = 0.0
 var camera_up_dir : Vector3 = Vector3.UP
 
 func set_target(new_target: Node3D) -> void:

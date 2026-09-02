@@ -111,6 +111,7 @@ var input_move : Vector2 = Vector2.ZERO
 var stance_height : float = 0.0
 var target_angle_horizontal : float = 0
 var camera_pitch : float = 0.0
+var camera_yaw : float = 0.0
 var sprinting := false
 var crouch_jump := false
 var grounded := false
@@ -241,14 +242,18 @@ func _physics_process(delta: float) -> void:
 	if multiplayer.is_server():
 		_apply_input_state(input_move, target_angle_horizontal, camera_pitch,
 			sprinting, jumping, crouching, crawling, trying_to_grab)
-	elif is_local_owner():
-		_send_input_to_server.rpc_id(1, input_move, target_angle_horizontal,
-			camera_pitch, sprinting, jumping, crouching, crawling, trying_to_grab)
-		if (shapecast_arms.is_colliding()):
-			var col = shapecast_arms.get_collider(0)
-			valid_grab = col is RigidBody3D and not col.has_meta("no_grab")
-		else:
-			valid_grab = false
+		shapecast_arms.transform.basis = shapecast_arms_base_basis * Basis(Vector3.RIGHT, -camera_pitch)
+	else:
+		shapecast_arms.global_basis = camera_controller.cam_spring.global_basis
+		shapecast_arms.global_basis.z = -shapecast_arms.global_basis.z
+		if is_local_owner():
+			_send_input_to_server.rpc_id(1, input_move, target_angle_horizontal,
+				camera_pitch, sprinting, jumping, crouching, crawling, trying_to_grab)
+			if (shapecast_arms.is_colliding()):
+				var col = shapecast_arms.get_collider(0)
+				valid_grab = col is RigidBody3D and not col.has_meta("no_grab")
+			else:
+				valid_grab = false
 	
 	if not is_multiplayer_authority():
 		return
@@ -260,8 +265,6 @@ func _physics_process(delta: float) -> void:
 	var base_right := up_dir.cross(global_basis.z).normalized()
 	var shapecast_basis := Basis(base_right, up_dir, global_basis.z.normalized())
 	shapecast_legs.global_basis = shapecast_basis.orthonormalized()
-
-	shapecast_arms.transform.basis = shapecast_arms_base_basis * Basis(Vector3.RIGHT, -camera_pitch)
 
 	var input_3d := _get_camera_relative_input(up_dir, input_move)
 	var max_speed = max(lerpf(crouch_speed * roll_force, roll_force * sprint_multiplier * sprint_multiplier_scale, min(stance_height / speed_stance_stop, 1)), 0)
