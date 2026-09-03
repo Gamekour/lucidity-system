@@ -265,12 +265,12 @@ func _physics_process(delta: float) -> void:
 			else:
 				valid_grab = false
 	
-	if not multiplayer.is_server():
-		return
-
 	var gravity_vec : Vector3 = get_gravity()
 	var up_dir : Vector3 = _get_up_direction(gravity_vec).normalized()
 	current_up_dir = up_dir
+	
+	if not multiplayer.is_server():
+		return
 	
 	var base_right := up_dir.cross(global_basis.z).normalized()
 	var shapecast_basis := Basis(base_right, up_dir, global_basis.z.normalized())
