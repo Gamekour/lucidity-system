@@ -49,23 +49,29 @@ func _process(delta: float) -> void:
 	if has_focus_origin:
 		camera_pitch = clampf(camera_pitch, min_camera_pitch, max_camera_pitch)
 	var up_dir := _get_target_up_dir().normalized()
+	var upside_down := up_dir.y < 0.0
 	var tilt_t : float = 1.0 - exp(-camera_tilt_smoothing * delta)
 	camera_up_dir = camera_up_dir.normalized()
 	camera_up_dir = _safe_slerp_up(camera_up_dir, up_dir, tilt_t)
-	var tilt_basis := _get_tilt_basis(camera_up_dir)
+	var tilt_basis := _get_tilt_basis(camera_up_dir, upside_down)
 	var yaw_basis := Basis(Vector3.UP, target_angle_horizontal)
-	var pitch_basis := Basis(Vector3.RIGHT, camera_pitch)
+	var pitch_angle = camera_pitch + (PI if upside_down else 0)
+	var pitch_basis := Basis(Vector3.RIGHT, pitch_angle)
 	var pivot_position := focus_origin.global_position if has_focus_origin else target.global_position
 	global_position = pivot_position
-	global_basis = tilt_basis * yaw_basis * pitch_basis
+	var flat_basis = yaw_basis * pitch_basis
+	global_basis = (tilt_basis * flat_basis)
 
 func _get_target_up_dir() -> Vector3:
 	if target is PhysicsPlayerController:
 		return (target as PhysicsPlayerController).current_up_dir
 	return Vector3.UP
 
-func _get_tilt_basis(up_dir: Vector3) -> Basis:
+func _get_tilt_basis(up_dir: Vector3, upside_down : bool) -> Basis:
 	var axis := Vector3.UP.cross(up_dir)
+	var t = abs(Vector3.RIGHT.dot(up_dir))
+	if upside_down:
+		axis = Vector3.DOWN.cross(up_dir)
 	var axis_length := axis.length()
 	if axis_length < 0.0001:
 		if Vector3.UP.dot(up_dir) < 0.0:
@@ -73,7 +79,10 @@ func _get_tilt_basis(up_dir: Vector3) -> Basis:
 		return Basis.IDENTITY
 	axis /= axis_length
 	var angle := Vector3.UP.angle_to(up_dir)
-	return Basis(axis, angle)
+	if upside_down:
+		angle = Vector3.DOWN.angle_to(up_dir)
+	var end_basis = Basis(axis, angle)
+	return end_basis
 
 func _safe_slerp_up(from: Vector3, to: Vector3, weight: float) -> Vector3:
 	from = from.normalized()
