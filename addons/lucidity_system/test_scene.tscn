@@ -14,6 +14,7 @@
 [ext_resource type="Script" uid="uid://b11yeup1xif5d" path="res://addons/lucidity_system/toggle_button.gd" id="12_oo8pe"]
 [ext_resource type="Script" uid="uid://da7t3xbiyxsvd" path="res://addons/lucidity_system/nav_agent_rigidbody.gd" id="13_xqn1g"]
 [ext_resource type="PackedScene" uid="uid://cf26g3lcevbfm" path="res://addons/lucidity_system/toygun.glb" id="14_p48gw"]
+[ext_resource type="Script" uid="uid://2by6uig7as31" path="res://addons/lucidity_system/ik_overlay.gd" id="15_3vnh1"]
 [ext_resource type="PackedScene" uid="uid://yhetlsk6081a" path="res://addons/lucidity_system/grav_test.glb" id="15_ehqhu"]
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_1s05b"]
@@ -189,6 +190,12 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5607107, 0)
 
 [node name="OmniLight3D" type="OmniLight3D" parent="Environment" unique_id=1154806392]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.1654396, 17.174236, -8.437365)
+omni_range = 147.727
+
+[node name="OmniLight3D4" type="OmniLight3D" parent="Environment" unique_id=827174733]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 39.82263, 13.536417, 2.062294)
+light_energy = 13.03
+shadow_enabled = true
 omni_range = 147.727
 
 [node name="OmniLight3D2" type="OmniLight3D" parent="Environment" unique_id=106794305]
@@ -508,6 +515,14 @@ mesh = SubResource("BoxMesh_fbuy2")
 [node name="ToyGun" parent="." unique_id=1458075073 instance=ExtResource("14_p48gw")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.6967921, 0.090282746, -2.4653006)
 metadata/attachment_slot = "RightHolster"
+
+[node name="IKOverlay" type="Node" parent="ToyGun" unique_id=1234888765 node_paths=PackedStringArray("override_nodes")]
+script = ExtResource("15_3vnh1")
+override_indices = Array[int]([2])
+override_nodes = [NodePath("../grip")]
+metadata/_custom_type_script = "uid://2by6uig7as31"
+
+[node name="grip" type="Node3D" parent="ToyGun" unique_id=520353106]
 
 [node name="grav_test" parent="." unique_id=1193492090 instance=ExtResource("15_ehqhu")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 39.818813, 13.290279, 2.3028274)
