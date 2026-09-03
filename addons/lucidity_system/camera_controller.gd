@@ -17,11 +17,14 @@ var has_focus_origin : bool = false
 var camera_pitch : float = 0.0
 var target_angle_horizontal : float = 0.0
 var camera_up_dir : Vector3 = Vector3.UP
+var transport_basis : Basis = Basis.IDENTITY
+var _transport_initialized : bool = false
 
 func set_target(new_target: Node3D) -> void:
 	target = new_target
 	focus_origin = null
 	has_focus_origin = false
+	_transport_initialized = false
 	if is_instance_valid(target):
 		var origin_node := target.find_child("focus_origin")
 		if origin_node is Node3D:
@@ -48,31 +51,44 @@ func _process(delta: float) -> void:
 		return
 	if has_focus_origin:
 		camera_pitch = clampf(camera_pitch, min_camera_pitch, max_camera_pitch)
-	var up_dir := _get_target_up_dir().normalized()
+	var target_up := _get_target_up_dir().normalized()
 	var tilt_t : float = 1.0 - exp(-camera_tilt_smoothing * delta)
-	camera_up_dir = camera_up_dir.normalized()
-	camera_up_dir = _safe_slerp_up(camera_up_dir, up_dir, tilt_t)
-	var tilt_basis := _get_tilt_basis(camera_up_dir)
+	_update_transport_basis(target_up, tilt_t)
 	var yaw_basis := Basis(Vector3.UP, target_angle_horizontal)
 	var pitch_basis := Basis(Vector3.RIGHT, camera_pitch)
 	var pivot_position := focus_origin.global_position if has_focus_origin else target.global_position
 	global_position = pivot_position
-	global_basis = tilt_basis * yaw_basis * pitch_basis
+	global_basis = transport_basis * yaw_basis * pitch_basis
 
 func _get_target_up_dir() -> Vector3:
 	if target is PhysicsPlayerController:
 		return (target as PhysicsPlayerController).current_up_dir
 	return Vector3.UP
 
-func _get_tilt_basis(up_dir: Vector3) -> Basis:
-	var axis := Vector3.UP.cross(up_dir)
+func _update_transport_basis(target_up: Vector3, t: float) -> void:
+	if not _transport_initialized:
+		transport_basis = _minimal_rotation(Vector3.UP, target_up)
+		camera_up_dir = target_up
+		_transport_initialized = true
+		return
+	var new_up := _safe_slerp_up(camera_up_dir, target_up, t)
+	var step_rotation := _minimal_rotation(camera_up_dir, new_up)
+	transport_basis = (step_rotation * transport_basis).orthonormalized()
+	camera_up_dir = new_up
+
+func _minimal_rotation(from: Vector3, to: Vector3) -> Basis:
+	from = from.normalized()
+	to = to.normalized()
+	var axis := from.cross(to)
 	var axis_length := axis.length()
 	if axis_length < 0.0001:
-		if Vector3.UP.dot(up_dir) < 0.0:
-			return Basis(Vector3.RIGHT, PI)
+		if from.dot(to) < 0.0:
+			var arbitrary := Vector3.RIGHT if abs(from.x) < 0.9 else Vector3.UP
+			var perp_axis := from.cross(arbitrary).normalized()
+			return Basis(perp_axis, PI)
 		return Basis.IDENTITY
 	axis /= axis_length
-	var angle := Vector3.UP.angle_to(up_dir)
+	var angle := acos(clampf(from.dot(to), -1.0, 1.0))
 	return Basis(axis, angle)
 
 func _safe_slerp_up(from: Vector3, to: Vector3, weight: float) -> Vector3:

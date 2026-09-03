@@ -97,6 +97,8 @@ var grab_offset : Vector3 = Vector3.ZERO
 var grab_rotation_offset : Basis = Basis.IDENTITY
 var relative_velocity : Vector3 = Vector3.ZERO
 var overlay_eulers : Vector3 = Vector3.ZERO
+var transport_basis : Basis = Basis.IDENTITY
+var _transport_initialized : bool = false
 
 var synced_grounded : bool = false
 var synced_current_up_dir : Vector3 = Vector3.UP
@@ -268,6 +270,7 @@ func _physics_process(delta: float) -> void:
 	var gravity_vec : Vector3 = get_gravity()
 	var up_dir : Vector3 = _get_up_direction(gravity_vec).normalized()
 	current_up_dir = up_dir
+	_update_transport_basis(up_dir)
 	
 	if not multiplayer.is_server():
 		return
@@ -461,16 +464,14 @@ func _get_up_direction(gravity_vec: Vector3) -> Vector3:
 	return -gravity_vec.normalized()
 
 func _get_horizontal_basis(up_dir: Vector3) -> Array:
-	var tilt_basis := _get_tilt_basis(up_dir)
-	var forward_ref := tilt_basis.z
-	var right_ref := tilt_basis.x
+	var forward_ref := transport_basis.z
+	var right_ref := transport_basis.x
 	return [forward_ref, right_ref]
 
 func _get_camera_relative_axes(up_dir: Vector3) -> Array:
-	var tilt_basis := _get_tilt_basis(up_dir)
 	var yaw_basis := Basis(Vector3.UP, target_angle_horizontal)
 	var pitch_basis := Basis(Vector3.RIGHT, camera_pitch)
-	var cam_basis := tilt_basis * yaw_basis * pitch_basis
+	var cam_basis := transport_basis * yaw_basis * pitch_basis
 	var cam_forward := -cam_basis.z
 	var flat_forward := cam_forward - up_dir * cam_forward.dot(up_dir)
 	if flat_forward.length_squared() < 0.0001:
@@ -588,15 +589,28 @@ func _upright_torque_towards(target_up: Vector3, strength: float, damping: float
 	var tipping_angular_velocity := angular_velocity - angular_velocity.project(current_up)
 	return axis * (tilt_angle * strength) - tipping_angular_velocity * damping
 
-func _get_tilt_basis(up_dir: Vector3) -> Basis:
-	var axis := Vector3.UP.cross(up_dir)
+func _update_transport_basis(up_dir: Vector3) -> void:
+	if not _transport_initialized:
+		transport_basis = _minimal_rotation(Vector3.UP, up_dir)
+		_transport_initialized = true
+		return
+	var prev_up := transport_basis.y.normalized()
+	var step_rotation := _minimal_rotation(prev_up, up_dir)
+	transport_basis = (step_rotation * transport_basis).orthonormalized()
+
+func _minimal_rotation(from: Vector3, to: Vector3) -> Basis:
+	from = from.normalized()
+	to = to.normalized()
+	var axis := from.cross(to)
 	var axis_length := axis.length()
 	if axis_length < 0.0001:
-		if Vector3.UP.dot(up_dir) < 0.0:
-			return Basis(Vector3.RIGHT, PI)
+		if from.dot(to) < 0.0:
+			var arbitrary := Vector3.RIGHT if abs(from.x) < 0.9 else Vector3.UP
+			var perp_axis := from.cross(arbitrary).normalized()
+			return Basis(perp_axis, PI)
 		return Basis.IDENTITY
 	axis /= axis_length
-	var angle := Vector3.UP.angle_to(up_dir)
+	var angle := acos(clampf(from.dot(to), -1.0, 1.0))
 	return Basis(axis, angle)
 
 func arm_cast() -> void:
