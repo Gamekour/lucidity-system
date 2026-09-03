@@ -107,6 +107,7 @@ var synced_climb_grab_tick : int = 0
 var synced_crouching : bool = false
 var synced_crawling : bool = false
 var synced_is_grabbing : bool = false
+var synced_camera_basis : Basis = Basis.IDENTITY
 var input_move : Vector2 = Vector2.ZERO
 var stance_height : float = 0.0
 var target_angle_horizontal : float = 0
@@ -241,21 +242,30 @@ func _physics_process(delta: float) -> void:
 
 	if multiplayer.is_server():
 		_apply_input_state(input_move, target_angle_horizontal, camera_pitch,
-			sprinting, jumping, crouching, crawling, trying_to_grab)
-		shapecast_arms.transform.basis = shapecast_arms_base_basis * Basis(Vector3.RIGHT, -camera_pitch) #incorrect if up_dir != Vector3.UP
+			sprinting, jumping, crouching, crawling, trying_to_grab, synced_camera_basis.get_rotation_quaternion())
+		shapecast_arms.global_basis = synced_camera_basis
+		shapecast_arms.global_basis = shapecast_arms.global_basis.rotated(shapecast_arms.global_basis.y, PI)
+		if (shapecast_arms.is_colliding()):
+			var col = shapecast_arms.get_collider(0)
+			valid_grab = col is RigidBody3D and not col.has_meta("no_grab")
+		else:
+			valid_grab = false
 	else:
-		shapecast_arms.global_basis = camera_controller.cam_spring.global_basis
-		shapecast_arms.global_basis.z = -shapecast_arms.global_basis.z
+		if is_local_owner() and is_instance_valid(camera_controller):
+			synced_camera_basis = camera_controller.cam_spring.global_basis
+		shapecast_arms.global_basis = synced_camera_basis
+		shapecast_arms.global_basis = shapecast_arms.global_basis.rotated(shapecast_arms.global_basis.y, PI)
 		if is_local_owner():
 			_send_input_to_server.rpc_id(1, input_move, target_angle_horizontal,
-				camera_pitch, sprinting, jumping, crouching, crawling, trying_to_grab)
+				camera_pitch, sprinting, jumping, crouching, crawling, trying_to_grab,
+				synced_camera_basis.get_rotation_quaternion())
 			if (shapecast_arms.is_colliding()):
 				var col = shapecast_arms.get_collider(0)
 				valid_grab = col is RigidBody3D and not col.has_meta("no_grab")
 			else:
 				valid_grab = false
 	
-	if not is_multiplayer_authority():
+	if not multiplayer.is_server():
 		return
 
 	var gravity_vec : Vector3 = get_gravity()
@@ -376,15 +386,15 @@ func _physics_process(delta: float) -> void:
 @rpc("any_peer", "call_remote", "unreliable_ordered")
 func _send_input_to_server(move: Vector2, yaw: float, pitch: float,
 		is_sprinting: bool, is_jumping: bool, is_crouching: bool,
-		is_crawling: bool, is_grabbing: bool) -> void:
+		is_crawling: bool, is_grabbing: bool, cam_rotation: Quaternion) -> void:
 	if !is_inside_tree(): return
 	if not multiplayer.is_server(): return
 	if multiplayer.get_remote_sender_id() != owner_peer_id: return
-	_apply_input_state(move, yaw, pitch, is_sprinting, is_jumping, is_crouching, is_crawling, is_grabbing)
+	_apply_input_state(move, yaw, pitch, is_sprinting, is_jumping, is_crouching, is_crawling, is_grabbing, cam_rotation)
 
 func _apply_input_state(move: Vector2, yaw: float, pitch: float,
 		is_sprinting: bool, is_jumping: bool, is_crouching: bool,
-		is_crawling: bool, is_grabbing: bool) -> void:
+		is_crawling: bool, is_grabbing: bool, cam_rotation: Quaternion) -> void:
 	input_move = move
 	target_angle_horizontal = yaw
 	camera_pitch = pitch
@@ -393,6 +403,7 @@ func _apply_input_state(move: Vector2, yaw: float, pitch: float,
 	crouching = is_crouching
 	crawling = is_crawling
 	trying_to_grab = is_grabbing
+	synced_camera_basis = Basis(cam_rotation)
 
 func _supply_input(event: InputEvent) -> void:
 	if not is_local_owner(): return
@@ -589,11 +600,10 @@ func _get_tilt_basis(up_dir: Vector3) -> Basis:
 	return Basis(axis, angle)
 
 func arm_cast() -> void:
-	if not shapecast_arms.is_colliding():
-		return
+	if not valid_grab: return
 
 	var collider = shapecast_arms.get_collider(0)
-
+	
 	if collider is RigidBody3D and not collider.has_meta("no_grab"):
 		grabbed_col = collider
 		grab_offset = collider.to_local(shapecast_arms.get_collision_point(0))
