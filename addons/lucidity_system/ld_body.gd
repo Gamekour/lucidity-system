@@ -347,7 +347,7 @@ func _physics_process(delta: float) -> void:
 		upright_torque = _get_upright_torque(up_dir, lean_input, upright_strength, upright_damping)
 	else:
 		upright_torque = _get_air_upright_torque(up_dir)
-	
+
 	var total_torque := yaw_torque + upright_torque
 	apply_torque(total_torque)
 	
@@ -461,17 +461,15 @@ func _get_up_direction(gravity_vec: Vector3) -> Vector3:
 	return -gravity_vec.normalized()
 
 func _get_horizontal_basis(up_dir: Vector3) -> Array:
-	var tilt_basis := _get_tilt_basis(up_dir, up_dir.y < 0)
+	var tilt_basis := _get_tilt_basis(up_dir)
 	var forward_ref := tilt_basis.z
 	var right_ref := tilt_basis.x
 	return [forward_ref, right_ref]
 
 func _get_camera_relative_axes(up_dir: Vector3) -> Array:
-	var upside_down := up_dir.y < 0.0
-	var tilt_basis := _get_tilt_basis(up_dir, upside_down)
-	var yaw_basis := Basis(Vector3.DOWN if upside_down else Vector3.UP, target_angle_horizontal)
-	var pitch_angle = camera_pitch + (PI if upside_down else 0)
-	var pitch_basis := Basis(Vector3.RIGHT, pitch_angle)
+	var tilt_basis := _get_tilt_basis(up_dir)
+	var yaw_basis := Basis(Vector3.UP, target_angle_horizontal)
+	var pitch_basis := Basis(Vector3.RIGHT, camera_pitch)
 	var cam_basis := tilt_basis * yaw_basis * pitch_basis
 	var cam_forward := -cam_basis.z
 	var flat_forward := cam_forward - up_dir * cam_forward.dot(up_dir)
@@ -590,11 +588,8 @@ func _upright_torque_towards(target_up: Vector3, strength: float, damping: float
 	var tipping_angular_velocity := angular_velocity - angular_velocity.project(current_up)
 	return axis * (tilt_angle * strength) - tipping_angular_velocity * damping
 
-func _get_tilt_basis(up_dir: Vector3, upside_down : bool) -> Basis:
+func _get_tilt_basis(up_dir: Vector3) -> Basis:
 	var axis := Vector3.UP.cross(up_dir)
-	var t = abs(Vector3.RIGHT.dot(up_dir))
-	if upside_down:
-		axis = Vector3.DOWN.cross(up_dir)
 	var axis_length := axis.length()
 	if axis_length < 0.0001:
 		if Vector3.UP.dot(up_dir) < 0.0:
@@ -602,10 +597,7 @@ func _get_tilt_basis(up_dir: Vector3, upside_down : bool) -> Basis:
 		return Basis.IDENTITY
 	axis /= axis_length
 	var angle := Vector3.UP.angle_to(up_dir)
-	if upside_down:
-		angle = Vector3.DOWN.angle_to(up_dir)
-	var end_basis = Basis(axis, angle)
-	return end_basis
+	return Basis(axis, angle)
 
 func arm_cast() -> void:
 	if not valid_grab: return
