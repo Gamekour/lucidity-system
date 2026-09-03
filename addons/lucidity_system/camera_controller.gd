@@ -17,6 +17,7 @@ var has_focus_origin : bool = false
 var camera_pitch : float = 0.0
 var target_angle_horizontal : float = 0.0
 var camera_up_dir : Vector3 = Vector3.UP
+var reference_basis : Basis = Basis.IDENTITY
 
 func set_target(new_target: Node3D) -> void:
 	target = new_target
@@ -58,6 +59,11 @@ func _process(delta: float) -> void:
 	var pivot_position := focus_origin.global_position if has_focus_origin else target.global_position
 	global_position = pivot_position
 	global_basis = tilt_basis * yaw_basis * pitch_basis
+	
+	_update_reference_basis()
+
+func _update_reference_basis():
+	reference_basis = global_basis
 
 func _get_target_up_dir() -> Vector3:
 	if target is PhysicsPlayerController:
