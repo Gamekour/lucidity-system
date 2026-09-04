@@ -73,6 +73,8 @@ func _update_transport_basis(target_up: Vector3, t: float) -> void:
 		return
 	var new_up := _safe_slerp_up(camera_up_dir, target_up, t)
 	var step_rotation := _minimal_rotation(camera_up_dir, new_up)
+	if target_up.is_equal_approx(Vector3.UP):
+		transport_basis = transport_basis.slerp(Basis.IDENTITY, t)
 	transport_basis = (step_rotation * transport_basis).orthonormalized()
 	camera_up_dir = new_up
 

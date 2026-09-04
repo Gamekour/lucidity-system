@@ -596,6 +596,8 @@ func _update_transport_basis(up_dir: Vector3) -> void:
 		return
 	var prev_up := transport_basis.y.normalized()
 	var step_rotation := _minimal_rotation(prev_up, up_dir)
+	if up_dir.is_equal_approx(Vector3.UP):
+		transport_basis = transport_basis.slerp(Basis.IDENTITY, 0.1)
 	transport_basis = (step_rotation * transport_basis).orthonormalized()
 
 func _minimal_rotation(from: Vector3, to: Vector3) -> Basis:
