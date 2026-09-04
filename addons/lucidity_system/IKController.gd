@@ -43,8 +43,21 @@ var pose_blend : float = 0.0
 var air_blend : float = 0.0
 var last_climb_grab_tick : int = 0
 
+var skeleton : Skeleton3D
+var _root_bone_indices : Array[int] = []
+
 func _process(delta: float) -> void:
 	if not initialized: return
+	
+	if skeleton != null:
+		if _root_bone_indices.size() != ik_bone_roots.size():
+			_root_bone_indices.clear()
+			for bone_name in ik_bone_roots:
+				_root_bone_indices.append(skeleton.find_bone(bone_name))
+		for i in ik_springs.size():
+			var bone_idx : int = _root_bone_indices[i]
+			if bone_idx != -1:
+				ik_springs[i].global_position = skeleton.global_transform * skeleton.get_bone_global_pose(bone_idx).origin
 	
 	var t := clampf(shapecast_legs.get_closest_collision_safe_fraction() * 2, 0, 1)
 	global_basis = body.basis.slerp(_apply_gravity_counter_rotation(delta), t)

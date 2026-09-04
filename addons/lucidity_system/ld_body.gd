@@ -174,6 +174,7 @@ func rig_setup() -> void:
 		if (playermodel_scene != null):
 			playermodel = PlayerModelFactory.spawn_player_model(playermodel_scene, self)
 			playermodel.body = self
+			ik_controller.skeleton = playermodel
 			var i = 0
 			for ik_node in ik_controller.ik_targets:
 				var two_bone := TwoBoneIK3D.new()
