@@ -17,11 +17,10 @@ func _process(_delta: float) -> void:
 	for i in range(count):
 		var idx: int = override_indices[i]
 		var source: Node3D = override_nodes[i]
-		if idx < 0 or idx >= ik_controller.ik_springs.size():
+		if idx < 0 or idx >= ik_controller.ik_targets.size():
 			continue
 		if source == null or not is_instance_valid(source):
 			continue
 
-		var spring := ik_controller.ik_springs[idx] as SpringArm3D
-		spring.look_at(source.global_position)
-		spring.spring_length = 0.0
+		var target := ik_controller.ik_targets[idx]
+		target.global_position = source.global_position
