@@ -191,7 +191,7 @@ func rig_setup() -> void:
 				var end := playermodel.get_bone_global_pose(playermodel.find_bone(ik_controller.ik_bone_ends[i])).origin
 				var chain_length = root.distance_to(mid) + mid.distance_to(end)
 				ik_controller.ik_springs[i].spring_length = chain_length
-				ik_controller.ik_springs[i].position = root
+				ik_controller.ik_springs[i].global_position = root
 				if i == 0:
 					var height = chain_length * shapecast_legs_length_scale
 					shapecast_legs.target_position = Vector3.DOWN * height
