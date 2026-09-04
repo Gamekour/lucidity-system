@@ -51,7 +51,7 @@ point_count = 5
 radius = 0.02
 
 [sub_resource type="BoxMesh" id="BoxMesh_sb6tq"]
-size = Vector3(0.05, 0.05, 0.25)
+size = Vector3(0.25, 0.05, 0.05)
 
 [sub_resource type="Resource" id="Resource_vr1i5"]
 script = ExtResource("6_qu0rw")
@@ -161,9 +161,6 @@ shape = SubResource("SphereShape3D_buypi")
 
 [node name="IK_RH" type="Marker3D" parent="rig_root/spring_RH" unique_id=1240559730]
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="rig_root/spring_RH" unique_id=1569910798]
-mesh = SubResource("BoxMesh_sb6tq")
-
 [node name="spring_LH" type="SpringArm3D" parent="rig_root" unique_id=584466057]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.072052956, 0.2880001, 0.0373559)
 shape = SubResource("SphereShape3D_buypi")
@@ -172,6 +169,10 @@ shape = SubResource("SphereShape3D_buypi")
 
 [node name="pole_RF" type="Node3D" parent="rig_root" unique_id=2032389328]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.069999695, 0, -0.67377615)
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="rig_root/pole_RF" unique_id=1569910798]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.15258491, 0, 0)
+mesh = SubResource("BoxMesh_sb6tq")
 
 [node name="pole_LF" type="Node3D" parent="rig_root" unique_id=1991189279]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.069999695, 0, -0.67377615)

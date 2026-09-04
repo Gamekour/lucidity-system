@@ -24,3 +24,4 @@ func _process(_delta: float) -> void:
 
 		var target := ik_controller.ik_targets[idx]
 		target.global_position = source.global_position
+		target.global_basis = source.global_basis

@@ -125,6 +125,7 @@ func _process(delta: float) -> void:
 			var body_yaw := body.global_basis.get_euler().y
 			var yaw_right := Vector3.RIGHT
 			ik_springs[i].rotate(yaw_right, -head_root.rotation.x + deg_to_rad(60))
+		ik_poles[i].global_basis = ik_targets[i].global_basis
 
 func _apply_gravity_counter_rotation(delta: float) -> Basis:
 	var parent_node := get_parent()
