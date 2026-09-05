@@ -16,6 +16,7 @@
 [ext_resource type="PackedScene" uid="uid://cf26g3lcevbfm" path="res://addons/lucidity_system/toygun.glb" id="14_p48gw"]
 [ext_resource type="Script" uid="uid://2by6uig7as31" path="res://addons/lucidity_system/ik_overlay.gd" id="15_3vnh1"]
 [ext_resource type="PackedScene" uid="uid://yhetlsk6081a" path="res://addons/lucidity_system/grav_test.glb" id="15_ehqhu"]
+[ext_resource type="Script" uid="uid://clomgkhcajpdc" path="res://addons/lucidity_system/node_path_builder_3d.gd" id="16_jejnn"]
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_1s05b"]
 radius = 0.25
@@ -89,6 +90,8 @@ size = Vector3(0.5, 0.25, 3)
 
 [sub_resource type="BoxMesh" id="BoxMesh_fbuy2"]
 size = Vector3(0.5, 0.25, 3)
+
+[sub_resource type="Curve3D" id="Curve3D_3vnh1"]
 
 [node name="Test Scene" type="Node3D" unique_id=667831700]
 
@@ -519,17 +522,35 @@ metadata/attachment_slot = "RightHolster"
 [node name="IKOverlay" type="Node" parent="ToyGun" unique_id=1234888765 node_paths=PackedStringArray("override_nodes")]
 script = ExtResource("15_3vnh1")
 override_indices = Array[int]([2, 3])
-override_nodes = [NodePath("../grip"), NodePath("../grip2")]
+override_nodes = [NodePath("../grip"), NodePath("../Path3D/grip2")]
 metadata/_custom_type_script = "uid://2by6uig7as31"
 
 [node name="grip" type="Node3D" parent="ToyGun" unique_id=520353106]
 transform = Transform3D(-4.3711385e-08, 0, -1, 0.9999999, -4.371138e-08, -4.371139e-08, -4.3711385e-08, -0.9999999, 0, 0.041826963, 0, 0.084499836)
 
-[node name="grip2" type="Node3D" parent="ToyGun" unique_id=491964263]
-transform = Transform3D(-4.3711385e-08, 4.2351647e-22, 1, -0.9999999, -4.371138e-08, -4.371139e-08, 4.3711378e-08, -0.9999999, 0, -0.05248952, 2.9802322e-08, -0.011591673)
-
 [node name="attachment_origin" type="Node3D" parent="ToyGun" unique_id=1634066231]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.06411743, 0, 0.10354757)
+
+[node name="Path3D" type="Path3D" parent="ToyGun" unique_id=855883784]
+curve = SubResource("Curve3D_3vnh1")
+script = ExtResource("16_jejnn")
+waypoints = Array[NodePath]([NodePath("../reload_path/path0"), NodePath("../reload_path/path1"), NodePath("../reload_path/path2")])
+closed_loop = true
+metadata/_custom_type_script = "uid://clomgkhcajpdc"
+
+[node name="grip2" type="PathFollow3D" parent="ToyGun/Path3D" unique_id=720644356]
+transform = Transform3D(0.9999999, 0, 0, 0, 0.9999999, 0, 0, 0, 1, 0, 0, 0)
+
+[node name="reload_path" type="Node3D" parent="ToyGun" unique_id=1134720487]
+
+[node name="path0" type="Node3D" parent="ToyGun/reload_path" unique_id=509513274]
+transform = Transform3D(-4.3711385e-08, 4.2351647e-22, 1, -0.9999999, -4.371138e-08, -4.371139e-08, 4.3711378e-08, -0.9999999, 0, -0.05248952, 2.9802322e-08, -0.011591673)
+
+[node name="path1" type="Node3D" parent="ToyGun/reload_path" unique_id=927660285]
+transform = Transform3D(-4.3711385e-08, 4.2351647e-22, 1, -0.9999999, -4.371138e-08, -4.371139e-08, 4.3711378e-08, -0.9999999, 0, -0.14877605, -0.15537308, -0.011591666)
+
+[node name="path2" type="Node3D" parent="ToyGun/reload_path" unique_id=815887283]
+transform = Transform3D(-4.3711385e-08, 4.2351647e-22, 1, -0.9999999, -4.371138e-08, -4.371139e-08, 4.3711378e-08, -0.9999999, 0, -0.25630188, -0.28038043, -0.011591666)
 
 [node name="grav_test" parent="." unique_id=1193492090 instance=ExtResource("15_ehqhu")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 39.818813, 13.290279, 2.3028274)

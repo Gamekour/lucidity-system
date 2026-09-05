@@ -387,7 +387,8 @@ func add_exceptions(parent_body : RigidBody3D, child_body : Node3D):
 		i.add_exception(child_body)
 
 func _clear_ik_overrides(ik_overlay: IKOverlay) -> void:
-	if (multiplayer.is_server()): return
+	if (multiplayer != null):
+		if (multiplayer.is_server()): return
 	var ik_controller := ik_overlay.ik_controller
 	if not is_instance_valid(ik_controller):
 		return
