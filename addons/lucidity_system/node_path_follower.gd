@@ -66,5 +66,5 @@ func _apply_slerped_rotation() -> void:
 		var b: float = _waypoint_offsets[i + 1]
 		if offset <= b:
 			var t: float = 0.0 if is_equal_approx(a, b) else (offset - a) / (b - a)
-			basis = Basis(_waypoint_rotations[i].slerp(_waypoint_rotations[i + 1], t))
+			global_basis = Basis(_waypoint_rotations[i].slerp(_waypoint_rotations[i + 1], t))
 			return
