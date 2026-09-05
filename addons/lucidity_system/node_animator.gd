@@ -18,6 +18,8 @@ func _process(delta: float) -> void:
 		return
 	if origin is PathFollow3D:
 		(origin as PathFollow3D).progress += delta * animation_speed
+	if origin is NodePathRotationSync:
+		origin.path_follower.progress += delta * animation_speed
 	target.global_transform = origin.global_transform
 
 func set_animation_index(index: int) -> void:

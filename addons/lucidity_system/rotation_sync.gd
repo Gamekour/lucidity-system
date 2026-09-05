@@ -1,6 +1,7 @@
-extends PathFollow3D
-class_name NodePathFollower3D
+extends Node3D
+class_name NodePathRotationSync
 
+@export var path_follower: PathFollow3D
 @export var copy_rotation: bool = false
 
 var _waypoint_offsets: Array[float] = []
@@ -13,6 +14,7 @@ func _process(_delta: float) -> void:
 	if not copy_rotation or _waypoint_rotations.size() < 2:
 		return
 	_apply_slerped_rotation()
+	global_position = path_follower.global_position
 
 func rebuild_waypoint_rotations() -> void:
 	_waypoint_offsets.clear()
@@ -30,7 +32,6 @@ func rebuild_waypoint_rotations() -> void:
 		var local_pos: Vector3 = path.to_local(node.global_position)
 		_waypoint_offsets.append(path.curve.get_closest_offset(local_pos))
 		_waypoint_rotations.append(node.global_basis.get_rotation_quaternion())
-		print(node)
 
 	if path is NodePathBuilder3D and (path as NodePathBuilder3D).closed_loop:
 		_waypoint_offsets.append(path.curve.get_baked_length())
@@ -50,7 +51,7 @@ func _gather_waypoint_nodes(path: Path3D) -> Array[Node3D]:
 	return result
 
 func _apply_slerped_rotation() -> void:
-	var offset: float = progress
+	var offset: float = path_follower.progress
 
 	if offset <= _waypoint_offsets[0]:
 		global_basis = Basis(_waypoint_rotations[0])
@@ -66,5 +67,5 @@ func _apply_slerped_rotation() -> void:
 		var b: float = _waypoint_offsets[i + 1]
 		if offset <= b:
 			var t: float = 0.0 if is_equal_approx(a, b) else (offset - a) / (b - a)
-			global_basis = Basis(_waypoint_rotations[i].slerp(_waypoint_rotations[i + 1], t))
+			basis = Basis(_waypoint_rotations[i].slerp(_waypoint_rotations[i + 1], t))
 			return
