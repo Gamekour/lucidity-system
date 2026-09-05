@@ -518,11 +518,18 @@ metadata/attachment_slot = "RightHolster"
 
 [node name="IKOverlay" type="Node" parent="ToyGun" unique_id=1234888765 node_paths=PackedStringArray("override_nodes")]
 script = ExtResource("15_3vnh1")
-override_indices = Array[int]([2])
-override_nodes = [NodePath("../grip")]
+override_indices = Array[int]([2, 3])
+override_nodes = [NodePath("../grip"), NodePath("../grip2")]
 metadata/_custom_type_script = "uid://2by6uig7as31"
 
 [node name="grip" type="Node3D" parent="ToyGun" unique_id=520353106]
+transform = Transform3D(-4.3711385e-08, 0, -1, 0.9999999, -4.371138e-08, -4.371139e-08, -4.3711385e-08, -0.9999999, 0, 0.041826963, 0, 0.084499836)
+
+[node name="grip2" type="Node3D" parent="ToyGun" unique_id=491964263]
+transform = Transform3D(-4.3711385e-08, 4.2351647e-22, 1, -0.9999999, -4.371138e-08, -4.371139e-08, 4.3711378e-08, -0.9999999, 0, -0.05248952, 2.9802322e-08, -0.011591673)
+
+[node name="attachment_origin" type="Node3D" parent="ToyGun" unique_id=1634066231]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.06411743, 0, 0.10354757)
 
 [node name="grav_test" parent="." unique_id=1193492090 instance=ExtResource("15_ehqhu")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 39.818813, 13.290279, 2.3028274)

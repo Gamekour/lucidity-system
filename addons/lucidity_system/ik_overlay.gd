@@ -23,5 +23,6 @@ func _process(_delta: float) -> void:
 			continue
 
 		var target := ik_controller.ik_targets[idx]
+		ik_controller.ik_overrides[idx] = true
 		target.global_position = source.global_position
-		target.global_basis = source.global_basis
+		target.global_rotation = source.global_rotation

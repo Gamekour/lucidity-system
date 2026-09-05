@@ -2,13 +2,15 @@ extends Node3D
 class_name WalkIKController
 
 @export var head_root : Node3D
-@export var ik_springs : Array[SpringArm3D]
+@export var ik_springs : Array[ShapeCast3D]
 @export var ik_targets : Array[Node3D]
 @export var ik_poles : Array[Node3D]
 @export var ik_bone_roots : Array[String]
 @export var ik_bone_mids : Array[String]
 @export var ik_bone_ends : Array[String]
 @export var start_positions : Array[Vector3]
+@export var start_rotations : Array[Vector3]
+@export var pole_axes : Array[Vector3]
 @export var phase_offsets : Array[float] = [0.0, 0.5, 0.5, 0.0]
 @export var speed_min : float = 0.25
 @export var speed_max : float = 0.5
@@ -45,6 +47,10 @@ var last_climb_grab_tick : int = 0
 
 var skeleton : Skeleton3D
 var _root_bone_indices : Array[int] = []
+var ik_overrides : Array[bool] = []
+
+func _ready() -> void:
+	ik_overrides.resize(ik_targets.size())
 
 func _process(delta: float) -> void:
 	if not initialized: return
@@ -118,14 +124,13 @@ func _process(delta: float) -> void:
 
 		var limb_air_blend := 1.0 if (is_climbing and i < 2) else air_blend
 		var target_pos := grounded_pos.lerp(airborne_pos, limb_air_blend)
-		var is_holding = i >= 2 and body.synced_is_grabbing and not body.synced_climbing_ledge
-		ik_springs[i].look_at(to_global(target_pos if not is_holding else start_positions[i]), to_global(Vector3.UP), true)
-		ik_springs[i].spring_length = ik_springs[i].global_position.distance_to(to_global(target_pos))
-		if body.synced_is_grabbing and i >= 2:
-			var body_yaw := body.global_basis.get_euler().y
-			var yaw_right := Vector3.RIGHT
-			ik_springs[i].rotate(yaw_right, -head_root.rotation.x + deg_to_rad(60))
-		ik_poles[i].global_basis = ik_targets[i].global_basis
+		if (!ik_overrides[i]):
+			ik_springs[i].target_position = target_pos
+			ik_targets[i].global_position = ik_springs[i].to_global(target_pos) if (!ik_springs[i].is_colliding()) else ik_springs[i].get_collision_point(0)
+			ik_targets[i].rotation = start_rotations[i]
+		var is_left = ik_springs[i].position.x < 0
+		var pole_pos = ik_springs[i].global_position.lerp(ik_targets[i].global_position, 0.5) + ik_targets[i].global_basis * pole_axes[i] * (0.25 if is_left else -0.25)
+		ik_poles[i].global_position = pole_pos
 
 func _apply_gravity_counter_rotation(delta: float) -> Basis:
 	var parent_node := get_parent()

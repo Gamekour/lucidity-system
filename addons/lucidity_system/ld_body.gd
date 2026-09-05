@@ -184,15 +184,16 @@ func rig_setup() -> void:
 				two_bone.set_root_bone_name(0, ik_controller.ik_bone_roots[i])
 				two_bone.set_middle_bone_name(0, ik_controller.ik_bone_mids[i])
 				two_bone.set_end_bone_name(0, ik_controller.ik_bone_ends[i])
-				two_bone.set_pole_direction(0, SkeletonModifier3D.SECONDARY_DIRECTION_MINUS_Z)
 				two_bone.name = ik_controller.ik_targets[i].name
 				playermodel.add_child(two_bone)
+				var end_fixer := IKEndFixer.new()
+				end_fixer.target_node = ik_controller.ik_targets[i]
+				end_fixer.bone_name = ik_controller.ik_bone_ends[i]
+				playermodel.add_child(end_fixer)
 				var root := playermodel.get_bone_global_pose(playermodel.find_bone(ik_controller.ik_bone_roots[i])).origin
 				var mid := playermodel.get_bone_global_pose(playermodel.find_bone(ik_controller.ik_bone_mids[i])).origin
 				var end := playermodel.get_bone_global_pose(playermodel.find_bone(ik_controller.ik_bone_ends[i])).origin
 				var chain_length = root.distance_to(mid) + mid.distance_to(end)
-				ik_controller.ik_springs[i].spring_length = chain_length
-				ik_controller.ik_springs[i].global_position = root
 				if i == 0:
 					var height = chain_length * shapecast_legs_length_scale
 					shapecast_legs.target_position = Vector3.DOWN * height
@@ -454,7 +455,7 @@ func _do_attach_grabbed() -> void:
 		grab_release_pending.erase(grabbed_col)
 		if (ik_controller != null):
 			for spring in ik_controller.ik_springs:
-				spring.remove_excluded_object(grabbed_col.get_rid())
+				spring.remove_exception(grabbed_col)
 		grabbed_col = null
 		climbing_ledge = false
 		_reset_climb_scan()
@@ -632,7 +633,7 @@ func arm_cast() -> void:
 		grab_release_pending.erase(grabbed_col)
 		if (ik_controller != null):
 			for spring in ik_controller.ik_springs:
-				spring.add_excluded_object(collider.get_rid())
+				spring.add_exception(collider)
 		return
 
 	var hit_point := shapecast_arms.get_collision_point(0)
@@ -929,7 +930,7 @@ func _ungrab() -> void:
 	_queue_collision_exception_release(grabbed_col)
 	if (ik_controller != null and grabbed_col != null):
 		for spring in ik_controller.ik_springs:
-			spring.remove_excluded_object(grabbed_col.get_rid())
+			spring.remove_exception(grabbed_col)
 	grabbed_col = null
 	climbing_ledge = false
 	_reset_climb_scan()
