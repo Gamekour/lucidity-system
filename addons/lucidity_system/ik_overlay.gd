@@ -10,7 +10,7 @@ func _ready() -> void:
 	process_priority = 50
 
 func _process(_delta: float) -> void:
-	if not active or ik_controller == null:
+	if not active or ik_controller == null or multiplayer.is_server():
 		return
 
 	var count := min(override_indices.size(), override_nodes.size())
@@ -23,6 +23,5 @@ func _process(_delta: float) -> void:
 			continue
 
 		var target := ik_controller.ik_targets[idx]
-		ik_controller.ik_overrides[idx] = true
 		target.global_position = source.global_position
 		target.global_rotation = source.global_rotation

@@ -284,7 +284,7 @@ func _on_hotbar_change() -> void:
 			continue
 
 		var is_equipped: bool = i == current_hotbar_slot
-		if is_equipped and not slot["is_hidden"]:
+		if is_equipped:
 			skeleton_overlay.active = true
 		else:
 			skeleton_overlay.active = false
@@ -355,6 +355,8 @@ func attach(child_body: RigidBody3D) -> bool:
 	if (ik_overlay != null and body.ik_controller != null):
 		ik_overlay.ik_controller = body.ik_controller
 		ik_overlay.active = true
+		for override in ik_overlay.override_indices:
+			body.ik_controller.ik_overrides[override] = true
 	slot["origin_xform_inv"] = origin_xform.affine_inverse()
 
 	child_body.freeze = true
@@ -384,6 +386,15 @@ func add_exceptions(parent_body : RigidBody3D, child_body : Node3D):
 	for i in parent_body.find_children("*", "ShapeCast3D", true, false):
 		i.add_exception(child_body)
 
+func _clear_ik_overrides(ik_overlay: IKOverlay) -> void:
+	if (multiplayer.is_server()): return
+	var ik_controller := ik_overlay.ik_controller
+	if not is_instance_valid(ik_controller):
+		return
+	for idx in ik_overlay.override_indices:
+		if idx >= 0 and idx < ik_controller.ik_overrides.size():
+			ik_controller.ik_overrides[idx] = false
+
 func detach(child_body: RigidBody3D) -> void:
 	for slot_name in attachment_slots.keys():
 		var slot: Dictionary = attachment_slots[slot_name]
@@ -411,8 +422,9 @@ func detach(child_body: RigidBody3D) -> void:
 	if (skeleton_overlay != null):
 		skeleton_overlay.active = false
 	if (ik_overlay != null):
-		ik_overlay.ik_controller = body.ik_controller
-		ik_overlay.active = true
+		_clear_ik_overrides(ik_overlay)
+		ik_overlay.ik_controller = null
+		ik_overlay.active = false
 	if (body is RigidBody3D and child_body is RigidBody3D):
 		body.mass -= child_body.mass
 	if (is_instance_valid(body)):
