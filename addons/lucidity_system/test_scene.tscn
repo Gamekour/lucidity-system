@@ -17,6 +17,7 @@
 [ext_resource type="Script" uid="uid://2by6uig7as31" path="res://addons/lucidity_system/ik_overlay.gd" id="15_3vnh1"]
 [ext_resource type="PackedScene" uid="uid://yhetlsk6081a" path="res://addons/lucidity_system/grav_test.glb" id="15_ehqhu"]
 [ext_resource type="Script" uid="uid://clomgkhcajpdc" path="res://addons/lucidity_system/node_path_builder_3d.gd" id="16_jejnn"]
+[ext_resource type="Script" uid="uid://dhwc14mboyjsw" path="res://addons/lucidity_system/node_path_follower.gd" id="17_4w186"]
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_1s05b"]
 radius = 0.25
@@ -90,8 +91,6 @@ size = Vector3(0.5, 0.25, 3)
 
 [sub_resource type="BoxMesh" id="BoxMesh_fbuy2"]
 size = Vector3(0.5, 0.25, 3)
-
-[sub_resource type="Curve3D" id="Curve3D_3vnh1"]
 
 [node name="Test Scene" type="Node3D" unique_id=667831700]
 
@@ -532,14 +531,17 @@ transform = Transform3D(-4.3711385e-08, 0, -1, 0.9999999, -4.371138e-08, -4.3711
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.06411743, 0, 0.10354757)
 
 [node name="Path3D" type="Path3D" parent="ToyGun" unique_id=855883784]
-curve = SubResource("Curve3D_3vnh1")
 script = ExtResource("16_jejnn")
 waypoints = Array[NodePath]([NodePath("../reload_path/path0"), NodePath("../reload_path/path1"), NodePath("../reload_path/path2")])
 closed_loop = true
 metadata/_custom_type_script = "uid://clomgkhcajpdc"
 
-[node name="grip2" type="PathFollow3D" parent="ToyGun/Path3D" unique_id=720644356]
+[node name="grip2" type="PathFollow3D" parent="ToyGun/Path3D" unique_id=74984999]
 transform = Transform3D(0.9999999, 0, 0, 0, 0.9999999, 0, 0, 0, 1, 0, 0, 0)
+progress = 0.1
+script = ExtResource("17_4w186")
+copy_rotation = true
+metadata/_custom_type_script = "uid://dhwc14mboyjsw"
 
 [node name="reload_path" type="Node3D" parent="ToyGun" unique_id=1134720487]
 
