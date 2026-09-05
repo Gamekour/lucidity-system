@@ -12,6 +12,8 @@ class_name WalkIKController
 @export var start_rotations : Array[Vector3]
 @export var pole_axes : Array[Vector3]
 @export var phase_offsets : Array[float] = [0.0, 0.5, 0.5, 0.0]
+@export_range(0.0, 90.0, 0.5, "radians_as_degrees") var foot_pitch_max : float = deg_to_rad(30.0)
+@export var foot_pitch_lift_scale : float = 4.0
 @export var speed_min : float = 0.25
 @export var speed_max : float = 0.5
 @export var min_speed : float = 1.0
@@ -127,7 +129,11 @@ func _process(delta: float) -> void:
 		if (!ik_overrides[i]):
 			ik_springs[i].target_position = target_pos
 			ik_targets[i].global_position = ik_springs[i].to_global(target_pos) if (!ik_springs[i].is_colliding()) else ik_springs[i].get_collision_point(0)
-			ik_targets[i].rotation = start_rotations[i]
+			if i < 2:
+				var foot_pitch := clampf(lift * foot_pitch_lift_scale, 0.0, 1.0) * foot_pitch_max * pose_blend
+				ik_targets[i].rotation = start_rotations[i] + Vector3(-foot_pitch, 0.0, 0.0)
+			else:
+				ik_targets[i].rotation = start_rotations[i]
 		var is_left = ik_springs[i].position.x < 0
 		var pole_pos = ik_springs[i].global_position.lerp(ik_targets[i].global_position, 0.5) + ik_targets[i].global_basis * pole_axes[i] * (0.25 if is_left else -0.25)
 		ik_poles[i].global_position = pole_pos
