@@ -486,7 +486,13 @@ func _on_skeleton_updated() -> void:
 			var bone_global_pose: Transform3D = playermodel.get_bone_global_pose(bone_idx)
 			target_xform = playermodel.global_transform * bone_global_pose * offset
 		elif is_equipped and body != null:
-			target_xform = body.shapecast_arms.global_transform * offset
+			var equip_offset = offset
+			var normal_distance : float = offset.origin.length()
+			if body.shapecast_arms.is_colliding() and normal_distance > 0.0001:
+				var hit_distance : float = body.shapecast_arms.get_closest_collision_safe_fraction() * body.shapecast_arms.target_position.length()
+				if hit_distance < normal_distance:
+					equip_offset = Transform3D(offset.basis, offset.origin * (hit_distance / normal_distance))
+			target_xform = body.shapecast_arms.global_transform * equip_offset
 		else:
 			target_xform = parent.global_transform * offset
 
