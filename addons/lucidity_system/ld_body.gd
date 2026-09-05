@@ -618,11 +618,12 @@ func _minimal_rotation(from: Vector3, to: Vector3) -> Basis:
 	return Basis(axis, angle)
 
 func arm_cast() -> void:
-	if not valid_grab: return
+	if not shapecast_arms.is_colliding(): return
 
 	var collider = shapecast_arms.get_collider(0)
+	if (collider.has_meta("no_grab")): return
 	
-	if collider is RigidBody3D and not collider.has_meta("no_grab"):
+	if collider is RigidBody3D:
 		grabbed_col = collider
 		grab_offset = collider.to_local(shapecast_arms.get_collision_point(0))
 		grab_rotation_offset = global_basis.orthonormalized().inverse() * collider.global_basis.orthonormalized()
