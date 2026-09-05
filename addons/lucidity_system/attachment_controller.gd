@@ -18,6 +18,11 @@ const ATTACHMENT_ORIGIN_NAME: String = "attachment_origin"
 @export var slot_definitions: Array[AttachmentSlot]
 @export var drop_distance: float = 1.0
 @export var drop_height: float = 0.2
+@export var sway_spring_strength: float = 200.0
+@export var sway_spring_damping: float = 20.0
+@export var sway_velocity_scale: float = 0.0
+@export var sway_torque_spring_strength: float = 200.0
+@export var sway_torque_spring_damping: float = 20.0
 var hotbar : Array[AttachmentSlot]
 var current_hotbar_slot : int = 0
 
@@ -210,7 +215,11 @@ func _build_slots() -> void:
 			"origin_xform_inv": Transform3D.IDENTITY,
 			"is_hotbar" : def.is_hotbar,
 			"is_hidden" : def.is_hidden,
-			"temp_shown" : false
+			"temp_shown" : false,
+			"relative_velocity": Vector3.ZERO,
+			"sway_offset": Vector3.ZERO,
+			"angular_velocity": Vector3.ZERO,
+			"sway_angular_offset": Vector3.ZERO
 		}
 
 func _find_attachment_origin(body: Node3D) -> Transform3D:
@@ -228,6 +237,16 @@ func _mirror_bone_name(bone_name: String) -> String:
 	elif bone_name.find("Right") != -1:
 		return bone_name.replace("Right", "Left")
 	return bone_name
+
+func add_sway_impulse(slot_name: String, impulse: Vector3) -> void:
+	if not attachment_slots.has(slot_name):
+		return
+	attachment_slots[slot_name]["relative_velocity"] += impulse
+
+func add_sway_torque_impulse(slot_name: String, impulse: Vector3) -> void:
+	if not attachment_slots.has(slot_name):
+		return
+	attachment_slots[slot_name]["angular_velocity"] += impulse
 
 func _resolve_bone_idx(slot: Dictionary) -> int:
 	var bone_name: String = slot["bone_name"]
@@ -413,7 +432,8 @@ func _on_body_tree_exiting() -> void:
 			detach(occupant)
 
 func _on_skeleton_updated() -> void:
-	
+	var delta := get_physics_process_delta_time()
+
 	for slot_name in attachment_slots.keys():
 		var slot: Dictionary = attachment_slots[slot_name]
 		var child: RigidBody3D = slot["occupant"]
@@ -456,5 +476,27 @@ func _on_skeleton_updated() -> void:
 			target_xform = body.shapecast_arms.global_transform * offset
 		else:
 			target_xform = parent.global_transform * offset
+
+		if is_equipped:
+			var sway_accel: Vector3 = (-slot["sway_offset"] * sway_spring_strength) - (slot["relative_velocity"] * sway_spring_damping)
+			slot["relative_velocity"] += sway_accel * delta
+			slot["sway_offset"] += slot["relative_velocity"] * delta
+
+			var torque_accel: Vector3 = (-slot["sway_angular_offset"] * sway_torque_spring_strength) - (slot["angular_velocity"] * sway_torque_spring_damping)
+			slot["angular_velocity"] += torque_accel * delta
+			slot["sway_angular_offset"] += slot["angular_velocity"] * delta
+
+			var velocity_sway: Vector3 = Vector3.ZERO
+			if body != null:
+				var body_local_velocity: Vector3 = body.global_basis.orthonormalized().inverse() * body.synced_linear_velocity
+				velocity_sway = -body_local_velocity * sway_velocity_scale
+
+			var sway_basis: Basis = Basis.from_euler(slot["sway_angular_offset"])
+			target_xform = target_xform * Transform3D(sway_basis, slot["sway_offset"] + velocity_sway)
+		else:
+			slot["relative_velocity"] = Vector3.ZERO
+			slot["sway_offset"] = Vector3.ZERO
+			slot["angular_velocity"] = Vector3.ZERO
+			slot["sway_angular_offset"] = Vector3.ZERO
 
 		child.global_transform = target_xform * slot["origin_xform_inv"]

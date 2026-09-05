@@ -203,4 +203,5 @@ transform = Transform3D(1, 8.420134e-15, 0, 8.393005e-15, 1, 0, 0, 6.4212524e-14
 [node name="AttachmentController" type="Node3D" parent="." unique_id=1784956247]
 script = ExtResource("5_uqufu")
 slot_definitions = Array[ExtResource("6_qu0rw")]([SubResource("Resource_vr1i5"), SubResource("Resource_rpuu0"), SubResource("Resource_p48gw")])
+sway_velocity_scale = 0.005
 metadata/attachment_slot = "RightHolster"
