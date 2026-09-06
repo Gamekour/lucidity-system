@@ -47,10 +47,13 @@ func _controller_delivered(controller_node : Node) -> void:
 	var owner = int(controller.name.trim_suffix("_controller"))
 	if (owner == multiplayer.get_unique_id()):
 		local_controller = controller
-	if (multiplayer.is_server()):
-		controller.spawn_pawn(owner)
+		if !multiplayer.is_server():
+			controller.spawn_pawn.rpc_id(1, owner)
+		else:
+			controller.spawn_pawn(1)
 
 func _pawn_delivered(pawn_node : Node) -> void:
+	print("pawn delivered")
 	pawn_node.set_multiplayer_authority(1)
 	var target_owner = int(pawn_node.name)
 	if (pawn_node is PhysicsPlayerController):
