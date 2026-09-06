@@ -53,7 +53,6 @@ func _controller_delivered(controller_node : Node) -> void:
 			controller.spawn_pawn(1)
 
 func _pawn_delivered(pawn_node : Node) -> void:
-	print("pawn delivered")
 	pawn_node.set_multiplayer_authority(1)
 	var target_owner = int(pawn_node.name)
 	if (pawn_node is PhysicsPlayerController):

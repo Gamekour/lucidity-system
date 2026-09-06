@@ -258,18 +258,22 @@ func _physics_process(delta: float) -> void:
 			valid_grab = col is RigidBody3D and not col.has_meta("no_grab")
 		else:
 			valid_grab = false
-	else:
+	if is_local_owner():
 		shapecast_arms.global_basis = synced_camera_basis
 		shapecast_arms.global_basis = shapecast_arms.global_basis.rotated(shapecast_arms.global_basis.y, PI)
-		if is_local_owner():
+		if multiplayer.is_server():
+			_send_input_to_server(input_move, target_angle_horizontal,
+			camera_pitch, sprinting, jumping, crouching, crawling, trying_to_grab,
+			synced_camera_basis.get_rotation_quaternion())
+		else:
 			_send_input_to_server.rpc_id(1, input_move, target_angle_horizontal,
 				camera_pitch, sprinting, jumping, crouching, crawling, trying_to_grab,
 				synced_camera_basis.get_rotation_quaternion())
-			if (shapecast_arms.is_colliding()):
-				var col = shapecast_arms.get_collider(0)
-				valid_grab = col is RigidBody3D and not col.has_meta("no_grab")
-			else:
-				valid_grab = false
+		if (shapecast_arms.is_colliding()):
+			var col = shapecast_arms.get_collider(0)
+			valid_grab = col is RigidBody3D and not col.has_meta("no_grab")
+		else:
+			valid_grab = false
 	
 	var gravity_vec : Vector3 = get_gravity()
 	var up_dir : Vector3 = _get_up_direction(gravity_vec).normalized()
@@ -384,7 +388,7 @@ func _physics_process(delta: float) -> void:
 	
 	if (grabbed_col == null && trying_to_grab && allow_grab):
 		arm_cast()
-	elif (grabbed_col != null and (!trying_to_grab or !allow_grab)):
+	elif (grabbed_col != null and !allow_grab):
 		_ungrab()
 	arm_logic()
 	_process_climb_scan(delta, input_move)
@@ -396,7 +400,8 @@ func _send_input_to_server(move: Vector2, yaw: float, pitch: float,
 		is_crawling: bool, is_grabbing: bool, cam_rotation: Quaternion) -> void:
 	if !is_inside_tree(): return
 	if not multiplayer.is_server(): return
-	if multiplayer.get_remote_sender_id() != owner_peer_id: return
+	var sender_id = multiplayer.get_remote_sender_id()
+	if sender_id != owner_peer_id and sender_id != 0: return
 	_apply_input_state(move, yaw, pitch, is_sprinting, is_jumping, is_crouching, is_crawling, is_grabbing, cam_rotation)
 
 func _apply_input_state(move: Vector2, yaw: float, pitch: float,
@@ -417,7 +422,13 @@ func _supply_input(event: InputEvent) -> void:
 	if event.is_action("move_forward") or event.is_action("move_back") or event.is_action("move_left") or event.is_action("move_right"):
 		input_move = Input.get_vector("move_left", "move_right", "move_back", "move_forward")
 	if event.is_action("grab"):
-		trying_to_grab = event.is_pressed()
+		var is_pressed = event.is_pressed()
+		trying_to_grab = is_pressed
+		if not is_pressed:
+			if (multiplayer.is_server()):
+				_ungrab()
+			else:
+				_ungrab.rpc_id(1)
 	if event.is_action_pressed("attach"):
 		request_attach()
 	if (event.is_action_pressed("interact")):
@@ -809,82 +820,81 @@ func _get_angular_velocity_networked(target: RigidBody3D) -> Vector3:
 	return target.angular_velocity
 
 func arm_logic() -> void:
-	if (grabbed_col != null):
-		var is_rb = grabbed_col is RigidBody3D
-		var grab_position = grabbed_col.to_global(grab_offset)
-		var grab_position_target := shapecast_arms.to_global((Vector3.BACK * grab_distance) + (Vector3.UP * (grab_lift_offset if grabbed_col is RigidBody3D else 0.0)))
-		var offset = (grab_position_target - grab_position)
-		if (offset.length() > shapecast_arms.target_position.length()):
-			_queue_collision_exception_release(grabbed_col)
-			grabbed_col = null
-			climbing_ledge = false
-			_reset_climb_scan()
-			return
-		
-		var weight := 1.0
-		if (is_rb):
-			weight = clampf(grabbed_col.mass / grab_scale_max_mass, 0, 1)
+	if (grabbed_col == null): return
+	
+	var is_rb = grabbed_col is RigidBody3D
+	var grab_position = grabbed_col.to_global(grab_offset)
+	var grab_position_target := shapecast_arms.to_global((Vector3.BACK * grab_distance) + (Vector3.UP * (grab_lift_offset if grabbed_col is RigidBody3D else 0.0)))
+	var offset = (grab_position_target - grab_position)
+	if (offset.length() > shapecast_arms.target_position.length()):
+		_queue_collision_exception_release(grabbed_col)
+		grabbed_col = null
+		climbing_ledge = false
+		_reset_climb_scan()
+		return
+
+	var weight := 1.0
+	if (is_rb):
+		weight = clampf(grabbed_col.mass / grab_scale_max_mass, 0, 1)
+	else:
+		weight = clampf(mass / grab_scale_max_mass, 0, 1)
+	var spring_k := lerpf(0, grab_strength_max, weight)
+
+	var grabbed_point_velocity := Vector3.ZERO
+	if (is_rb):
+		var grabbed_rb := grabbed_col as RigidBody3D
+		grabbed_point_velocity = _get_linear_velocity_networked(grabbed_rb) \
+			+ _get_angular_velocity_networked(grabbed_rb).cross(grab_position - grabbed_col.global_position)
+	var arm_point_velocity := linear_velocity \
+		+ angular_velocity.cross(grab_position_target - global_position)
+	var grab_relative_velocity := grabbed_point_velocity - arm_point_velocity
+	var damp := lerpf(grab_damp_min, grab_damp_max, weight)
+	var body_up := global_basis.y
+	var offset_vert := offset.project(body_up)
+	var offset_horiz = offset - offset_vert
+	var vel_vert := grab_relative_velocity.project(body_up)
+	var vel_horiz := grab_relative_velocity - vel_vert
+
+	var force_vert := offset_vert * spring_k * grab_vertical_strength_multiplier \
+		- vel_vert * (damp if grabbed_col is RigidBody3D else grab_damp_static)
+	var force_horiz = offset_horiz * spring_k - vel_horiz * damp
+
+	var force = force_vert + force_horiz
+
+	var rotation_torque := Vector3.ZERO
+	if (is_rb):
+		var grabbed_rb := grabbed_col as RigidBody3D
+		var target_basis := (global_basis.orthonormalized() * grab_rotation_offset).orthonormalized()
+		var target_rot := target_basis.get_rotation_quaternion()
+		var current_rot := grabbed_rb.global_basis.orthonormalized().get_rotation_quaternion()
+		var rot_diff := target_rot * current_rot.inverse()
+		if rot_diff.w < 0.0:
+			rot_diff = -rot_diff
+		var diff_angle := 2.0 * acos(clampf(rot_diff.w, -1.0, 1.0))
+		var diff_axis := Vector3(rot_diff.x, rot_diff.y, rot_diff.z)
+		var diff_axis_len := diff_axis.length()
+		if diff_axis_len > 0.0001:
+			diff_axis /= diff_axis_len
 		else:
-			weight = clampf(mass / grab_scale_max_mass, 0, 1)
-		var spring_k := lerpf(0, grab_strength_max, weight)
-		
-		var grabbed_point_velocity := Vector3.ZERO
-		if (is_rb):
-			var grabbed_rb := grabbed_col as RigidBody3D
-			grabbed_point_velocity = _get_linear_velocity_networked(grabbed_rb) \
-				+ _get_angular_velocity_networked(grabbed_rb).cross(grab_position - grabbed_col.global_position)
-		var arm_point_velocity := linear_velocity \
-			+ angular_velocity.cross(grab_position_target - global_position)
-		var grab_relative_velocity := grabbed_point_velocity - arm_point_velocity
+			diff_axis = Vector3.ZERO
+			diff_angle = 0.0
 
-		var damp := lerpf(grab_damp_min, grab_damp_max, weight)
+		var rot_strength := lerpf(0, grab_rotation_strength_max, weight)
+		var rel_angular_velocity := _get_angular_velocity_networked(grabbed_rb) - angular_velocity
+		rotation_torque = diff_axis * (diff_angle * rot_strength) - rel_angular_velocity * grab_rotation_damp
 
-		var body_up := global_basis.y
-		var offset_vert := offset.project(body_up)
-		var offset_horiz = offset - offset_vert
-		var vel_vert := grab_relative_velocity.project(body_up)
-		var vel_horiz := grab_relative_velocity - vel_vert
+		var grabbed_lever_arm = grab_position - grabbed_col.global_position
+		_apply_force_networked(grabbed_rb, force * 0.5 * (1.0 - grab_force_central_scale), grabbed_lever_arm)
+		_apply_force_networked(grabbed_rb, force * 0.5 * (grab_force_central_scale))
+		_apply_torque_networked(grabbed_rb, rotation_torque)
+		var grabbed_angular_velocity := _get_angular_velocity_networked(grabbed_rb)
+		if grabbed_angular_velocity.length() > grab_max_angular_velocity:
+			_apply_torque_networked(grabbed_rb, -grabbed_angular_velocity * grab_angular_damp)
 
-		var force_vert := offset_vert * spring_k * grab_vertical_strength_multiplier \
-			- vel_vert * (damp if grabbed_col is RigidBody3D else grab_damp_static)
-		var force_horiz = offset_horiz * spring_k - vel_horiz * damp
-
-		var force = force_vert + force_horiz
-
-		var rotation_torque := Vector3.ZERO
-		if (is_rb):
-			var grabbed_rb := grabbed_col as RigidBody3D
-			var target_basis := (global_basis.orthonormalized() * grab_rotation_offset).orthonormalized()
-			var target_rot := target_basis.get_rotation_quaternion()
-			var current_rot := grabbed_rb.global_basis.orthonormalized().get_rotation_quaternion()
-			var rot_diff := target_rot * current_rot.inverse()
-			if rot_diff.w < 0.0:
-				rot_diff = -rot_diff
-			var diff_angle := 2.0 * acos(clampf(rot_diff.w, -1.0, 1.0))
-			var diff_axis := Vector3(rot_diff.x, rot_diff.y, rot_diff.z)
-			var diff_axis_len := diff_axis.length()
-			if diff_axis_len > 0.0001:
-				diff_axis /= diff_axis_len
-			else:
-				diff_axis = Vector3.ZERO
-				diff_angle = 0.0
-
-			var rot_strength := lerpf(0, grab_rotation_strength_max, weight)
-			var rel_angular_velocity := _get_angular_velocity_networked(grabbed_rb) - angular_velocity
-			rotation_torque = diff_axis * (diff_angle * rot_strength) - rel_angular_velocity * grab_rotation_damp
-
-			var grabbed_lever_arm = grab_position - grabbed_col.global_position
-			_apply_force_networked(grabbed_rb, force * 0.5 * (1.0 - grab_force_central_scale), grabbed_lever_arm)
-			_apply_force_networked(grabbed_rb, force * 0.5 * (grab_force_central_scale))
-			_apply_torque_networked(grabbed_rb, rotation_torque)
-			var grabbed_angular_velocity := _get_angular_velocity_networked(grabbed_rb)
-			if grabbed_angular_velocity.length() > grab_max_angular_velocity:
-				_apply_torque_networked(grabbed_rb, -grabbed_angular_velocity * grab_angular_damp)
-
-		if (linear_velocity.length() > grab_strength_max / mass / 20):
-			var force_scale = (force.normalized().dot(linear_velocity.normalized()) + 1) / 2
-			force *= force_scale
-		apply_force(-force / 2)
+	if (linear_velocity.length() > grab_strength_max / mass / 20):
+		var force_scale = (force.normalized().dot(linear_velocity.normalized()) + 1) / 2
+		force *= force_scale
+	apply_force(-force / 2)
 
 func _queue_collision_exception_release(col : Node3D) -> void:
 	if col is RigidBody3D and not grab_release_pending.has(col):
@@ -929,6 +939,7 @@ func _update_grab_release_pending() -> void:
 			body.remove_collision_exception_with(self)
 			grab_release_pending.remove_at(i)
 
+@rpc("any_peer")
 func _ungrab() -> void:
 	_queue_collision_exception_release(grabbed_col)
 	if (ik_controller != null and grabbed_col != null):
