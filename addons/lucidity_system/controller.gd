@@ -74,9 +74,15 @@ func _input(event: InputEvent) -> void:
 	if not is_multiplayer_authority(): return
 	if pawn == null: return
 	if (event.is_action_pressed("respawn")):
-		despawn_pawn.rpc_id(1, multiplayer.get_unique_id())
+		if multiplayer.is_server():
+			despawn_pawn(multiplayer.get_unique_id())
+		else:
+			despawn_pawn.rpc_id(1, multiplayer.get_unique_id())
 		await get_tree().create_timer(3).timeout
-		spawn_pawn.rpc_id(1, multiplayer.get_unique_id())
+		if multiplayer.is_server():
+			spawn_pawn(multiplayer.get_unique_id())
+		else:
+			spawn_pawn.rpc_id(1, multiplayer.get_unique_id())
 	else:
 		pawn._supply_input(event)
 	if is_instance_valid(camera_controller):

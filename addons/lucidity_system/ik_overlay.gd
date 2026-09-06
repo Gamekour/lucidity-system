@@ -10,7 +10,7 @@ func _ready() -> void:
 	process_priority = 50
 
 func _process(_delta: float) -> void:
-	if not active or ik_controller == null or multiplayer.is_server():
+	if not active or ik_controller == null or OS.has_feature("dedicated_server"):
 		return
 
 	var count := min(override_indices.size(), override_nodes.size())

@@ -8,7 +8,7 @@ class_name PlayerModel
 var is_fp := true
 
 func _process(delta: float) -> void:
-	if !is_inside_tree() or multiplayer.is_server(): return
+	if !is_inside_tree() or OS.has_feature("dedicated_server"): return
 	
 	var head_bone_index : int = find_bone(head_bone_name)
 	if cam_spring == null:

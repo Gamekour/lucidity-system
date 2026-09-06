@@ -166,7 +166,7 @@ func rig_setup() -> void:
 			attach_controller = child
 			attach_controller.body = self
 	
-	if (multiplayer.is_server()): return
+	if (OS.has_feature("dedicated_server")): return
 	if (ik_controller != null):
 		ik_controller.body = self
 		ik_controller.shapecast_legs = shapecast_legs
@@ -197,7 +197,10 @@ func rig_setup() -> void:
 				if i == 0:
 					var height = chain_length * shapecast_legs_length_scale
 					shapecast_legs.target_position = Vector3.DOWN * height
-					_set_cast_height.rpc_id(1, height)
+					if multiplayer.get_unique_id() == 1:
+						_set_cast_height(height)
+					else:
+						_set_cast_height.rpc_id(1, height)
 				i += 1
 			playermodel.owner = self
 			for bone_root : BoneRoot in find_children("*", "BoneRoot"):
@@ -243,6 +246,7 @@ func _physics_process(delta: float) -> void:
 	if is_local_owner() and is_instance_valid(camera_controller):
 		target_angle_horizontal = camera_controller.target_angle_horizontal
 		camera_pitch = camera_controller.camera_pitch
+		synced_camera_basis = camera_controller.cam_spring.global_basis
 
 	if multiplayer.is_server():
 		_apply_input_state(input_move, target_angle_horizontal, camera_pitch,
@@ -255,8 +259,6 @@ func _physics_process(delta: float) -> void:
 		else:
 			valid_grab = false
 	else:
-		if is_local_owner() and is_instance_valid(camera_controller):
-			synced_camera_basis = camera_controller.cam_spring.global_basis
 		shapecast_arms.global_basis = synced_camera_basis
 		shapecast_arms.global_basis = shapecast_arms.global_basis.rotated(shapecast_arms.global_basis.y, PI)
 		if is_local_owner():
