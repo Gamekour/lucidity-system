@@ -13,7 +13,7 @@ func _disable_plugin() -> void:
 
 func _enter_tree() -> void:
 	var plugin_repos:Dictionary = ProjectSettings.get_setting("plugin_updater/plugins", {})
-	plugin_repos[get_plugin_path()] = "https://github.com/{USERNAME}/{REPO_NAME}"
+	plugin_repos[get_plugin_path()] = "https://github.com/Gamekour/lucidity-system"
 	ProjectSettings.set_setting("plugin_updater/plugins", plugin_repos)
 	ProjectSettings.save()
 

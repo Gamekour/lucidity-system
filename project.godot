@@ -119,6 +119,12 @@ respawn={
 common/physics_ticks_per_second=120
 3d/physics_engine="Jolt Physics"
 
+[plugin_updater]
+
+plugins={
+"res://addons/lucidity_system/": "https://github.com/Gamekour/lucidity-system"
+}
+
 [rendering]
 
 rendering_device/driver.windows="d3d12"
