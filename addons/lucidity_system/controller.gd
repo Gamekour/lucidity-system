@@ -3,6 +3,7 @@ class_name Controller
 
 @export var default_pawn : PackedScene
 @export var camera_controller : CameraController
+var manager : ControllerManager
 var pawn_spawner : MultiplayerSpawner
 var pawn : Node3D
 var pawn_path : NodePath
@@ -11,8 +12,6 @@ var crosshair_grab : TextureRect
 func _ready() -> void:
 	var owner_id := int(name)
 	set_multiplayer_authority(owner_id)
-	if (multiplayer.is_server()):
-		spawn_pawn(owner_id)
 
 func _physics_process(delta: float) -> void:
 	if (crosshair_grab == null): return
@@ -37,6 +36,9 @@ func spawn_pawn(id: int) -> void:
 	
 	if new_pawn.has_method("set_multiplayer_authority"):
 		new_pawn.set_multiplayer_authority(1)
+	
+	if (!OS.has_feature("dedicated_server") and id == 1):
+		manager._pawn_delivered(new_pawn)
 
 @rpc("any_peer")
 func despawn_pawn(id: int) -> void:
@@ -59,7 +61,8 @@ func _set_pawn_path(path: NodePath) -> void:
 	pawn = get_node_or_null(path) as Node3D
 
 func connect_pawn(pawn_node : Node):
-	if not (pawn_node.is_inside_tree()): await pawn_node.tree_entered
+	if not pawn_node.is_inside_tree(): await pawn_node.tree_entered
+	if not pawn_node.is_node_ready(): await pawn_node.ready
 	
 	_set_pawn_path.rpc(pawn_node.get_path())
 	

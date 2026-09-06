@@ -19,11 +19,15 @@ func spawn_controller(id: int) -> void:
 
 	var spawn_root := get_node(controller_spawner.spawn_path)
 	if spawn_root.has_node(str(id)): return
-
+	
 	var new_controller := controller_scene.instantiate() as Controller
 	new_controller.name = str(id) + "_controller"
 	new_controller.pawn_spawner = pawn_spawner
+	new_controller.manager = self
 	spawn_root.add_child(new_controller)
+	if !OS.has_feature("dedicated_server") and id == 1:
+		local_controller = new_controller
+		_controller_delivered(new_controller)
 
 func despawn_controller(id: int) -> void:
 	if not multiplayer.is_server(): return
@@ -36,11 +40,15 @@ func despawn_controller(id: int) -> void:
 	target.queue_free()
 	
 func _controller_delivered(controller_node : Node) -> void:
-	(controller_node as Controller).camera_controller = camera_controller
-	controller_node.crosshair_grab = crosshair_grab
-	var owner = int(controller_node.name.trim_suffix("_controller"))
+	var controller := controller_node as Controller
+	controller.camera_controller = camera_controller
+	controller.manager = self
+	controller.crosshair_grab = crosshair_grab
+	var owner = int(controller.name.trim_suffix("_controller"))
 	if (owner == multiplayer.get_unique_id()):
-		local_controller = controller_node
+		local_controller = controller
+	if (multiplayer.is_server()):
+		controller.spawn_pawn(owner)
 
 func _pawn_delivered(pawn_node : Node) -> void:
 	pawn_node.set_multiplayer_authority(1)
