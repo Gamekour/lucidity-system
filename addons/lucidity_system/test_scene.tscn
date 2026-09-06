@@ -134,17 +134,16 @@ near = 0.01
 
 [node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=207457716]
 
-[node name="button_server" type="Button" parent="CanvasLayer" unique_id=149323115]
+[node name="button_host" type="Button" parent="CanvasLayer" unique_id=149323115]
 offset_right = 147.0
 offset_bottom = 36.0
-text = "start server"
+text = "host game"
 
 [node name="button_client" type="Button" parent="CanvasLayer" unique_id=710434397]
 offset_top = 47.0
 offset_right = 147.0
 offset_bottom = 83.0
-text = "start client
-"
+text = "join game"
 
 [node name="ip_setting" type="TextEdit" parent="CanvasLayer" unique_id=1000864481]
 offset_left = 160.0
@@ -572,6 +571,6 @@ transform = Transform3D(-4.3711385e-08, 4.2351647e-22, 1, -0.9999999, -4.371138e
 [node name="grav_test" parent="." unique_id=1193492090 instance=ExtResource("15_ehqhu")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 39.818813, 13.290279, 2.3028274)
 
-[connection signal="pressed" from="CanvasLayer/button_server" to="NetworkManager" method="create_game"]
+[connection signal="pressed" from="CanvasLayer/button_host" to="NetworkManager" method="create_game"]
 [connection signal="pressed" from="CanvasLayer/button_client" to="NetworkManager" method="join_game"]
 [connection signal="text_changed" from="CanvasLayer/ip_setting" to="NetworkManager" method="_on_ip_setting_text_changed"]

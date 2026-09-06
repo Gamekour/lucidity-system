@@ -51,10 +51,10 @@ func _autostart_dedicated_server() -> void:
 					port = int(parsed["port"])
 				if parsed.has("ip"):
 					bind_ip = str(parsed["ip"])
-	create_game(port, bind_ip)
+	create_game(port, bind_ip, false)
 
 
-func create_game(port: int = PORT, bind_ip: String = "*"):
+func create_game(port: int = PORT, bind_ip: String = "*", host_locally: bool = true):
 	var peer = ENetMultiplayerPeer.new()
 	peer.set_bind_ip(bind_ip)
 	var error = peer.create_server(port, MAX_CONNECTIONS, 0, 0, 0)
@@ -65,6 +65,9 @@ func create_game(port: int = PORT, bind_ip: String = "*"):
 
 	players[1] = player_info
 	player_connected.emit(1, player_info)
+
+	if host_locally:
+		controller_manager.spawn_controller(1)
 
 func join_game(address = ""):
 	if address.is_empty():
@@ -79,7 +82,6 @@ func join_game(address = ""):
 func remove_multiplayer_peer():
 	multiplayer.multiplayer_peer = OfflineMultiplayerPeer.new()
 	players.clear()
-
 
 # When the server decides to start the game from a UI scene,
 # do Lobby.load_game.rpc(filepath)
