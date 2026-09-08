@@ -48,9 +48,9 @@ func _controller_delivered(controller_node : Node) -> void:
 	if (owner == multiplayer.get_unique_id()):
 		local_controller = controller
 		if !multiplayer.is_server():
-			controller.spawn_pawn.rpc_id(1, owner)
+			controller.spawn_pawn.rpc_id(1)
 		else:
-			controller.spawn_pawn(1)
+			controller.spawn_pawn()
 
 func _pawn_delivered(pawn_node : Node) -> void:
 	pawn_node.set_multiplayer_authority(1)
