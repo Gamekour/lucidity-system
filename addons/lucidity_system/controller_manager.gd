@@ -1,8 +1,8 @@
 extends Node
 
-var controller_scene_path : String = "res://addons/lucidity_system/controller.tscn"
-var pawn_scene_path : String = "res://addons/lucidity_system/ls_human.tscn"
-var camera_controller_scene_path : String = "res://addons/lucidity_system/camera_controller.tscn"
+@export var controller_scene_path : String = "res://addons/lucidity_system/controller.tscn"
+@export var pawn_scene_path : String = "res://addons/lucidity_system/ls_human.tscn"
+@export var camera_controller_scene_path : String = "res://addons/lucidity_system/camera_controller.tscn"
 var controller_spawner : MultiplayerSpawner
 var pawn_spawner : MultiplayerSpawner
 
@@ -62,7 +62,6 @@ func despawn_controller(id: int) -> void:
 	
 func _controller_delivered(controller_node : Node) -> void:
 	var controller := controller_node as Controller
-	controller.camera_controller = camera_controller
 	pawn_spawner.spawned.connect(controller._pawn_delivered)
 	var owner = int(controller.name.trim_suffix("_controller"))
 	if (owner == multiplayer.get_unique_id()):

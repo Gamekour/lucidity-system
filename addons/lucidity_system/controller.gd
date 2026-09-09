@@ -1,8 +1,6 @@
-extends Node3D
+extends Node
 class_name Controller
 
-@export var default_pawn : PackedScene
-@export var camera_controller : CameraController
 var pawn_spawner : MultiplayerSpawner
 var pawn : Node3D
 var pawn_path : NodePath
@@ -29,7 +27,7 @@ func spawn_pawn() -> void:
 	
 	var owner := int(name.trim_suffix("_controller"))
 	
-	var new_pawn = default_pawn.instantiate()
+	var new_pawn = load(ControllerManager.pawn_scene_path).instantiate()
 	new_pawn.name = name.trim_suffix("_controller")
 	pawn_spawner.get_node(pawn_spawner.spawn_path).add_child(new_pawn)
 	if (new_pawn is PhysicsPlayerController):
@@ -69,10 +67,10 @@ func connect_pawn(pawn_node : Node):
 	
 	_set_pawn_path.rpc(pawn_node.get_path())
 	
-	if (pawn_node is PhysicsPlayerController) and is_instance_valid(camera_controller):
-		pawn_node.set_camera_controller(camera_controller)
-	if is_instance_valid(camera_controller):
-		camera_controller.set_target(pawn_node)
+	if (pawn_node is PhysicsPlayerController) and is_instance_valid(ControllerManager.camera_controller):
+		pawn_node.set_camera_controller(ControllerManager.camera_controller)
+	if is_instance_valid(ControllerManager.camera_controller):
+		ControllerManager.camera_controller.set_target(pawn_node)
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	get_viewport().gui_release_focus()
 	
@@ -91,8 +89,8 @@ func _input(event: InputEvent) -> void:
 			spawn_pawn.rpc_id(1)
 	else:
 		pawn._supply_input(event)
-	if is_instance_valid(camera_controller):
-		camera_controller.handle_input(event)
+	if is_instance_valid(ControllerManager.camera_controller):
+		ControllerManager.camera_controller.handle_input(event)
 
 func _pawn_delivered(pawn_node : Node) -> void:
 	var self_owner = int(name.trim_suffix("_controller"))
