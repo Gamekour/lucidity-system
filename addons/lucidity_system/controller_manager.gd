@@ -13,7 +13,6 @@ func _ready() -> void:
 	_create_spawners()
 	camera_controller = load(camera_controller_scene_path).instantiate()
 	get_tree().current_scene.add_child(camera_controller)
-	pawn_spawner.spawned.connect(_pawn_delivered)
 	controller_spawner.spawned.connect(_controller_delivered)
 
 func _create_spawners():
@@ -64,6 +63,7 @@ func despawn_controller(id: int) -> void:
 func _controller_delivered(controller_node : Node) -> void:
 	var controller := controller_node as Controller
 	controller.camera_controller = camera_controller
+	pawn_spawner.spawned.connect(controller._pawn_delivered)
 	var owner = int(controller.name.trim_suffix("_controller"))
 	if (owner == multiplayer.get_unique_id()):
 		local_controller = controller
@@ -71,11 +71,3 @@ func _controller_delivered(controller_node : Node) -> void:
 			controller.spawn_pawn.rpc_id(1)
 		else:
 			controller.spawn_pawn()
-
-func _pawn_delivered(pawn_node : Node) -> void:
-	pawn_node.set_multiplayer_authority(1)
-	var target_owner = int(pawn_node.name)
-	if (pawn_node is PhysicsPlayerController):
-		pawn_node.set_owner_peer_id(target_owner)
-	if (target_owner == multiplayer.get_unique_id()):
-		local_controller.connect_pawn(pawn_node)

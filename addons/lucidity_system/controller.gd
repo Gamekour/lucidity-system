@@ -39,7 +39,7 @@ func spawn_pawn() -> void:
 		new_pawn.set_multiplayer_authority(1)
 	
 	if (!OS.has_feature("dedicated_server") and multiplayer.is_server() and owner == 1):
-		ControllerManager._pawn_delivered(new_pawn)
+		_pawn_delivered(new_pawn)
 
 @rpc("any_peer")
 func despawn_pawn() -> void:
@@ -93,3 +93,11 @@ func _input(event: InputEvent) -> void:
 		pawn._supply_input(event)
 	if is_instance_valid(camera_controller):
 		camera_controller.handle_input(event)
+
+func _pawn_delivered(pawn_node : Node) -> void:
+	pawn_node.set_multiplayer_authority(1)
+	var target_owner = int(pawn_node.name)
+	if (pawn_node is PhysicsPlayerController):
+		pawn_node.set_owner_peer_id(target_owner)
+	if (target_owner == multiplayer.get_unique_id()):
+		ControllerManager.local_controller.connect_pawn(pawn_node)
