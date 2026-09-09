@@ -95,9 +95,11 @@ func _input(event: InputEvent) -> void:
 		camera_controller.handle_input(event)
 
 func _pawn_delivered(pawn_node : Node) -> void:
+	var self_owner = int(name.trim_suffix("_controller"))
 	pawn_node.set_multiplayer_authority(1)
 	var target_owner = int(pawn_node.name)
+	
 	if (pawn_node is PhysicsPlayerController):
 		pawn_node.set_owner_peer_id(target_owner)
-	if (target_owner == multiplayer.get_unique_id()):
-		ControllerManager.local_controller.connect_pawn(pawn_node)
+	if (target_owner == multiplayer.get_unique_id() and target_owner == self_owner):
+		connect_pawn(pawn_node)
