@@ -1,15 +1,11 @@
 [gd_scene format=3 uid="uid://ifogxg85vdcp"]
 
-[ext_resource type="Script" uid="uid://c8ehykskc7ulc" path="res://addons/lucidity_system/network_manager.gd" id="1_skw67"]
 [ext_resource type="PackedScene" uid="uid://6l6j14vr886s" path="res://addons/lucidity_system/luciddebug.glb" id="1_uhqqe"]
-[ext_resource type="PackedScene" uid="uid://cfcn5ugcgh3y3" path="res://addons/lucidity_system/controller.tscn" id="3_l63t3"]
+[ext_resource type="Script" uid="uid://2jrnpcqncx70" path="res://addons/lucidity_system/network_interface.gd" id="3_3vnh1"]
 [ext_resource type="Texture2D" uid="uid://dltl0ic26i5lg" path="res://addons/lucidity_system/crosshair.png" id="5_6kti4"]
 [ext_resource type="Script" uid="uid://cdtw10mdyvmie" path="res://addons/lucidity_system/network_rigidbody_3d.gd" id="5_l63t3"]
-[ext_resource type="Texture2D" uid="uid://cxjw8metbv5bv" path="res://addons/lucidity_system/crosshair_grab.png" id="6_6iij7"]
 [ext_resource type="Script" uid="uid://c8qyp1ubjxh1u" path="res://addons/lucidity_system/skeleton_overlay.gd" id="7_8pr8v"]
 [ext_resource type="Material" uid="uid://dnm5ak0rw2pxe" path="res://addons/lucidity_system/debug_mat.tres" id="9_njel3"]
-[ext_resource type="Script" uid="uid://co2vbeigmv0bs" path="res://addons/lucidity_system/camera_controller.gd" id="10_1s05b"]
-[ext_resource type="Script" uid="uid://banit2vkcej65" path="res://addons/lucidity_system/controller_manager.gd" id="11_6kti4"]
 [ext_resource type="PackedScene" uid="uid://1q405i8mu7nw" path="res://addons/lucidity_system/silly_dancing.tscn" id="11_oo8pe"]
 [ext_resource type="Script" uid="uid://b11yeup1xif5d" path="res://addons/lucidity_system/toggle_button.gd" id="12_oo8pe"]
 [ext_resource type="Script" uid="uid://da7t3xbiyxsvd" path="res://addons/lucidity_system/nav_agent_rigidbody.gd" id="13_xqn1g"]
@@ -19,9 +15,6 @@
 [ext_resource type="Script" uid="uid://clomgkhcajpdc" path="res://addons/lucidity_system/node_path_builder_3d.gd" id="16_jejnn"]
 [ext_resource type="Script" uid="uid://dwct63vx16wf4" path="res://addons/lucidity_system/node_animator.gd" id="18_f8quq"]
 [ext_resource type="Script" uid="uid://d4nbobbvy3im8" path="res://addons/lucidity_system/rotation_sync.gd" id="18_ox1jj"]
-
-[sub_resource type="SphereShape3D" id="SphereShape3D_1s05b"]
-radius = 0.25
 
 [sub_resource type="Environment" id="Environment_ia1lp"]
 background_mode = 1
@@ -95,43 +88,6 @@ size = Vector3(0.5, 0.25, 3)
 
 [node name="Test Scene" type="Node3D" unique_id=667831700]
 
-[node name="NetworkManager" type="Node" parent="." unique_id=1970058237 node_paths=PackedStringArray("ip_setting", "controller_manager")]
-script = ExtResource("1_skw67")
-ip_setting = NodePath("../CanvasLayer/ip_setting")
-controller_manager = NodePath("../ControllerManager")
-metadata/_custom_type_script = "uid://c8ehykskc7ulc"
-
-[node name="ControllerManager" type="Node" parent="." unique_id=649736868 node_paths=PackedStringArray("controller_spawner", "pawn_spawner", "camera_controller", "crosshair_grab")]
-script = ExtResource("11_6kti4")
-controller_scene = ExtResource("3_l63t3")
-controller_spawner = NodePath("../ControllerSpawner")
-pawn_spawner = NodePath("../PawnSpawner")
-camera_controller = NodePath("../CameraController")
-crosshair_grab = NodePath("../CanvasLayer/crosshair_grab")
-metadata/_custom_type_script = "uid://banit2vkcej65"
-
-[node name="PawnSpawner" type="MultiplayerSpawner" parent="." unique_id=963253975]
-_spawnable_scenes = PackedStringArray("uid://cuyit38h4qs42")
-spawn_path = NodePath("../pawn_spawn")
-
-[node name="ControllerSpawner" type="MultiplayerSpawner" parent="." unique_id=240330043]
-_spawnable_scenes = PackedStringArray("uid://cfcn5ugcgh3y3")
-spawn_path = NodePath("../controller_spawn")
-
-[node name="CameraController" type="Node3D" parent="." unique_id=316878535 node_paths=PackedStringArray("cam_spring")]
-script = ExtResource("10_1s05b")
-cam_spring = NodePath("cam_spring")
-metadata/_custom_type_script = "uid://co2vbeigmv0bs"
-
-[node name="cam_spring" type="SpringArm3D" parent="CameraController" unique_id=1553511948]
-transform = Transform3D(0.99999994, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
-shape = SubResource("SphereShape3D_1s05b")
-spring_length = 0.0
-
-[node name="Camera3D" type="Camera3D" parent="CameraController/cam_spring" unique_id=82195019]
-transform = Transform3D(1, -1.16406905e-10, 7.275958e-12, 1.1642372e-10, 1, -2.842171e-13, 0, 3.656797e-15, 1, 0, 0, 0)
-near = 0.01
-
 [node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=207457716]
 
 [node name="button_host" type="Button" parent="CanvasLayer" unique_id=149323115]
@@ -167,26 +123,10 @@ grow_horizontal = 2
 grow_vertical = 2
 texture = ExtResource("5_6kti4")
 
-[node name="crosshair_grab" type="TextureRect" parent="CanvasLayer" unique_id=1708239603]
-visible = false
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -10.0
-offset_top = -10.0
-offset_right = 10.0
-offset_bottom = 10.0
-grow_horizontal = 2
-grow_vertical = 2
-texture = ExtResource("6_6iij7")
-
-[node name="pawn_spawn" type="Node3D" parent="." unique_id=185583409]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5607107, 0)
-
-[node name="controller_spawn" type="Node3D" parent="." unique_id=616531245]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5607107, 0)
+[node name="NetworkInterface" type="Node" parent="CanvasLayer" unique_id=1173632389 node_paths=PackedStringArray("ip_setting")]
+script = ExtResource("3_3vnh1")
+ip_setting = NodePath("../ip_setting")
+metadata/_custom_type_script = "uid://2jrnpcqncx70"
 
 [node name="Environment" type="Node3D" parent="." unique_id=1926106931]
 
@@ -571,6 +511,6 @@ transform = Transform3D(-4.3711385e-08, 4.2351647e-22, 1, -0.9999999, -4.371138e
 [node name="grav_test" parent="." unique_id=1193492090 instance=ExtResource("15_ehqhu")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 39.818813, 13.290279, 2.3028274)
 
-[connection signal="pressed" from="CanvasLayer/button_host" to="NetworkManager" method="create_game"]
-[connection signal="pressed" from="CanvasLayer/button_client" to="NetworkManager" method="join_game"]
-[connection signal="text_changed" from="CanvasLayer/ip_setting" to="NetworkManager" method="_on_ip_setting_text_changed"]
+[connection signal="pressed" from="CanvasLayer/button_host" to="CanvasLayer/NetworkInterface" method="_create_game"]
+[connection signal="pressed" from="CanvasLayer/button_client" to="CanvasLayer/NetworkInterface" method="_join_game"]
+[connection signal="text_changed" from="CanvasLayer/ip_setting" to="CanvasLayer/NetworkInterface" method="_on_ip_setting_text_changed"]

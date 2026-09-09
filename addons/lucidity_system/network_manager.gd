@@ -1,10 +1,5 @@
 extends Node
 
-class_name NetworkManager
-
-@export var ip_setting : TextEdit
-@export var controller_manager : ControllerManager
-
 signal player_connected(peer_id, player_info)
 signal player_disconnected(peer_id)
 signal server_disconnected
@@ -67,7 +62,7 @@ func create_game(port: int = PORT, bind_ip: String = "*", host_locally: bool = t
 	player_connected.emit(1, player_info)
 
 	if host_locally:
-		controller_manager.spawn_controller(1)
+		ControllerManager.spawn_controller(1)
 
 func join_game(address = ""):
 	if address.is_empty():
@@ -104,7 +99,7 @@ func player_loaded():
 # This allows transfer of all desired data for each player, not only the unique ID.
 func _on_player_connected(id):
 	_register_player.rpc_id(id, player_info)
-	controller_manager.spawn_controller(id)
+	ControllerManager.spawn_controller(id)
 
 
 @rpc("any_peer", "reliable")
@@ -133,7 +128,3 @@ func _on_server_disconnected():
 	remove_multiplayer_peer()
 	players.clear()
 	server_disconnected.emit()
-
-
-func _on_ip_setting_text_changed() -> void:
-	server_ip = ip_setting.text

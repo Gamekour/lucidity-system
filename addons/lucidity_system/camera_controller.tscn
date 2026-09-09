@@ -1,0 +1,18 @@
+[gd_scene format=3 uid="uid://bakppfx11rbpe"]
+
+[ext_resource type="Script" uid="uid://co2vbeigmv0bs" path="res://addons/lucidity_system/camera_controller.gd" id="1_j7lcu"]
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_1s05b"]
+radius = 0.25
+
+[node name="CameraController" type="Node3D" unique_id=2132651297]
+script = ExtResource("1_j7lcu")
+metadata/_custom_type_script = "uid://co2vbeigmv0bs"
+
+[node name="cam_spring" type="SpringArm3D" parent="." unique_id=384850264]
+transform = Transform3D(0.99999994, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+shape = SubResource("SphereShape3D_1s05b")
+
+[node name="Camera3D" type="Camera3D" parent="cam_spring" unique_id=2077608159]
+transform = Transform3D(1, -1.16406905e-10, 7.275958e-12, 1.1642372e-10, 1, -2.842171e-13, 0, 3.656797e-15, 1, 0, 0, 0)
+near = 0.01

@@ -1,7 +1,7 @@
 extends Node3D
 class_name CameraController
 
-@export var cam_spring : SpringArm3D
+@onready var cam_spring : SpringArm3D = $cam_spring
 @export var sens := Vector2(0.5, 0.5)
 @export_range(-90.0, 90.0, 0.5, "radians_as_degrees") var min_camera_pitch : float = deg_to_rad(-80.0)
 @export_range(-90.0, 90.0, 0.5, "radians_as_degrees") var max_camera_pitch : float = deg_to_rad(80.0)

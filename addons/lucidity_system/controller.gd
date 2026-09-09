@@ -3,7 +3,6 @@ class_name Controller
 
 @export var default_pawn : PackedScene
 @export var camera_controller : CameraController
-var manager : ControllerManager
 var pawn_spawner : MultiplayerSpawner
 var pawn : Node3D
 var pawn_path : NodePath
@@ -40,7 +39,7 @@ func spawn_pawn() -> void:
 		new_pawn.set_multiplayer_authority(1)
 	
 	if (!OS.has_feature("dedicated_server") and multiplayer.is_server() and owner == 1):
-		manager._pawn_delivered(new_pawn)
+		ControllerManager._pawn_delivered(new_pawn)
 
 @rpc("any_peer")
 func despawn_pawn() -> void:
