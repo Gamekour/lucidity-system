@@ -30,6 +30,25 @@ func _ready():
 	if (OS.has_feature("dedicated_server")):
 		_autostart_dedicated_server()
 
+func _reload_scene():
+	get_tree().reload_current_scene()
+	# reload_current_scene() is deferred, not immediate - the new scene
+	# tree isn't actually in place until the next idle frame.
+	if multiplayer.is_server():
+		await get_tree().process_frame
+		await get_tree().process_frame
+		ControllerManager._do_init()
+		_reinitialize_players.rpc()
+
+# Re-spawn a controller for every already-known player after a scene reload.
+# Called on the server (via call_local) and propagated to all peers so any
+# peer-local bookkeeping tied to spawning also gets a chance to run.
+@rpc("authority", "call_local", "reliable")
+func _reinitialize_players():
+	if not multiplayer.is_server():
+		return
+	for id in players.keys():
+		ControllerManager.spawn_controller(id)
 
 func _autostart_dedicated_server() -> void:
 	var config_path := OS.get_executable_path().get_base_dir().path_join("server.cfg")

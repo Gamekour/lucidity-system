@@ -9,7 +9,10 @@ var pawn_spawner : MultiplayerSpawner
 var local_controller : Controller
 var camera_controller : CameraController
 
-func _ready() -> void:
+func _enter_tree() -> void:
+	_do_init()
+
+func _do_init() -> void:
 	_create_spawners()
 	camera_controller = load(camera_controller_scene_path).instantiate()
 	get_tree().current_scene.add_child(camera_controller)
