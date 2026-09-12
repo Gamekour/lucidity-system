@@ -286,16 +286,21 @@ func _on_hotbar_change() -> void:
 			behavior._set_equipped.rpc(is_equipped)
 
 		var skeleton_overlay := _find_skeleton_overlay(occupant)
-		if skeleton_overlay == null:
-			continue
+		if skeleton_overlay != null and slot["is_hotbar"]:
+			if is_equipped:
+				skeleton_overlay.active = true
+			else:
+				skeleton_overlay.active = false
+				if (body != null):
+					if (body is PhysicsPlayerController):
+						body.overlay_eulers = Vector3.ZERO
 		
-		if is_equipped:
-			skeleton_overlay.active = true
-		else:
-			skeleton_overlay.active = false
-			if (body != null):
-				if (body is PhysicsPlayerController):
-					body.overlay_eulers = Vector3.ZERO
+		var ik_overlay := _find_ik_overlay(occupant)
+		if (ik_overlay != null and slot["is_hotbar"]):
+			if (is_equipped):
+				ik_overlay.active = true
+			else:
+				ik_overlay.active = false
 
 func _set_meshes_and_collisions_enabled(node: Node, enabled: bool) -> void:
 	if node is MeshInstance3D:
@@ -359,9 +364,10 @@ func attach(child_body: RigidBody3D) -> bool:
 			skeleton_overlay.set_deferred("active", true)
 	if (ik_overlay != null and body.ik_controller != null):
 		ik_overlay.ik_controller = body.ik_controller
-		ik_overlay.active = true
-		for override in ik_overlay.override_indices:
-			body.ik_controller.ik_overrides[override] = true
+		if (is_equipped):
+			ik_overlay.active = true
+			for override in ik_overlay.override_indices:
+				body.ik_controller.ik_overrides[override] = true
 	slot["origin_xform_inv"] = origin_xform.affine_inverse()
 	
 	if (parent_body is PhysicsPlayerController):
