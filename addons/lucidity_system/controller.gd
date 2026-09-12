@@ -5,6 +5,7 @@ var pawn_spawner : MultiplayerSpawner
 var pawn : Node3D
 var pawn_path : NodePath
 var crosshair_grab : TextureRect
+var input_recievers : Array[Node]
 
 func _ready() -> void:
 	var owner_id := int(name.trim_suffix("_controller"))
@@ -89,6 +90,9 @@ func _input(event: InputEvent) -> void:
 			spawn_pawn.rpc_id(1)
 	else:
 		pawn._supply_input(event)
+		for node in input_recievers:
+			if node.has_method("_supply_input"):
+				node._supply_input(event)
 	if is_instance_valid(ControllerManager.camera_controller):
 		ControllerManager.camera_controller.handle_input(event)
 

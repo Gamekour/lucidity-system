@@ -12,6 +12,7 @@
 [ext_resource type="PackedScene" uid="uid://cf26g3lcevbfm" path="res://addons/lucidity_system/toygun.glb" id="14_p48gw"]
 [ext_resource type="Script" uid="uid://2by6uig7as31" path="res://addons/lucidity_system/ik_overlay.gd" id="15_3vnh1"]
 [ext_resource type="PackedScene" uid="uid://yhetlsk6081a" path="res://addons/lucidity_system/grav_test.glb" id="15_ehqhu"]
+[ext_resource type="Script" uid="uid://bd3u4ty7lfilf" path="res://addons/lucidity_system/attachment_behavior.gd" id="15_jejnn"]
 [ext_resource type="Script" uid="uid://clomgkhcajpdc" path="res://addons/lucidity_system/node_path_builder_3d.gd" id="16_jejnn"]
 [ext_resource type="Script" uid="uid://dwct63vx16wf4" path="res://addons/lucidity_system/node_animator.gd" id="18_f8quq"]
 [ext_resource type="Script" uid="uid://d4nbobbvy3im8" path="res://addons/lucidity_system/rotation_sync.gd" id="18_ox1jj"]
@@ -507,6 +508,10 @@ transform = Transform3D(1.910685e-15, -4.371138e-08, 1, 8.742276e-08, -0.9999999
 
 [node name="path2" type="Node3D" parent="ToyGun/reload_path" unique_id=815887283]
 transform = Transform3D(-4.3711385e-08, 4.2351647e-22, 1, -0.9999999, -4.371138e-08, -4.371139e-08, 4.3711378e-08, -0.9999999, 0, -0.009263754, -0.28038043, -0.011591673)
+
+[node name="AttachmentBehavior" type="Node" parent="ToyGun" unique_id=199170326]
+script = ExtResource("15_jejnn")
+metadata/_custom_type_script = "uid://bd3u4ty7lfilf"
 
 [node name="grav_test" parent="." unique_id=1193492090 instance=ExtResource("15_ehqhu")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 39.818813, 13.290279, 2.3028274)

@@ -278,12 +278,17 @@ func _on_hotbar_change() -> void:
 		var occupant: RigidBody3D = slot["occupant"]
 		if occupant == null or not is_instance_valid(occupant):
 			continue
+			
+		var is_equipped: bool = i == current_hotbar_slot
+			
+		var behaviors = occupant.find_children("*", "AttachmentBehavior", true, false)
+		for behavior : AttachmentBehavior in behaviors:
+			behavior._set_equipped.rpc(is_equipped)
 
 		var skeleton_overlay := _find_skeleton_overlay(occupant)
 		if skeleton_overlay == null:
 			continue
-
-		var is_equipped: bool = i == current_hotbar_slot
+		
 		if is_equipped:
 			skeleton_overlay.active = true
 		else:
@@ -336,15 +341,15 @@ func attach(child_body: RigidBody3D) -> bool:
 	var is_equipped := false
 	var is_hotbar = slot["is_hotbar"]
 	if (is_hotbar):
-			var hotbar_index = 0
-			var i = 0
-			for chk_slot in hotbar:
-				if (chk_slot.slot_name == slot_name):
-					hotbar_index = i
-					continue
-				else:
-					i += 1
-			is_equipped = hotbar_index == current_hotbar_slot
+		var hotbar_index = 0
+		var i = 0
+		for chk_slot in hotbar:
+			if (chk_slot.slot_name == slot_name):
+				hotbar_index = i
+				continue
+			else:
+				i += 1
+		is_equipped = hotbar_index == current_hotbar_slot
 	var holstered = is_hotbar and not is_equipped
 	if (skeleton_overlay != null):
 		skeleton_overlay.playermodel = playermodel
@@ -358,6 +363,12 @@ func attach(child_body: RigidBody3D) -> bool:
 		for override in ik_overlay.override_indices:
 			body.ik_controller.ik_overrides[override] = true
 	slot["origin_xform_inv"] = origin_xform.affine_inverse()
+	
+	if (parent_body is PhysicsPlayerController):
+		var behaviors = child_body.find_children("*", "AttachmentBehavior", true, false)
+		for behavior : AttachmentBehavior in behaviors:
+			behavior._set_owner(parent_body.owner_peer_id)
+			behavior._set_equipped(is_equipped)
 
 	child_body.freeze = true
 	child_body.freeze_mode = RigidBody3D.FREEZE_MODE_KINEMATIC
@@ -426,6 +437,10 @@ func detach(child_body: RigidBody3D) -> void:
 		_clear_ik_overrides(ik_overlay)
 		ik_overlay.ik_controller = null
 		ik_overlay.active = false
+	var behaviors = child_body.find_children("*", "AttachmentBehavior", true, false)
+	for behavior : AttachmentBehavior in behaviors:
+		behavior._set_owner.rpc(-1)
+		behavior._set_equipped(false)
 	if (body is RigidBody3D and child_body is RigidBody3D):
 		body.mass -= child_body.mass
 	if (is_instance_valid(body)):
