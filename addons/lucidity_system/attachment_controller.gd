@@ -301,6 +301,8 @@ func _on_hotbar_change() -> void:
 				ik_overlay.active = true
 			else:
 				ik_overlay.active = false
+				for idx in ik_overlay.override_indices:
+					ik_overlay.ik_controller.ik_overrides[idx] = false
 
 func _set_meshes_and_collisions_enabled(node: Node, enabled: bool) -> void:
 	if node is MeshInstance3D:

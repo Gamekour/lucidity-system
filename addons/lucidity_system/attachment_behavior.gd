@@ -27,4 +27,3 @@ func _on_owner_changed(new_peer : int):
 
 func _supply_input(event : InputEvent):
 	if (!is_equipped and require_equipped): return
-	print(event.as_text())
