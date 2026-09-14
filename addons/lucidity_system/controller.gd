@@ -72,6 +72,8 @@ func connect_pawn(pawn_node : Node):
 		pawn_node.set_camera_controller(ControllerManager.camera_controller)
 	if is_instance_valid(ControllerManager.camera_controller):
 		ControllerManager.camera_controller.set_target(pawn_node)
+	if crosshair_grab == null:
+		crosshair_grab = get_tree().current_scene.find_child("crosshair_grab", true, false) as TextureRect
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	get_viewport().gui_release_focus()
 	

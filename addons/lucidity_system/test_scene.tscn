@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://ifogxg85vdcp"]
 
 [ext_resource type="PackedScene" uid="uid://6l6j14vr886s" path="res://addons/lucidity_system/luciddebug.glb" id="1_uhqqe"]
+[ext_resource type="Texture2D" uid="uid://cxjw8metbv5bv" path="res://addons/lucidity_system/crosshair_grab.png" id="2_jejnn"]
 [ext_resource type="Script" uid="uid://2jrnpcqncx70" path="res://addons/lucidity_system/network_interface.gd" id="3_3vnh1"]
 [ext_resource type="Texture2D" uid="uid://dltl0ic26i5lg" path="res://addons/lucidity_system/crosshair.png" id="5_6kti4"]
 [ext_resource type="Script" uid="uid://cdtw10mdyvmie" path="res://addons/lucidity_system/network_rigidbody_3d.gd" id="5_l63t3"]
@@ -123,6 +124,21 @@ offset_bottom = 8.0
 grow_horizontal = 2
 grow_vertical = 2
 texture = ExtResource("5_6kti4")
+
+[node name="crosshair_grab" type="TextureRect" parent="CanvasLayer" unique_id=182195409]
+visible = false
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -8.0
+offset_top = -8.0
+offset_right = 8.0
+offset_bottom = 8.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("2_jejnn")
 
 [node name="NetworkInterface" type="Node" parent="CanvasLayer" unique_id=1173632389 node_paths=PackedStringArray("ip_setting")]
 script = ExtResource("3_3vnh1")
