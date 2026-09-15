@@ -121,17 +121,27 @@ func _on_player_connected(id):
 	ControllerManager.spawn_controller(id)
 
 
+
 @rpc("any_peer", "reliable")
 func _register_player(new_player_info):
 	var new_player_id = multiplayer.get_remote_sender_id()
 	players[new_player_id] = new_player_info
 	player_connected.emit(new_player_id, new_player_info)
 
-
 func _on_player_disconnected(id):
 	players.erase(id)
+	if multiplayer.is_server():
+		_cleanup_disconnected_player(id)
 	player_disconnected.emit(id)
 
+func _cleanup_disconnected_player(id: int) -> void:
+	if not is_instance_valid(ControllerManager.controller_spawner):
+		return
+	var spawn_root := ControllerManager.controller_spawner.get_node(ControllerManager.controller_spawner.spawn_path)
+	var controller_node := spawn_root.get_node_or_null(str(id) + "_controller")
+	if is_instance_valid(controller_node) and controller_node.has_method("despawn_pawn"):
+		controller_node.despawn_pawn()
+	ControllerManager.despawn_controller(id)
 
 func _on_connected_ok():
 	var peer_id = multiplayer.get_unique_id()
