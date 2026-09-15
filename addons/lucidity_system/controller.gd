@@ -7,12 +7,15 @@ var pawn_path : NodePath
 var crosshair_grab : TextureRect
 var input_recievers : Array[Node]
 var interact_label : Label
+var spectating : bool = false
 
 func _ready() -> void:
 	var owner_id := int(name.trim_suffix("_controller"))
 	set_multiplayer_authority(owner_id)
 
 func _physics_process(delta: float) -> void:
+	if is_multiplayer_authority():
+		_update_spectator()
 	if (crosshair_grab == null): return
 	if (pawn != null):
 		if (pawn is PhysicsPlayerController):
@@ -26,6 +29,39 @@ func _physics_process(delta: float) -> void:
 		crosshair_grab.visible = false
 		if (interact_label != null):
 			interact_label.visible = false
+
+func _update_spectator() -> void:
+	if not is_instance_valid(ControllerManager.camera_controller):
+		return
+
+	if is_instance_valid(pawn):
+		if spectating:
+			spectating = false
+			ControllerManager.camera_controller.set_target(pawn)
+		return
+
+	if spectating and is_instance_valid(ControllerManager.camera_controller.target):
+		return
+
+	if not is_instance_valid(ControllerManager.pawn_spawner):
+		return
+
+	var spawn_root := ControllerManager.pawn_spawner.get_node(ControllerManager.pawn_spawner.spawn_path)
+	if spawn_root == null:
+		return
+
+	var candidates : Array[Node3D] = []
+	for child in spawn_root.get_children():
+		if child == pawn: continue
+		if child is Node3D and is_instance_valid(child):
+			candidates.append(child)
+
+	if candidates.is_empty():
+		return
+
+	var target : Node3D = candidates[randi() % candidates.size()]
+	ControllerManager.camera_controller.set_target(target)
+	spectating = true
 
 func _update_interact_label(pawn : PhysicsPlayerController) -> void:
 	if interact_label == null:
