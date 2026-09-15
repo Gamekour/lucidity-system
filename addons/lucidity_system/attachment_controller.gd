@@ -327,6 +327,19 @@ func attach(child_body: RigidBody3D) -> bool:
 		child_body.remove_meta(ATTACHED_META_KEY)
 
 	var slot_name: String = str(child_body.get_meta(SLOT_META_KEY))
+	if slot_name == "hotbar":
+		var free_slot_name := ""
+		for slot_def in hotbar:
+			if slot_def == null or not attachment_slots.has(slot_def.slot_name):
+				continue
+			if (attachment_slots[slot_def.slot_name] as Dictionary)["occupant"] == null:
+				free_slot_name = slot_def.slot_name
+				break
+		if free_slot_name == "":
+			push_warning("AttachmentController: no free hotbar slot available for '%s'." % child_body.name)
+			return false
+		slot_name = free_slot_name
+
 	if not attachment_slots.has(slot_name):
 		push_warning("AttachmentController: no slot named '%s' exists." % slot_name)
 		return false

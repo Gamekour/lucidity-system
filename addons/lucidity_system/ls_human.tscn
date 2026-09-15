@@ -73,7 +73,29 @@ metadata/_custom_type_script = "uid://dnryq4yanmj62"
 script = ExtResource("6_qu0rw")
 slot_name = "RightHolster"
 bone_name = "Hips"
-pos_offset = Vector3(-0.175, 0, 0)
+pos_offset = Vector3(-0.1, 0, 0)
+rot_offset = Vector3(180, -90, 0)
+pos_offset_equipped = Vector3(0, -0.1, 0.25)
+rot_offset_equipped = Vector3(0, 180, 0)
+is_hotbar = true
+metadata/_custom_type_script = "uid://dnryq4yanmj62"
+
+[sub_resource type="Resource" id="Resource_1s46y"]
+script = ExtResource("6_qu0rw")
+slot_name = "LeftHolster"
+bone_name = "Hips"
+pos_offset = Vector3(0.1, 0, 0)
+rot_offset = Vector3(180, 90, 0)
+pos_offset_equipped = Vector3(0, -0.1, 0.25)
+rot_offset_equipped = Vector3(0, 180, 0)
+is_hotbar = true
+metadata/_custom_type_script = "uid://dnryq4yanmj62"
+
+[sub_resource type="Resource" id="Resource_d76ps"]
+script = ExtResource("6_qu0rw")
+slot_name = "BackHolster"
+bone_name = "Chest"
+pos_offset = Vector3(0.1, 0.1, -0.15)
 rot_offset = Vector3(180, -90, 0)
 pos_offset_equipped = Vector3(0, -0.1, 0.25)
 rot_offset_equipped = Vector3(0, 180, 0)
@@ -202,6 +224,6 @@ transform = Transform3D(1, 8.420134e-15, 0, 8.393005e-15, 1, 0, 0, 6.4212524e-14
 
 [node name="AttachmentController" type="Node3D" parent="." unique_id=1784956247]
 script = ExtResource("5_uqufu")
-slot_definitions = Array[ExtResource("6_qu0rw")]([SubResource("Resource_vr1i5"), SubResource("Resource_rpuu0"), SubResource("Resource_p48gw")])
+slot_definitions = Array[ExtResource("6_qu0rw")]([SubResource("Resource_vr1i5"), SubResource("Resource_rpuu0"), SubResource("Resource_p48gw"), SubResource("Resource_1s46y"), SubResource("Resource_d76ps")])
 sway_velocity_scale = 0.005
 metadata/attachment_slot = "RightHolster"

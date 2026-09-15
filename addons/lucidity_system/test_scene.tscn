@@ -491,7 +491,7 @@ mesh = SubResource("BoxMesh_fbuy2")
 
 [node name="ToyGun" parent="." unique_id=1458075073 instance=ExtResource("14_p48gw")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.6967921, 0.090282746, -2.4653006)
-metadata/attachment_slot = "RightHolster"
+metadata/attachment_slot = "hotbar"
 
 [node name="IKOverlay" type="Node" parent="ToyGun" unique_id=1234888765 node_paths=PackedStringArray("override_nodes")]
 script = ExtResource("15_3vnh1")
@@ -544,6 +544,180 @@ transform = Transform3D(1.910685e-15, -4.371138e-08, 1, 8.742276e-08, -0.9999999
 transform = Transform3D(-4.3711385e-08, 4.2351647e-22, 1, -0.9999999, -4.371138e-08, -4.371139e-08, 4.3711378e-08, -0.9999999, 0, -0.009263754, -0.28038043, -0.011591673)
 
 [node name="AttachmentBehavior" type="Node" parent="ToyGun" unique_id=199170326]
+script = ExtResource("15_jejnn")
+metadata/_custom_type_script = "uid://bd3u4ty7lfilf"
+
+[node name="ToyGun2" parent="." unique_id=1187312290 instance=ExtResource("14_p48gw")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.1089225, 0.090282746, -2.4653006)
+metadata/attachment_slot = "hotbar"
+
+[node name="IKOverlay" type="Node" parent="ToyGun2" unique_id=242982727 node_paths=PackedStringArray("override_nodes")]
+script = ExtResource("15_3vnh1")
+override_indices = Array[int]([2, 3])
+override_nodes = [NodePath("../grip"), NodePath("../grip2")]
+metadata/_custom_type_script = "uid://2by6uig7as31"
+
+[node name="attachment_origin" type="Node3D" parent="ToyGun2" unique_id=186290109]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.06411743, 0, 0.10354757)
+
+[node name="grip" type="Node3D" parent="ToyGun2" unique_id=707602166]
+transform = Transform3D(-4.3711385e-08, 0, -1, 0.9999999, -4.371138e-08, -4.371139e-08, -4.3711385e-08, -0.9999999, 0, 0.041826963, 0, 0.084499836)
+
+[node name="grip2" type="Node3D" parent="ToyGun2" unique_id=2077719741]
+
+[node name="NodeAnimator" type="Node" parent="ToyGun2" unique_id=852745831 node_paths=PackedStringArray("target", "origins")]
+script = ExtResource("18_f8quq")
+target = NodePath("../grip2")
+origins = [NodePath("../offgrip_idle"), NodePath("../reload_path/reload_rotsync")]
+animation_speed = 0.2
+metadata/_custom_type_script = "uid://dwct63vx16wf4"
+
+[node name="offgrip_idle" type="Node3D" parent="ToyGun2" unique_id=1296905535]
+transform = Transform3D(-4.3711385e-08, 4.2351647e-22, 1, -0.9999999, -4.371138e-08, -4.371139e-08, 4.3711378e-08, -0.9999999, 0, -0.05248952, 2.9802322e-08, -0.011591673)
+
+[node name="reload_path" type="Path3D" parent="ToyGun2" unique_id=1428795435]
+script = ExtResource("16_jejnn")
+waypoints = Array[NodePath]([NodePath("path0"), NodePath("path1"), NodePath("path2")])
+closed_loop = true
+metadata/_custom_type_script = "uid://clomgkhcajpdc"
+
+[node name="reload_rotsync" type="Node3D" parent="ToyGun2/reload_path" unique_id=2105128755 node_paths=PackedStringArray("path_follower")]
+transform = Transform3D(0.9999999, 0, 0, 0, 0.9999999, 0, 0, 0, 1, 0, 0, 0)
+script = ExtResource("18_ox1jj")
+path_follower = NodePath("../path_follower")
+copy_rotation = true
+metadata/_custom_type_script = "uid://d4nbobbvy3im8"
+
+[node name="path_follower" type="PathFollow3D" parent="ToyGun2/reload_path" unique_id=922457612]
+transform = Transform3D(0.9999999, 0, 0, 0, 0.9999999, 0, 0, 0, 1, 0, 0, 0)
+rotation_mode = 0
+
+[node name="path0" type="Node3D" parent="ToyGun2/reload_path" unique_id=281826179]
+transform = Transform3D(-4.3711385e-08, 4.2351647e-22, 1, -0.9999999, -4.371138e-08, -4.371139e-08, 4.3711378e-08, -0.9999999, 0, -0.05248952, 2.9802322e-08, -0.011591673)
+
+[node name="path1" type="Node3D" parent="ToyGun2/reload_path" unique_id=1313605956]
+transform = Transform3D(1.910685e-15, -4.371138e-08, 1, 8.742276e-08, -0.9999999, -4.3711385e-08, 0.9999999, 8.742276e-08, 0, -0.14877605, -0.15537308, -0.011591673)
+
+[node name="path2" type="Node3D" parent="ToyGun2/reload_path" unique_id=228352537]
+transform = Transform3D(-4.3711385e-08, 4.2351647e-22, 1, -0.9999999, -4.371138e-08, -4.371139e-08, 4.3711378e-08, -0.9999999, 0, -0.009263754, -0.28038043, -0.011591673)
+
+[node name="AttachmentBehavior" type="Node" parent="ToyGun2" unique_id=1223307633]
+script = ExtResource("15_jejnn")
+metadata/_custom_type_script = "uid://bd3u4ty7lfilf"
+
+[node name="ToyGun3" parent="." unique_id=367574250 instance=ExtResource("14_p48gw")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.6449537, 0.090282746, -2.4653006)
+metadata/attachment_slot = "hotbar"
+
+[node name="IKOverlay" type="Node" parent="ToyGun3" unique_id=1319070120 node_paths=PackedStringArray("override_nodes")]
+script = ExtResource("15_3vnh1")
+override_indices = Array[int]([2, 3])
+override_nodes = [NodePath("../grip"), NodePath("../grip2")]
+metadata/_custom_type_script = "uid://2by6uig7as31"
+
+[node name="attachment_origin" type="Node3D" parent="ToyGun3" unique_id=1020401821]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.06411743, 0, 0.10354757)
+
+[node name="grip" type="Node3D" parent="ToyGun3" unique_id=801516511]
+transform = Transform3D(-4.3711385e-08, 0, -1, 0.9999999, -4.371138e-08, -4.371139e-08, -4.3711385e-08, -0.9999999, 0, 0.041826963, 0, 0.084499836)
+
+[node name="grip2" type="Node3D" parent="ToyGun3" unique_id=488737016]
+
+[node name="NodeAnimator" type="Node" parent="ToyGun3" unique_id=932405372 node_paths=PackedStringArray("target", "origins")]
+script = ExtResource("18_f8quq")
+target = NodePath("../grip2")
+origins = [NodePath("../offgrip_idle"), NodePath("../reload_path/reload_rotsync")]
+animation_speed = 0.2
+metadata/_custom_type_script = "uid://dwct63vx16wf4"
+
+[node name="offgrip_idle" type="Node3D" parent="ToyGun3" unique_id=1132757296]
+transform = Transform3D(-4.3711385e-08, 4.2351647e-22, 1, -0.9999999, -4.371138e-08, -4.371139e-08, 4.3711378e-08, -0.9999999, 0, -0.05248952, 2.9802322e-08, -0.011591673)
+
+[node name="reload_path" type="Path3D" parent="ToyGun3" unique_id=982365768]
+script = ExtResource("16_jejnn")
+waypoints = Array[NodePath]([NodePath("path0"), NodePath("path1"), NodePath("path2")])
+closed_loop = true
+metadata/_custom_type_script = "uid://clomgkhcajpdc"
+
+[node name="reload_rotsync" type="Node3D" parent="ToyGun3/reload_path" unique_id=1422538573 node_paths=PackedStringArray("path_follower")]
+transform = Transform3D(0.9999999, 0, 0, 0, 0.9999999, 0, 0, 0, 1, 0, 0, 0)
+script = ExtResource("18_ox1jj")
+path_follower = NodePath("../path_follower")
+copy_rotation = true
+metadata/_custom_type_script = "uid://d4nbobbvy3im8"
+
+[node name="path_follower" type="PathFollow3D" parent="ToyGun3/reload_path" unique_id=1140121696]
+transform = Transform3D(0.9999999, 0, 0, 0, 0.9999999, 0, 0, 0, 1, 0, 0, 0)
+rotation_mode = 0
+
+[node name="path0" type="Node3D" parent="ToyGun3/reload_path" unique_id=1261951958]
+transform = Transform3D(-4.3711385e-08, 4.2351647e-22, 1, -0.9999999, -4.371138e-08, -4.371139e-08, 4.3711378e-08, -0.9999999, 0, -0.05248952, 2.9802322e-08, -0.011591673)
+
+[node name="path1" type="Node3D" parent="ToyGun3/reload_path" unique_id=1610188790]
+transform = Transform3D(1.910685e-15, -4.371138e-08, 1, 8.742276e-08, -0.9999999, -4.3711385e-08, 0.9999999, 8.742276e-08, 0, -0.14877605, -0.15537308, -0.011591673)
+
+[node name="path2" type="Node3D" parent="ToyGun3/reload_path" unique_id=2038174603]
+transform = Transform3D(-4.3711385e-08, 4.2351647e-22, 1, -0.9999999, -4.371138e-08, -4.371139e-08, 4.3711378e-08, -0.9999999, 0, -0.009263754, -0.28038043, -0.011591673)
+
+[node name="AttachmentBehavior" type="Node" parent="ToyGun3" unique_id=1522624687]
+script = ExtResource("15_jejnn")
+metadata/_custom_type_script = "uid://bd3u4ty7lfilf"
+
+[node name="ToyGun4" parent="." unique_id=1933228333 instance=ExtResource("14_p48gw")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.176762, 0.090282746, -2.4653006)
+metadata/attachment_slot = "hotbar"
+
+[node name="IKOverlay" type="Node" parent="ToyGun4" unique_id=1389309427 node_paths=PackedStringArray("override_nodes")]
+script = ExtResource("15_3vnh1")
+override_indices = Array[int]([2, 3])
+override_nodes = [NodePath("../grip"), NodePath("../grip2")]
+metadata/_custom_type_script = "uid://2by6uig7as31"
+
+[node name="attachment_origin" type="Node3D" parent="ToyGun4" unique_id=1097519247]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.06411743, 0, 0.10354757)
+
+[node name="grip" type="Node3D" parent="ToyGun4" unique_id=1795971076]
+transform = Transform3D(-4.3711385e-08, 0, -1, 0.9999999, -4.371138e-08, -4.371139e-08, -4.3711385e-08, -0.9999999, 0, 0.041826963, 0, 0.084499836)
+
+[node name="grip2" type="Node3D" parent="ToyGun4" unique_id=2107405410]
+
+[node name="NodeAnimator" type="Node" parent="ToyGun4" unique_id=798269029 node_paths=PackedStringArray("target", "origins")]
+script = ExtResource("18_f8quq")
+target = NodePath("../grip2")
+origins = [NodePath("../offgrip_idle"), NodePath("../reload_path/reload_rotsync")]
+animation_speed = 0.2
+metadata/_custom_type_script = "uid://dwct63vx16wf4"
+
+[node name="offgrip_idle" type="Node3D" parent="ToyGun4" unique_id=337810463]
+transform = Transform3D(-4.3711385e-08, 4.2351647e-22, 1, -0.9999999, -4.371138e-08, -4.371139e-08, 4.3711378e-08, -0.9999999, 0, -0.05248952, 2.9802322e-08, -0.011591673)
+
+[node name="reload_path" type="Path3D" parent="ToyGun4" unique_id=1576448655]
+script = ExtResource("16_jejnn")
+waypoints = Array[NodePath]([NodePath("path0"), NodePath("path1"), NodePath("path2")])
+closed_loop = true
+metadata/_custom_type_script = "uid://clomgkhcajpdc"
+
+[node name="reload_rotsync" type="Node3D" parent="ToyGun4/reload_path" unique_id=635846066 node_paths=PackedStringArray("path_follower")]
+transform = Transform3D(0.9999999, 0, 0, 0, 0.9999999, 0, 0, 0, 1, 0, 0, 0)
+script = ExtResource("18_ox1jj")
+path_follower = NodePath("../path_follower")
+copy_rotation = true
+metadata/_custom_type_script = "uid://d4nbobbvy3im8"
+
+[node name="path_follower" type="PathFollow3D" parent="ToyGun4/reload_path" unique_id=297625163]
+transform = Transform3D(0.9999999, 0, 0, 0, 0.9999999, 0, 0, 0, 1, 0, 0, 0)
+rotation_mode = 0
+
+[node name="path0" type="Node3D" parent="ToyGun4/reload_path" unique_id=245821396]
+transform = Transform3D(-4.3711385e-08, 4.2351647e-22, 1, -0.9999999, -4.371138e-08, -4.371139e-08, 4.3711378e-08, -0.9999999, 0, -0.05248952, 2.9802322e-08, -0.011591673)
+
+[node name="path1" type="Node3D" parent="ToyGun4/reload_path" unique_id=1501290809]
+transform = Transform3D(1.910685e-15, -4.371138e-08, 1, 8.742276e-08, -0.9999999, -4.3711385e-08, 0.9999999, 8.742276e-08, 0, -0.14877605, -0.15537308, -0.011591673)
+
+[node name="path2" type="Node3D" parent="ToyGun4/reload_path" unique_id=1069032117]
+transform = Transform3D(-4.3711385e-08, 4.2351647e-22, 1, -0.9999999, -4.371138e-08, -4.371139e-08, 4.3711378e-08, -0.9999999, 0, -0.009263754, -0.28038043, -0.011591673)
+
+[node name="AttachmentBehavior" type="Node" parent="ToyGun4" unique_id=1139903527]
 script = ExtResource("15_jejnn")
 metadata/_custom_type_script = "uid://bd3u4ty7lfilf"
 
