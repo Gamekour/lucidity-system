@@ -6,6 +6,7 @@ var pawn : Node3D
 var pawn_path : NodePath
 var crosshair_grab : TextureRect
 var input_recievers : Array[Node]
+var interact_label : Label
 
 func _ready() -> void:
 	var owner_id := int(name.trim_suffix("_controller"))
@@ -16,10 +17,30 @@ func _physics_process(delta: float) -> void:
 	if (pawn != null):
 		if (pawn is PhysicsPlayerController):
 			crosshair_grab.visible = pawn.valid_grab
+			_update_interact_label(pawn)
 		elif crosshair_grab.visible:
 			crosshair_grab.visible = false
+			if (interact_label != null):
+				interact_label.visible = false
 	elif crosshair_grab.visible:
 		crosshair_grab.visible = false
+		if (interact_label != null):
+			interact_label.visible = false
+
+func _update_interact_label(pawn : PhysicsPlayerController) -> void:
+	if interact_label == null:
+		return
+	var shapecast_arms = pawn.shapecast_arms
+	if shapecast_arms != null and shapecast_arms.is_colliding():
+		var col = shapecast_arms.get_collider(0)
+		if col != null and col.has_method("_interact"):
+			var label_text = "Interact"
+			if col.has_meta("interact_description"):
+				label_text = str(col.get_meta("interact_description"))
+			interact_label.text = label_text
+			interact_label.visible = true
+			return
+	interact_label.visible = false
 
 @rpc("any_peer")
 func spawn_pawn() -> void:
@@ -74,6 +95,8 @@ func connect_pawn(pawn_node : Node):
 		ControllerManager.camera_controller.set_target(pawn_node)
 	if crosshair_grab == null:
 		crosshair_grab = get_tree().current_scene.find_child("crosshair_grab", true, false) as TextureRect
+	if interact_label == null:
+		interact_label = get_tree().current_scene.find_child("interact_label", true, false) as Label
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	get_viewport().gui_release_focus()
 	
