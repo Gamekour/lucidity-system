@@ -464,11 +464,7 @@ func _do_attach_grabbed() -> void:
 		return
 	var success := attach_controller.attach_and_sync(grabbed_col)
 	if (success):
-		(grabbed_col as RigidBody3D).remove_collision_exception_with(self)
 		grab_release_pending.erase(grabbed_col)
-		if (ik_controller != null):
-			for spring in ik_controller.ik_springs:
-				spring.remove_exception(grabbed_col)
 		grabbed_col = null
 		climbing_ledge = false
 		_reset_climb_scan()
