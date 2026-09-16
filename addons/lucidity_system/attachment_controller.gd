@@ -212,7 +212,6 @@ func _build_slots() -> void:
 			"local_xform": offset_xform,
 			"local_xform_equipped" : offset_xform_equipped,
 			"occupant": null,
-			"origin_xform_inv": Transform3D.IDENTITY,
 			"is_hotbar" : def.is_hotbar,
 			"is_hidden" : def.is_hidden,
 			"temp_shown" : false,
@@ -223,7 +222,7 @@ func _build_slots() -> void:
 		}
 
 func _find_attachment_origin(body: Node3D) -> Transform3D:
-	var origin_node := body.get_node_or_null(ATTACHMENT_ORIGIN_NAME)
+	var origin_node := body.find_child("attachment_origin", true, false)
 	if origin_node == null or not (origin_node is Node3D):
 		return Transform3D.IDENTITY
 	return origin_node.transform
@@ -284,6 +283,10 @@ func _on_hotbar_change() -> void:
 		var behaviors = occupant.find_children("*", "AttachmentBehavior", true, false)
 		for behavior : AttachmentBehavior in behaviors:
 			behavior._set_equipped.rpc(is_equipped)
+		
+		var origin_animator = occupant.find_child("origin_animator")
+		if (origin_animator != null):
+			(origin_animator as NodeAnimator).animation_index = 0
 
 		var skeleton_overlay := _find_skeleton_overlay(occupant)
 		if skeleton_overlay != null and slot["is_hotbar"]:
@@ -355,7 +358,6 @@ func attach(child_body: RigidBody3D) -> bool:
 		if (parent_body is PhysicsPlayerController):
 			parent_body.allow_grab = child_body.get_meta("allow_grab")
 
-	var origin_xform: Transform3D = _find_attachment_origin(child_body)
 	var skeleton_overlay = _find_skeleton_overlay(child_body)
 	var ik_overlay = _find_ik_overlay(child_body)
 	var is_equipped := false
@@ -383,7 +385,6 @@ func attach(child_body: RigidBody3D) -> bool:
 			ik_overlay.active = true
 			for override in ik_overlay.override_indices:
 				body.ik_controller.ik_overrides[override] = true
-	slot["origin_xform_inv"] = origin_xform.affine_inverse()
 	
 	if (parent_body is PhysicsPlayerController):
 		var behaviors = child_body.find_children("*", "AttachmentBehavior", true, false)
@@ -433,7 +434,6 @@ func detach(child_body: RigidBody3D) -> void:
 		var slot: Dictionary = attachment_slots[slot_name]
 		if slot["occupant"] == child_body:
 			slot["occupant"] = null
-			slot["origin_xform_inv"] = Transform3D.IDENTITY
 			if slot["is_hidden"]:
 				_set_meshes_and_collisions_enabled(child_body, true)
 			slot["temp_shown"] = false
@@ -462,6 +462,9 @@ func detach(child_body: RigidBody3D) -> void:
 	for behavior : AttachmentBehavior in behaviors:
 		behavior._set_owner.rpc(-1)
 		behavior._set_equipped(false)
+	var origin_animator = child_body.find_child("origin_animator")
+	if (origin_animator != null):
+		(origin_animator as NodeAnimator).animation_index = 0
 	if (body is RigidBody3D and child_body is RigidBody3D):
 		body.mass -= child_body.mass
 	if (is_instance_valid(body)):
@@ -554,4 +557,4 @@ func _on_skeleton_updated() -> void:
 			slot["angular_velocity"] = Vector3.ZERO
 			slot["sway_angular_offset"] = Vector3.ZERO
 
-		child.global_transform = target_xform * slot["origin_xform_inv"]
+		child.global_transform = target_xform * _find_attachment_origin(child).affine_inverse()
