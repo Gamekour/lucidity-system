@@ -15,8 +15,10 @@
 [ext_resource type="PackedScene" uid="uid://yhetlsk6081a" path="res://addons/lucidity_system/grav_test.glb" id="15_ehqhu"]
 [ext_resource type="Script" uid="uid://bd3u4ty7lfilf" path="res://addons/lucidity_system/attachment_behavior.gd" id="15_jejnn"]
 [ext_resource type="Script" uid="uid://clomgkhcajpdc" path="res://addons/lucidity_system/node_path_builder_3d.gd" id="16_jejnn"]
+[ext_resource type="PackedScene" uid="uid://carmowbuokhq8" path="res://addons/lucidity_system/BigHammer.glb" id="18_4w186"]
 [ext_resource type="Script" uid="uid://dwct63vx16wf4" path="res://addons/lucidity_system/node_animator.gd" id="18_f8quq"]
 [ext_resource type="Script" uid="uid://d4nbobbvy3im8" path="res://addons/lucidity_system/rotation_sync.gd" id="18_ox1jj"]
+[ext_resource type="PackedScene" uid="uid://clt7fea87etw1" path="res://addons/lucidity_system/outward_slash.tscn" id="19_f8quq"]
 
 [sub_resource type="Environment" id="Environment_ia1lp"]
 background_mode = 1
@@ -839,6 +841,21 @@ metadata/_custom_type_script = "uid://bd3u4ty7lfilf"
 
 [node name="grav_test" parent="." unique_id=1193492090 instance=ExtResource("15_ehqhu")]
 transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, 39.818813, 13.290279, 2.3028274)
+
+[node name="Sledgehammer" parent="." unique_id=831850254 instance=ExtResource("18_4w186")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.61781, 0.8073609, -1.2381736)
+metadata/attachment_slot = "hotbar"
+
+[node name="attachment_origin" type="Node3D" parent="Sledgehammer" unique_id=561712805]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.37012476, 0)
+
+[node name="SkeletonOverlay" type="Node" parent="Sledgehammer" unique_id=1244469903]
+script = ExtResource("7_8pr8v")
+source_scene = ExtResource("19_f8quq")
+IK_mods_disable = Array[String](["IK_RH"])
+bone_mask = PackedStringArray("RightUpperArm", "RightLowerArm", "RightHand")
+active = false
+metadata/_custom_type_script = "uid://c8qyp1ubjxh1u"
 
 [connection signal="pressed" from="CanvasLayer/button_host" to="CanvasLayer/NetworkInterface" method="_create_game"]
 [connection signal="pressed" from="CanvasLayer/button_client" to="CanvasLayer/NetworkInterface" method="_join_game"]
