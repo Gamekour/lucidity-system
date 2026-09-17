@@ -516,7 +516,7 @@ func _on_skeleton_updated() -> void:
 				slot["temp_shown"] = should_show
 
 		var bone_idx: int
-		var offset = slot["local_xform_equipped"] if is_equipped else slot["local_xform"]
+		var offset = slot["local_xform"]
 		if is_equipped:
 			bone_idx = -1
 		else:
@@ -534,7 +534,7 @@ func _on_skeleton_updated() -> void:
 				var hand_global_pose: Transform3D = playermodel.get_bone_global_pose(hand_idx)
 				target_xform = playermodel.global_transform * hand_global_pose * offset
 			else:
-				var equip_offset = offset
+				var equip_offset = slot["local_xform_equipped"]
 				var normal_distance : float = offset.origin.length()
 				if body.shapecast_arms.is_colliding() and normal_distance > 0.0001:
 					var hit_distance : float = body.shapecast_arms.get_closest_collision_safe_fraction() * body.shapecast_arms.target_position.length()

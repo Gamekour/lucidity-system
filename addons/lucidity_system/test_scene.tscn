@@ -245,6 +245,7 @@ metadata/attachment_slot = "RightWrist"
 shape = SubResource("BoxShape3D_rpuu0")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="test_box3" unique_id=303358053]
+visible = false
 mesh = SubResource("BoxMesh_oo8pe")
 surface_material_override/0 = ExtResource("9_njel3")
 

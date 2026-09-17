@@ -120,8 +120,12 @@ func toggle_ik():
 	for ikname : String in active_disable_list:
 		var ikmod = playermodel.find_child(ikname, false, false)
 		if (ikmod != null):
-			if (ikmod is IKModifier3D):
+			if (ikmod is SkeletonModifier3D):
 				ikmod.influence = 0 if active else 1
+		var end_fixer = playermodel.find_child(ikname + "_EndFixer", false, false)
+		if (end_fixer != null):
+			if (end_fixer is SkeletonModifier3D):
+				end_fixer.influence = 0 if active else 1
 
 func _apply_camera_aim() -> void:
 	if not camera_aim_active or camera_aim_weight <= 0.0:

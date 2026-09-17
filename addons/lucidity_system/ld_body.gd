@@ -189,6 +189,7 @@ func rig_setup() -> void:
 				var end_fixer := IKEndFixer.new()
 				end_fixer.target_node = ik_controller.ik_targets[i]
 				end_fixer.bone_name = ik_controller.ik_bone_ends[i]
+				end_fixer.name = ik_controller.ik_targets[i].name + "_EndFixer"
 				playermodel.add_child(end_fixer)
 				var root := playermodel.get_bone_global_pose(playermodel.find_bone(ik_controller.ik_bone_roots[i])).origin
 				var mid := playermodel.get_bone_global_pose(playermodel.find_bone(ik_controller.ik_bone_mids[i])).origin
