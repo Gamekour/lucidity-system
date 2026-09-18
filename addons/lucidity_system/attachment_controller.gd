@@ -197,20 +197,13 @@ func _build_slots() -> void:
 			deg_to_rad(def.rot_offset.y),
 			deg_to_rad(def.rot_offset.z)
 		))
-		var offset_basis_equipped: Basis = Basis.from_euler(Vector3(
-			deg_to_rad(def.rot_offset_equipped.x),
-			deg_to_rad(def.rot_offset_equipped.y),
-			deg_to_rad(def.rot_offset_equipped.z)
-		))
 		var offset_xform: Transform3D = Transform3D(offset_basis, def.pos_offset)
-		var offset_xform_equipped : Transform3D = Transform3D(offset_basis_equipped, def.pos_offset_equipped)
 		
 		attachment_slots[def.slot_name] = {
 			"parent": parent_node,
 			"bone_name": def.bone_name,
 			"bone_idx": bone_idx,
 			"local_xform": offset_xform,
-			"local_xform_equipped" : offset_xform_equipped,
 			"occupant": null,
 			"is_hotbar" : def.is_hotbar,
 			"is_hidden" : def.is_hidden,
@@ -225,6 +218,12 @@ func _find_attachment_origin(body: Node3D) -> Transform3D:
 	var origin_node := body.find_child("attachment_origin", true, false)
 	if origin_node == null or not (origin_node is Node3D):
 		return Transform3D.IDENTITY
+	return origin_node.transform
+
+func _find_attachment_origin_equipped(body: Node3D) -> Transform3D:
+	var origin_node := body.find_child("attachment_origin_equipped", true, false)
+	if origin_node == null or not (origin_node is Node3D):
+		return _find_attachment_origin(body)
 	return origin_node.transform
 	
 func _is_left_handed() -> bool:
@@ -516,7 +515,7 @@ func _on_skeleton_updated() -> void:
 				slot["temp_shown"] = should_show
 
 		var bone_idx: int
-		var offset = slot["local_xform"]
+		var offset = slot["local_xform"] if !is_equipped else Transform3D.IDENTITY
 		if is_equipped:
 			bone_idx = -1
 		else:
@@ -534,7 +533,7 @@ func _on_skeleton_updated() -> void:
 				var hand_global_pose: Transform3D = playermodel.get_bone_global_pose(hand_idx)
 				target_xform = playermodel.global_transform * hand_global_pose * offset
 			else:
-				var equip_offset = slot["local_xform_equipped"]
+				var equip_offset = offset
 				var normal_distance : float = offset.origin.length()
 				if body.shapecast_arms.is_colliding() and normal_distance > 0.0001:
 					var hit_distance : float = body.shapecast_arms.get_closest_collision_safe_fraction() * body.shapecast_arms.target_position.length()
@@ -565,5 +564,6 @@ func _on_skeleton_updated() -> void:
 			slot["sway_offset"] = Vector3.ZERO
 			slot["angular_velocity"] = Vector3.ZERO
 			slot["sway_angular_offset"] = Vector3.ZERO
-
-		child.global_transform = target_xform * _find_attachment_origin(child).affine_inverse()
+		
+		var origin_xform := _find_attachment_origin_equipped(child) if is_equipped else _find_attachment_origin(child)
+		child.global_transform = target_xform * origin_xform.affine_inverse()
