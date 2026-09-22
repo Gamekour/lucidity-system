@@ -134,7 +134,7 @@ func _process(delta: float) -> void:
 				ik_targets[i].rotation = start_rotations[i] + Vector3(-foot_pitch, 0.0, 0.0)
 			else:
 				ik_targets[i].rotation = start_rotations[i]
-		var is_left = ik_springs[i].position.x < 0
+		var is_left = start_positions[i].x < 0
 		var pole_pos = ik_springs[i].global_position.lerp(ik_targets[i].global_position, 0.5) + ik_targets[i].global_basis * pole_axes[i] * (0.25 if is_left else -0.25)
 		ik_poles[i].global_position = pole_pos
 
