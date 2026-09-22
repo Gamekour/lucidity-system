@@ -878,7 +878,13 @@ func arm_logic() -> void:
 
 		var rot_strength := lerpf(0, grab_rotation_strength_max, weight)
 		var rel_angular_velocity := _get_angular_velocity_networked(grabbed_rb) - angular_velocity
-		rotation_torque = diff_axis * (diff_angle * rot_strength) - rel_angular_velocity * grab_rotation_damp
+		var desired_angular_accel := diff_axis * (diff_angle * rot_strength) - rel_angular_velocity * grab_rotation_damp
+
+		var inertia_tensor := Basis.IDENTITY
+		var direct_state := PhysicsServer3D.body_get_direct_state(grabbed_rb.get_rid())
+		if direct_state != null:
+			inertia_tensor = direct_state.inverse_inertia_tensor.inverse()
+		rotation_torque = inertia_tensor * desired_angular_accel
 
 		var grabbed_lever_arm = grab_position - grabbed_col.global_position
 		_apply_force_networked(grabbed_rb, force * 0.5 * (1.0 - grab_force_central_scale), grabbed_lever_arm)
