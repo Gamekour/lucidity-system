@@ -309,7 +309,7 @@ func _physics_process(delta: float) -> void:
 		floor_contact_point = current_floor_point
 		floor_rigidbody = current_floor_node if current_floor_node is RigidBody3D else null
 		
-		if current_floor_node == last_floor_node:
+		if current_floor_node == last_floor_node and is_instance_valid(last_floor_node):
 			var floor_movement = (last_floor_node as Node3D).to_global(last_floor_offset) - last_floor_point
 			floor_velocity = floor_movement / delta
 			

@@ -46,7 +46,7 @@ func _update_spectator() -> void:
 	if not is_instance_valid(ControllerManager.pawn_spawner):
 		return
 
-	var spawn_root := ControllerManager.pawn_spawner.get_node(ControllerManager.pawn_spawner.spawn_path)
+	var spawn_root = ControllerManager.pawn_spawner.get_node(ControllerManager.pawn_spawner.spawn_path)
 	if spawn_root == null:
 		return
 
@@ -103,8 +103,8 @@ func despawn_pawn() -> void:
 	
 	var pawn_name = name.trim_suffix("_controller")
 	
-	var spawn_root := pawn_spawner.get_node(pawn_spawner.spawn_path)
-	var target := spawn_root.find_child(pawn_name, true, false)
+	var spawn_root = pawn_spawner.get_node(pawn_spawner.spawn_path)
+	var target = spawn_root.find_child(pawn_name, true, false)
 	if not is_instance_valid(target): return
 	
 	spawn_root.remove_child(target)
