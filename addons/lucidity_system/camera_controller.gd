@@ -19,6 +19,8 @@ var target_angle_horizontal : float = 0.0
 var camera_up_dir : Vector3 = Vector3.UP
 var transport_basis : Basis = Basis.IDENTITY
 var _transport_initialized : bool = false
+var _mouse_warp_pos : Vector2 = Vector2.ZERO
+var _do_mouse_warp : bool = false
 
 func set_target(new_target: Node3D) -> void:
 	target = new_target
@@ -36,8 +38,15 @@ func is_first_person() -> bool:
 
 func handle_input(event: InputEvent) -> void:
 	if event is InputEventMouseMotion:
-		target_angle_horizontal = wrapf(target_angle_horizontal - event.relative.x * get_process_delta_time() * sens.x, -PI, PI)
-		var new_pitch = camera_pitch - event.relative.y * get_process_delta_time() * sens.y
+		if (!_do_mouse_warp && !is_first_person()): return
+		
+		var mouse_delta = event.relative
+		if (_do_mouse_warp):
+			mouse_delta += event.position - _mouse_warp_pos
+			Input.warp_mouse(_mouse_warp_pos)
+		
+		target_angle_horizontal = wrapf(target_angle_horizontal - mouse_delta.x * get_process_delta_time() * sens.x, -PI, PI)
+		var new_pitch = camera_pitch - mouse_delta.y * get_process_delta_time() * sens.y
 		camera_pitch = clampf(new_pitch, min_camera_pitch, max_camera_pitch) if has_focus_origin else new_pitch
 	if event is InputEventMouseButton and is_instance_valid(cam_spring):
 		if event.is_pressed():
@@ -45,6 +54,11 @@ func handle_input(event: InputEvent) -> void:
 				cam_spring.spring_length = clampf(cam_spring.spring_length - cam_distance_max / 10, cam_distance_min, cam_distance_max)
 			if event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
 				cam_spring.spring_length = clampf(cam_spring.spring_length + cam_distance_max / 10, cam_distance_min, cam_distance_max)
+			Input.mouse_mode = Input.MOUSE_MODE_CAPTURED if is_first_person() else Input.MOUSE_MODE_VISIBLE
+	if event is InputEventMouseButton:
+		if event.is_action("camera_pan"):
+			_mouse_warp_pos = event.position
+			_do_mouse_warp = event.is_pressed()
 
 func _process(delta: float) -> void:
 	if not (is_instance_valid(target) and is_inside_tree()):

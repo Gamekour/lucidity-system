@@ -133,7 +133,6 @@ func connect_pawn(pawn_node : Node):
 		crosshair_grab = get_tree().current_scene.find_child("crosshair_grab", true, false) as TextureRect
 	if interact_label == null:
 		interact_label = get_tree().current_scene.find_child("interact_label", true, false) as Label
-	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	get_viewport().gui_release_focus()
 	
 func _input(event: InputEvent) -> void:

@@ -10,12 +10,13 @@ func _enable_plugin() -> void:
 	_add_input("crouch", [KEY_C])
 	_add_input("sprint", [KEY_SHIFT])
 	_add_input("crawl", [KEY_Z])
-	_add_input("grab", [], MOUSE_BUTTON_RIGHT)
+	_add_input("grab", [KEY_E])
 	_add_input("attach", [KEY_Q])
 	_add_input("drop", [KEY_G])
 	_add_input("interact", [KEY_F])
 	_add_input("respawn", [KEY_R])
 	_add_input("hotbar_direct", [KEY_0, KEY_1, KEY_2, KEY_3, KEY_4, KEY_5, KEY_6, KEY_7, KEY_8, KEY_9])
+	_add_input("camera_pan", [], MouseButton.MOUSE_BUTTON_RIGHT)
 	pass
 
 func _add_input(name : String, keys : Array[int], mouse_button : int = -1):
