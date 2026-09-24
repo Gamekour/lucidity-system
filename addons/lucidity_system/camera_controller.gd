@@ -2,6 +2,7 @@ extends Node3D
 class_name CameraController
 
 @onready var cam_spring : SpringArm3D = $cam_spring
+@onready var camera : Camera3D = $cam_spring/Camera3D
 @export var sens := Vector2(0.5, 0.5)
 @export_range(-90.0, 90.0, 0.5, "radians_as_degrees") var min_camera_pitch : float = deg_to_rad(-80.0)
 @export_range(-90.0, 90.0, 0.5, "radians_as_degrees") var max_camera_pitch : float = deg_to_rad(80.0)
@@ -9,6 +10,8 @@ class_name CameraController
 @export var cam_distance_min := 0.0
 @export var camera_tilt_smoothing : float = 10.0
 @export var fp_deadzone : float = 0.05
+@export var wall_margin : float = 0.2
+@export_range(0.05, 1.0, 0.05) var wall_min_facing : float = 0.25
 
 var target : Node3D
 var focus_origin : Node3D
@@ -75,6 +78,24 @@ func _process(delta: float) -> void:
 	var pivot_position := focus_origin.global_position if has_focus_origin else target.global_position
 	global_position = pivot_position
 	global_basis = transport_basis * yaw_basis * pitch_basis
+	_clamp_camera_to_walls()
+
+func _clamp_camera_to_walls() -> void:
+	if not is_instance_valid(camera) or cam_spring.spring_length <= fp_deadzone:
+		return
+	var origin := cam_spring.global_position
+	var direction := cam_spring.global_basis.z.normalized()
+	var length := minf(cam_spring.get_hit_length(), cam_spring.spring_length)
+	var query := PhysicsRayQueryParameters3D.create(origin, origin + direction * cam_spring.spring_length, cam_spring.collision_mask)
+	if target is CollisionObject3D:
+		query.exclude = [(target as CollisionObject3D).get_rid()]
+	var hit := get_world_3d().direct_space_state.intersect_ray(query)
+	if not hit.is_empty():
+		var hit_distance := origin.distance_to(hit.position)
+		var facing := maxf(absf(direction.dot(hit.normal)), wall_min_facing)
+		var safe_distance := maxf(hit_distance - wall_margin / facing, 0.0)
+		length = minf(length, safe_distance)
+	camera.position.z = length
 
 func _get_target_up_dir() -> Vector3:
 	if target is PhysicsPlayerController:
