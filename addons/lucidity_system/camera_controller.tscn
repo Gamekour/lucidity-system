@@ -16,6 +16,10 @@ shape = SubResource("SphereShape3D_1s05b")
 
 [node name="Camera3D" type="Camera3D" parent="cam_spring" unique_id=2077608159]
 transform = Transform3D(1, -1.16406905e-10, 7.275958e-12, 1.1642372e-10, 1, -2.842171e-13, 0, 3.656797e-15, 1, 0, 0, 0)
+fov = 90.0
 near = 0.01
 script = ExtResource("2_uo4ko")
 tilt_strength = 50.0
+fov_speed_min = 0.5
+fov_speed_max = 8.0
+max_fov = 150.0

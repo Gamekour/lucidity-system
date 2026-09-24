@@ -55,6 +55,8 @@ func handle_input(event: InputEvent) -> void:
 			if event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
 				cam_spring.spring_length = clampf(cam_spring.spring_length + cam_distance_max / 10, cam_distance_min, cam_distance_max)
 			Input.mouse_mode = Input.MOUSE_MODE_CAPTURED if is_first_person() else Input.MOUSE_MODE_VISIBLE
+		if (is_first_person()):
+			_do_mouse_warp = false
 	if event is InputEventMouseButton:
 		if event.is_action("camera_pan"):
 			_mouse_warp_pos = event.position
