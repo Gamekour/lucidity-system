@@ -519,7 +519,7 @@ func _get_body_target_angle(input_vector: Vector2) -> float:
 	if ((absf(absf(move_yaw_offset) - (PI / 2.0)) < body_turn_sideways_deadzone)) or grabbed_col != null or stance_height < stance_height_rot_min:
 		return target_angle_horizontal + overlay_eulers.y
 	
-	if input_vector.y < 0.0:
+	if input_vector.y < 0.0 and camera_controller.is_first_person():
 		if (move_yaw_offset < 0.0):
 			move_yaw_offset += PI
 		else:
