@@ -373,7 +373,7 @@ func _physics_process(delta: float) -> void:
 		var displacement : float = (stance_height * ride_height) - current_distance
 		
 		var normal_velocity : float = relative_velocity.dot(slope_normal)
-		var spring_magnitude : float = displacement * spring_strength * spring_strength_scale - normal_velocity * spring_damping * spring_damping_scale
+		var spring_magnitude : float = displacement * mass * spring_strength * spring_strength_scale - normal_velocity * spring_damping * spring_damping_scale * mass
 		var spring_force : Vector3 = slope_normal * spring_magnitude
 		force += spring_force
 	

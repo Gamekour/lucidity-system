@@ -85,7 +85,7 @@ metadata/_custom_type_script = "uid://dnryq4yanmj62"
 
 [node name="PhysicsPlayerController" type="RigidBody3D" unique_id=578935450]
 collision_layer = 2
-mass = 69.0
+mass = 59.0
 continuous_cd = true
 contact_monitor = true
 max_contacts_reported = 4
@@ -93,6 +93,8 @@ linear_damp_mode = 1
 script = ExtResource("1_1s46y")
 playermodel_scene = ExtResource("2_1s46y")
 shapecast_legs_length_scale = 1.35
+spring_strength = 84.746
+spring_damping = 16.949
 slope_correction = 0.2
 slope_correction_damping = 4.0
 slope_stance_height_scale = 0.75
