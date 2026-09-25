@@ -457,6 +457,15 @@ func _request_attach_grabbed() -> void:
 		return
 	_do_attach_grabbed()
 
+@rpc("any_peer", "call_remote", "unreliable_ordered")
+func _send_look_target_to_server(world_position: Vector3) -> void:
+	if not multiplayer.is_server():
+		return
+	var sender_id = multiplayer.get_remote_sender_id()
+	if sender_id != owner_peer_id and sender_id != 0:
+		return
+	set_look_target(world_position)
+
 func _do_attach_grabbed() -> void:
 	if not (grabbed_col is RigidBody3D):
 		return
