@@ -482,6 +482,12 @@ func _on_body_tree_exiting() -> void:
 		if occupant != null and is_instance_valid(occupant):
 			detach(occupant)
 
+func _find_sway_origin(body: Node3D) -> Node3D:
+	var origin_node := body.find_child("sway_origin", true, false)
+	if origin_node == null or not (origin_node is Node3D):
+		return null
+	return origin_node
+
 func _on_skeleton_updated() -> void:
 	var delta := get_physics_process_delta_time()
 
@@ -543,6 +549,9 @@ func _on_skeleton_updated() -> void:
 		else:
 			target_xform = parent.global_transform * offset
 
+		var sway_xform: Transform3D = Transform3D.IDENTITY
+		var has_sway: bool = false
+
 		if is_equipped:
 			var sway_accel: Vector3 = (-slot["sway_offset"] * sway_spring_strength) - (slot["relative_velocity"] * sway_spring_damping)
 			slot["relative_velocity"] += sway_accel * delta
@@ -558,7 +567,8 @@ func _on_skeleton_updated() -> void:
 				velocity_sway = -body_local_velocity * sway_velocity_scale
 
 			var sway_basis: Basis = Basis.from_euler(slot["sway_angular_offset"])
-			target_xform = target_xform * Transform3D(sway_basis, slot["sway_offset"] + velocity_sway)
+			sway_xform = Transform3D(sway_basis, slot["sway_offset"] + velocity_sway)
+			has_sway = true
 		else:
 			slot["relative_velocity"] = Vector3.ZERO
 			slot["sway_offset"] = Vector3.ZERO
@@ -566,4 +576,13 @@ func _on_skeleton_updated() -> void:
 			slot["sway_angular_offset"] = Vector3.ZERO
 		
 		var origin_xform := _find_attachment_origin_equipped(child) if is_equipped else _find_attachment_origin(child)
-		child.global_transform = target_xform * origin_xform.affine_inverse()
+
+		if has_sway:
+			var sway_origin_node := _find_sway_origin(child)
+			if sway_origin_node != null:
+				var sway_origin_xform: Transform3D = sway_origin_node.transform
+				child.global_transform = target_xform * origin_xform.affine_inverse() * sway_origin_xform * sway_xform * sway_origin_xform.affine_inverse()
+			else:
+				child.global_transform = target_xform * sway_xform * origin_xform.affine_inverse()
+		else:
+			child.global_transform = target_xform * origin_xform.affine_inverse()
