@@ -2,13 +2,20 @@ extends Skeleton3D
 class_name PlayerModel
 @export var body : PhysicsPlayerController
 @export var left_handed : bool = false
-@export var cam_spring : SpringArm3D
 @export var fp_deadzone : float = 0.05
 @export var head_bone_name : String = "Head"
 var is_fp := true
+var cam_spring : SpringArm3D
 
 func _process(delta: float) -> void:
 	if !is_inside_tree() or OS.has_feature("dedicated_server"): return
+	
+	if (!is_instance_valid(cam_spring)):
+		if (is_instance_valid(ControllerManager.camera_controller)):
+			if (is_instance_valid(ControllerManager.camera_controller.cam_spring)):
+				cam_spring = ControllerManager.camera_controller.cam_spring
+			else: return
+		else: return
 	
 	var head_bone_index : int = find_bone(head_bone_name)
 	if cam_spring == null:

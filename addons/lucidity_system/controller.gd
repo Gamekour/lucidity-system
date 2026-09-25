@@ -16,19 +16,35 @@ func _ready() -> void:
 func _physics_process(delta: float) -> void:
 	if is_multiplayer_authority():
 		_update_spectator()
-	if (crosshair_grab == null): return
-	if (pawn != null):
-		if (pawn is PhysicsPlayerController):
-			crosshair_grab.visible = pawn.valid_grab
-			_update_interact_label(pawn)
+	
+	if (!_is_owner()) : return
+	if (crosshair_grab != null):
+		if (pawn != null):
+			if (pawn is PhysicsPlayerController):
+				crosshair_grab.visible = pawn.valid_grab
+				_update_interact_label(pawn)
+			elif crosshair_grab.visible:
+				crosshair_grab.visible = false
+				if (interact_label != null):
+					interact_label.visible = false
 		elif crosshair_grab.visible:
 			crosshair_grab.visible = false
 			if (interact_label != null):
 				interact_label.visible = false
-	elif crosshair_grab.visible:
-		crosshair_grab.visible = false
-		if (interact_label != null):
-			interact_label.visible = false
+	if pawn is PhysicsPlayerController:
+		var space_state = get_viewport().world_3d.direct_space_state
+		var cam_ref := get_viewport().get_camera_3d()
+		var mouse_pos := get_viewport().get_mouse_position()
+		var cam_cast_origin := cam_ref.project_ray_origin(mouse_pos)
+		var cam_cast_end := cam_cast_origin + cam_ref.project_ray_normal(mouse_pos) * 2000
+		var query := PhysicsRayQueryParameters3D.create(cam_cast_origin, cam_cast_end)
+		var raycast_result := space_state.intersect_ray(query)
+		if not raycast_result.is_empty():
+			pawn.set_look_target(raycast_result['position'])
+
+func _is_owner() -> bool:
+	var owner := int(name.trim_suffix("_controller"))
+	return owner == multiplayer.get_unique_id()
 
 func _update_spectator() -> void:
 	if not is_instance_valid(ControllerManager.camera_controller):
@@ -125,8 +141,6 @@ func connect_pawn(pawn_node : Node):
 	
 	_set_pawn_path.rpc(pawn_node.get_path())
 	
-	if (pawn_node is PhysicsPlayerController) and is_instance_valid(ControllerManager.camera_controller):
-		pawn_node.set_camera_controller(ControllerManager.camera_controller)
 	if is_instance_valid(ControllerManager.camera_controller):
 		ControllerManager.camera_controller.set_target(pawn_node)
 	if crosshair_grab == null:

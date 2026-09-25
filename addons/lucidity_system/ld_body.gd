@@ -9,11 +9,6 @@ func is_local_owner() -> bool:
 func set_owner_peer_id(peer_id: int) -> void:
 	owner_peer_id = peer_id
 
-func set_camera_controller(cc: CameraController) -> void:
-	camera_controller = cc
-	if playermodel != null and is_instance_valid(cc):
-		playermodel.cam_spring = cc.cam_spring
-
 @export_category("Player Model")
 @export var playermodel_scene : PackedScene
 @export var shapecast_legs_length_scale : float = 1.5
@@ -89,7 +84,6 @@ func set_camera_controller(cc: CameraController) -> void:
 var playermodel : PlayerModel
 var ik_controller : WalkIKController
 var attach_controller : AttachmentController
-var camera_controller : CameraController
 
 var grabbed_col : Node3D
 var grab_release_pending : Array[RigidBody3D]
@@ -97,6 +91,8 @@ var grab_offset : Vector3 = Vector3.ZERO
 var grab_rotation_offset : Basis = Basis.IDENTITY
 var relative_velocity : Vector3 = Vector3.ZERO
 var overlay_eulers : Vector3 = Vector3.ZERO
+var look_target_position : Vector3 = Vector3.ZERO
+var has_look_target : bool = false
 var transport_basis : Basis = Basis.IDENTITY
 var _transport_initialized : bool = false
 
@@ -243,7 +239,8 @@ func _apply_anim_state(p_grounded: bool, p_up_dir: Vector3, p_dot: float,
 
 func _physics_process(delta: float) -> void:
 	super._physics_process(delta)
-
+	
+	var camera_controller = ControllerManager.camera_controller
 	if is_local_owner() and is_instance_valid(camera_controller):
 		target_angle_horizontal = camera_controller.target_angle_horizontal
 		camera_pitch = camera_controller.camera_pitch
@@ -512,12 +509,15 @@ func _get_current_yaw(up_dir: Vector3) -> float:
 	return atan2(projected_right.dot(right_ref), projected_right.dot(forward_ref)) - PI / 2.0
 
 func _get_body_target_angle(input_vector: Vector2) -> float:
+	var camera_controller = ControllerManager.camera_controller
+	var base_angle := _get_look_target_base_angle() if has_look_target else target_angle_horizontal
+	
 	if input_vector.length() < body_turn_input_deadzone:
-		return target_angle_horizontal + overlay_eulers.y
+		return base_angle + overlay_eulers.y
 	
 	var move_yaw_offset := atan2(input_vector.x, input_vector.y)
 	if ((absf(absf(move_yaw_offset) - (PI / 2.0)) < body_turn_sideways_deadzone)) or grabbed_col != null or stance_height < stance_height_rot_min:
-		return target_angle_horizontal + overlay_eulers.y
+		return base_angle + overlay_eulers.y
 	
 	if input_vector.y < 0.0 and camera_controller.is_first_person():
 		if (move_yaw_offset < 0.0):
@@ -526,7 +526,7 @@ func _get_body_target_angle(input_vector: Vector2) -> float:
 			move_yaw_offset -= PI
 	
 	var yaw_scale = clamp((stance_height - stance_height_rot_min) / (stance_height_rot_max - stance_height_rot_min), 0, 1)
-	var yaw_angle = lerp(target_angle_horizontal, target_angle_horizontal - move_yaw_offset, yaw_scale) + overlay_eulers.y
+	var yaw_angle = lerp(base_angle, base_angle - move_yaw_offset, yaw_scale) + overlay_eulers.y
 	
 	return wrapf(yaw_angle, -PI, PI)
 
@@ -951,3 +951,22 @@ func _ungrab() -> void:
 	grabbed_col = null
 	climbing_ledge = false
 	_reset_climb_scan()
+
+func set_look_target(world_position: Vector3) -> void:
+	look_target_position = world_position
+	has_look_target = true
+
+func clear_look_target() -> void:
+	has_look_target = false
+
+func _get_look_target_base_angle() -> float:
+	var up_dir := current_up_dir
+	var refs := _get_horizontal_basis(up_dir)
+	var forward_ref : Vector3 = refs[0]
+	var right_ref : Vector3 = refs[1]
+	var to_target := look_target_position - global_position
+	to_target -= up_dir * to_target.dot(up_dir)
+	if to_target.length_squared() < 0.0001:
+		return target_angle_horizontal
+	to_target = to_target.normalized()
+	return atan2(to_target.dot(right_ref), to_target.dot(forward_ref)) + PI
