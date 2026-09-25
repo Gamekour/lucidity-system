@@ -3,6 +3,7 @@ extends Node
 @export var controller_scene_path : String = "res://addons/lucidity_system/controller.tscn"
 @export var pawn_scene_path : String = "res://addons/lucidity_system/ls_human.tscn"
 @export var camera_controller_scene_path : String = "res://addons/lucidity_system/camera_controller.tscn"
+@export_flags_3d_physics var mouse_cast_layers : int = 1
 var controller_spawner : MultiplayerSpawner
 var pawn_spawner : MultiplayerSpawner
 

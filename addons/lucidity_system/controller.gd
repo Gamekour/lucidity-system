@@ -37,7 +37,7 @@ func _physics_process(delta: float) -> void:
 		var mouse_pos := get_viewport().get_mouse_position()
 		var cam_cast_origin := cam_ref.project_ray_origin(mouse_pos)
 		var cam_cast_end := cam_cast_origin + cam_ref.project_ray_normal(mouse_pos) * 2000
-		var query := PhysicsRayQueryParameters3D.create(cam_cast_origin, cam_cast_end)
+		var query := PhysicsRayQueryParameters3D.create(cam_cast_origin, cam_cast_end, ControllerManager.mouse_cast_layers)
 		var raycast_result := space_state.intersect_ray(query)
 		if not raycast_result.is_empty():
 			pawn.set_look_target(raycast_result['position'])
