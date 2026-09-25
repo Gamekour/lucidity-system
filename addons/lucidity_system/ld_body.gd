@@ -237,9 +237,21 @@ func _apply_anim_state(p_grounded: bool, p_up_dir: Vector3, p_dot: float,
 	synced_crawling = p_crawling
 	synced_is_grabbing = p_is_grabbing
 
+func _get_arms_aim_basis(up_dir: Vector3) -> Basis:
+	if has_look_target:
+		var to_target := look_target_position - shapecast_arms.global_position
+		if to_target.length_squared() > 0.0001:
+			return Basis.looking_at(to_target, up_dir)
+	return synced_camera_basis
+
 func _physics_process(delta: float) -> void:
 	super._physics_process(delta)
-	
+
+	var gravity_vec : Vector3 = get_gravity()
+	var up_dir : Vector3 = _get_up_direction(gravity_vec).normalized()
+	current_up_dir = up_dir
+	_update_transport_basis(up_dir)
+
 	var camera_controller = ControllerManager.camera_controller
 	if is_local_owner() and is_instance_valid(camera_controller):
 		target_angle_horizontal = camera_controller.target_angle_horizontal
@@ -249,7 +261,7 @@ func _physics_process(delta: float) -> void:
 	if multiplayer.is_server():
 		_apply_input_state(input_move, target_angle_horizontal, camera_pitch,
 			sprinting, jumping, crouching, crawling, trying_to_grab, synced_camera_basis.get_rotation_quaternion())
-		shapecast_arms.global_basis = synced_camera_basis
+		shapecast_arms.global_basis = _get_arms_aim_basis(up_dir)
 		shapecast_arms.global_basis = shapecast_arms.global_basis.rotated(shapecast_arms.global_basis.y, PI)
 		if (shapecast_arms.is_colliding()):
 			var col = shapecast_arms.get_collider(0)
@@ -257,7 +269,7 @@ func _physics_process(delta: float) -> void:
 		else:
 			valid_grab = false
 	if is_local_owner():
-		shapecast_arms.global_basis = synced_camera_basis
+		shapecast_arms.global_basis = _get_arms_aim_basis(up_dir)
 		shapecast_arms.global_basis = shapecast_arms.global_basis.rotated(shapecast_arms.global_basis.y, PI)
 		if multiplayer.is_server():
 			_send_input_to_server(input_move, target_angle_horizontal,
@@ -272,11 +284,6 @@ func _physics_process(delta: float) -> void:
 			valid_grab = col is RigidBody3D and not col.has_meta("no_grab")
 		else:
 			valid_grab = false
-	
-	var gravity_vec : Vector3 = get_gravity()
-	var up_dir : Vector3 = _get_up_direction(gravity_vec).normalized()
-	current_up_dir = up_dir
-	_update_transport_basis(up_dir)
 	
 	if not multiplayer.is_server():
 		return

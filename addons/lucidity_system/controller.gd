@@ -40,9 +40,8 @@ func _physics_process(delta: float) -> void:
 		var query := PhysicsRayQueryParameters3D.create(cam_cast_origin, cam_cast_end)
 		var raycast_result := space_state.intersect_ray(query)
 		if not raycast_result.is_empty():
-			if multiplayer.is_server():
-				pawn.set_look_target(raycast_result['position'])
-			else:
+			pawn.set_look_target(raycast_result['position'])
+			if not multiplayer.is_server():
 				pawn._send_look_target_to_server.rpc_id(1, raycast_result['position'])
 
 func _is_owner() -> bool:
