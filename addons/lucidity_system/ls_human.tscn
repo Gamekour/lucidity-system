@@ -93,6 +93,7 @@ slope_correction = 0.2
 slope_correction_damping = 4.0
 slope_stance_height_scale = 0.75
 grab_vertical_strength_multiplier = 1.0
+air_drag = 0.1
 max_look_angle_horizontal = 1.3962634015954636
 grab_strength_min = 10.0
 grab_strength_max = 4000.0

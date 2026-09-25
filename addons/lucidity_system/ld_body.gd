@@ -49,6 +49,7 @@ func set_owner_peer_id(peer_id: int) -> void:
 @export var grab_force_central_scale : float = 0.0
 @export var stance_height_rot_min : float = 0.5
 @export var stance_height_rot_max : float = 0.6
+@export var air_drag := 0.0
 @export_range(0.0, 360.0, 0.5, "radians_as_degrees") var max_look_angle_horizontal : float = deg_to_rad(40.0)
 @export_category("Grab Physics")
 @export var allow_grab : bool = true
@@ -349,6 +350,10 @@ func _physics_process(delta: float) -> void:
 	elif not (grabbed_col != null and not grabbed_col is RigidBody3D):
 		accel = _get_air_accel(target_force, flat_velocity, air_acceleration * air_acceleration_scale)
 	var force = accel.limit_length(friction_budget)
+
+	if not grounded:
+		var drag_velocity := relative_velocity - relative_velocity.project(up_dir)
+		force += -drag_velocity * mass * air_drag
 
 	var current_yaw := _get_current_yaw(up_dir)
 	var body_target_angle := _get_body_target_angle(input_move)
